@@ -1,0 +1,43 @@
+page {
+  background: #f4f7f5;
+  color: #18241f;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  min-height: 100%;
+}
+
+.page {
+  box-sizing: border-box;
+  display: grid;
+  gap: 24px;
+  min-height: 100vh;
+  padding: 28px 28px 52px;
+}
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 4px;
+}
+
+.page-heading__title {
+  font-size: 42px;
+  font-weight: 700;
+}
+
+.page-heading__description {
+  color: #68756f;
+  font-size: 27px;
+  margin-top: 12px;
+}
+
+.primary-button {
+  background: #1d6a50;
+  border: 0;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 30px;
+}
+
+.primary-button::after {
+  border: 0;
+}

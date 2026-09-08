@@ -1,0 +1,21 @@
+.page-section {
+  background: #fff;
+  border: 1px solid #e1e8e4;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+
+.page-section__title {
+  color: #18241f;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.page-section__description {
+  color: #6c7873;
+  font-size: 27px;
+  line-height: 1.7;
+  margin-top: 14px;
+}
