@@ -38,9 +38,9 @@ export interface HomeContent {
 }
 
 export function getHomeContent() {
-  return request<HomeContent>({ path: '/api/v1/app/home' })
+  return request<HomeContent>({ path: '/home' })
 }
 
 export function getCompanyContent() {
-  return request<CompanyContent>({ path: '/api/v1/app/company' })
+  return request<CompanyContent>({ path: '/company' })
 }
