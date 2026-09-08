@@ -18,3 +18,5 @@ docker compose -f compose.local.yaml up -d postgres
 ```bash
 ./mvnw spring-boot:run
 ```
+
+工程初始化阶段暂时排除了 Spring Session 自动配置。N2 创建会话表后会移除此项并启用 JDBC Session。

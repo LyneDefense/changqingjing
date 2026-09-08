@@ -1,6 +1,8 @@
 spring:
   application:
     name: changqingjing-backend
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/changqingjing}
     username: ${DB_USERNAME:changqingjing}
