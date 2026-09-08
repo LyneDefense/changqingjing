@@ -24,6 +24,42 @@ export interface AdminUser {
   permissions: string[]
 }
 
+export type AdminRole = 'ADMIN' | 'OPERATOR'
+export type AdminStatus = 'ACTIVE' | 'DISABLED'
+
+export interface AdminStaff {
+  id: string
+  loginName: string
+  displayName: string
+  role: AdminRole
+  status: AdminStatus
+  lastLoginAt?: string
+  createdAt: string
+  updatedAt: string
+  version: number
+}
+
+export interface PageResponse<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  total: number
+}
+
+export interface CreateAdminStaffInput {
+  loginName: string
+  displayName: string
+  role: AdminRole
+  initialPassword: string
+}
+
+export interface UpdateAdminStaffInput {
+  displayName: string
+  role: AdminRole
+  status: AdminStatus
+  expectedVersion: number
+}
+
 export class AdminApiError extends Error {
   readonly status: number
   readonly code: string
@@ -131,6 +167,51 @@ export async function logoutAdmin() {
   } finally {
     csrfToken = undefined
   }
+}
+
+export function searchAdminStaff(options: {
+  keyword: string
+  status: '' | AdminStatus
+  page: number
+  pageSize?: number
+}) {
+  const query = new URLSearchParams({
+    keyword: options.keyword,
+    page: String(options.page),
+    pageSize: String(options.pageSize ?? 20),
+  })
+  if (options.status) {
+    query.set('status', options.status)
+  }
+  return request<PageResponse<AdminStaff>>(`/staff?${query}`)
+}
+
+export function createAdminStaff(input: CreateAdminStaffInput) {
+  return writeRequest<AdminStaff>('/staff', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateAdminStaff(accountId: string, input: UpdateAdminStaffInput) {
+  return writeRequest<AdminStaff>(`/staff/${encodeURIComponent(accountId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function resetAdminStaffPassword(
+  accountId: string,
+  newPassword: string,
+  expectedVersion: number,
+) {
+  return writeRequest<AdminStaff>(
+    `/staff/${encodeURIComponent(accountId)}/reset-password`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ newPassword, expectedVersion }),
+    },
+  )
 }
 
 export const adminApi = {

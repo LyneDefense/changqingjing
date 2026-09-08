@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
 import { LoginPage } from './pages/LoginPage'
 import { RouteErrorPage } from './pages/RouteErrorPage'
+import { StaffPage } from './pages/StaffPage'
 import { UsersPage } from './pages/UsersPage'
 
 export const routes = [
@@ -26,7 +27,10 @@ export const routes = [
               { path: 'forbidden', Component: ForbiddenPage },
               {
                 Component: AdminOnlyRoute,
-                children: [{ path: 'users', Component: UsersPage }],
+                children: [
+                  { path: 'users', Component: UsersPage },
+                  { path: 'staff', Component: StaffPage },
+                ],
               },
             ],
           },

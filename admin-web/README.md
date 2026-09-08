@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# 管理后台前端
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite 管理端，生产路径固定为 `/admin/`，后端接口使用同域的 `/api/v1/admin/`。
 
-Currently, two official plugins are available:
+## 本地开发
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+pnpm install
+pnpm dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite 会把 `/api` 转发到 `http://localhost:8080`。先按照 `backend/README.md` 启动 PostgreSQL、创建首个管理员并运行后端，然后访问 `http://localhost:5173/admin/`。
+
+## 会话安全
+
+- 登录态使用后端签发的 HttpOnly Cookie，前端不把 Cookie 或会话标识写入 Web Storage。
+- 页面启动时通过 `/auth/me` 恢复会话；受保护请求返回 401 时跳转登录页并明确提示会话失效。
+- CSRF token 由 `/auth/csrf` 获取，只保存在当前页面内存中，所有写请求自动携带服务端指定的请求头。
+- 403 显示无权限页。人员和用户菜单只向管理员角色显示，后端仍独立执行权限校验。
+
+## 检查
+
+```bash
+pnpm test
+pnpm lint
+pnpm build
+```
+
+生产构建输出到 `dist/`，其中静态资源路径以 `/admin/` 为前缀。
