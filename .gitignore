@@ -19,6 +19,7 @@ admin-web/dist/
 
 miniprogram/node_modules/
 miniprogram/dist/
+miniprogram/project.private.config.json
 
 deploy/certbot/conf/
 deploy/certbot/www/

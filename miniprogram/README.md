@@ -7,6 +7,6 @@ pnpm install
 pnpm dev:weapp
 ```
 
-然后在微信开发者工具中导入本目录；`project.config.json` 已将编译产物目录设置为 `dist`。当前使用测试 AppID `touristappid`，接入微信登录前再换成正式 AppID。
+然后在微信开发者工具中导入本目录；`project.config.json` 已将编译产物目录设置为 `dist`。当前使用开发测试 AppID，接入微信登录前再换成正式 AppID。开发者工具生成的 `project.private.config.json` 仅保留在本机。
 
 接口地址通过 `TARO_APP_API_BASE_URL` 配置。本地可复制 `.env.example` 为 `.env.development.local`，真机调试时需使用手机能访问的 HTTPS 地址。
