@@ -1,0 +1,77 @@
+.company-page {
+  gap: 22px;
+}
+
+.company-page__header {
+  background:
+    radial-gradient(circle at 86% 12%, rgba(229, 202, 134, 0.38), transparent 32%),
+    #173f34;
+  border-radius: 28px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 44px 36px;
+}
+
+.company-page__title {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 18px;
+}
+
+.company-page__summary {
+  font-size: 27px;
+  line-height: 1.8;
+  margin-top: 20px;
+  opacity: 0.82;
+}
+
+.company-page__body {
+  background: #fff;
+  border: 1px solid #e1e8e4;
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  padding: 38px 34px 48px;
+}
+
+.company-content-heading {
+  color: #203c32;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 34px 0 12px;
+}
+
+.company-content-heading:first-child {
+  margin-top: 0;
+}
+
+.company-content-paragraph {
+  color: #52645d;
+  font-size: 28px;
+  line-height: 2;
+  margin-bottom: 18px;
+  white-space: pre-wrap;
+}
+
+.company-page-state {
+  align-items: center;
+  color: #68756f;
+  display: flex;
+  flex-direction: column;
+  font-size: 27px;
+  justify-content: center;
+  text-align: center;
+}
+
+.company-page-state--error {
+  gap: 22px;
+}
+
+.company-page-state__title {
+  color: #263e35;
+  font-size: 36px;
+  font-weight: 700;
+}

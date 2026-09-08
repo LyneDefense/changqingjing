@@ -6,17 +6,37 @@ interface ApiResponse<T> {
   data: T
 }
 
+interface ApiErrorResponse {
+  code?: string
+  message?: string
+  traceId?: string
+}
+
 interface RequestOptions<TData> {
   path: string
   method?: keyof Taro.request.Method
   data?: TData
 }
 
+export class ApiRequestError extends Error {
+  statusCode: number
+  code: string
+  traceId?: string
+
+  constructor(statusCode: number, code: string, message: string, traceId?: string) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.statusCode = statusCode
+    this.code = code
+    this.traceId = traceId
+  }
+}
+
 export async function request<TResponse, TData = unknown>(
   options: RequestOptions<TData>
 ): Promise<TResponse> {
   const token = getAccessToken()
-  const response = await Taro.request<ApiResponse<TResponse>>({
+  const response = await Taro.request<ApiResponse<TResponse> | ApiErrorResponse>({
     url: `${API_BASE_URL}${options.path}`,
     method: options.method || 'GET',
     data: options.data,
@@ -24,8 +44,14 @@ export async function request<TResponse, TData = unknown>(
   })
 
   if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw new Error(`请求失败：${response.statusCode}`)
+    const error = response.data as ApiErrorResponse
+    throw new ApiRequestError(
+      response.statusCode,
+      error.code || 'REQUEST_FAILED',
+      error.message || '网络开小差了，请稍后重试',
+      error.traceId
+    )
   }
 
-  return response.data.data
+  return (response.data as ApiResponse<TResponse>).data
 }
