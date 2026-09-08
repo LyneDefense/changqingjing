@@ -189,6 +189,45 @@ class MediaServiceIntegrationTest {
         assertThat(mediaService.getAdminMedia(created.media().id()).status()).isEqualTo("DELETED");
     }
 
+    @Test
+    void cleanupNeverDeletesAnAssetReferencedByAContentRevision() {
+        AdminPrincipal actor = bootstrapAdmin();
+        var created = mediaService.createUpload(
+                new CreateMediaUploadRequest(
+                        "referenced.webp",
+                        MediaType.IMAGE,
+                        "image/webp",
+                        12,
+                        MediaPurpose.COMPANY_IMAGE),
+                actor,
+                "media-referenced");
+        UUID entryId = UUID.randomUUID();
+        UUID revisionId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO content_entry (
+                    id, kind, business_key, created_by, updated_by
+                ) VALUES (?, 'COMPANY', ?, ?, ?)
+                """, entryId, "cleanup-" + entryId, actor.accountId(), actor.accountId());
+        jdbcTemplate.update("""
+                INSERT INTO content_revision (
+                    id, entry_id, revision_no, title, payload, created_by
+                ) VALUES (?, ?, 1, 'cleanup guard', '{}'::jsonb, ?)
+                """, revisionId, entryId, actor.accountId());
+        jdbcTemplate.update("""
+                INSERT INTO content_revision_media (
+                    revision_id, media_id, usage, display_order
+                ) VALUES (?, ?, 'BODY_IMAGE', 0)
+                """, revisionId, created.media().id());
+        jdbcTemplate.update(
+                "UPDATE media_asset SET upload_expires_at = now() - interval '1 minute' WHERE id = ?",
+                created.media().id());
+
+        cleanupService.cleanExpiredUploads();
+
+        assertThat(mediaService.getAdminMedia(created.media().id()).status())
+                .isEqualTo("UPLOADING");
+    }
+
     private AdminPrincipal bootstrapAdmin() {
         UUID id = bootstrapService.createFirstAdmin(
                 "media.admin", "媒体管理员", "MediaAdmin2026", "bootstrap");
