@@ -12,6 +12,7 @@ import com.changqingjing.app.auth.AppPrincipal;
 import com.changqingjing.app.auth.AppTokenAuthenticator;
 import com.changqingjing.admin.auth.AdminAccountRepository;
 import com.changqingjing.admin.auth.AdminAuthService;
+import com.changqingjing.admin.staff.AdminStaffService;
 import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import java.util.Optional;
@@ -52,6 +53,9 @@ class SecurityBoundaryTest {
 
     @MockBean
     private AdminAuthService adminAuthService;
+
+    @MockBean
+    private AdminStaffService adminStaffService;
 
     @BeforeEach
     void configureAppToken() {
@@ -100,6 +104,13 @@ class SecurityBoundaryTest {
     @Test
     void operatorCannotReadRegisteredUsers() throws Exception {
         mockMvc.perform(get("/api/v1/admin/users").session(adminSession("OPERATOR")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void operatorCannotManageStaff() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/staff").session(adminSession("OPERATOR")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }

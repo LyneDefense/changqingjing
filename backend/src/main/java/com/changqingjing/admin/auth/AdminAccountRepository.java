@@ -3,6 +3,8 @@ package com.changqingjing.admin.auth;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -61,6 +63,108 @@ public class AdminAccountRepository {
                 loggedInAt,
                 loggedInAt,
                 id);
+    }
+
+    public List<AdminAccount> search(
+            String keyword,
+            AdminStatus status,
+            int limit,
+            long offset) {
+        String normalizedKeyword = keyword == null
+                ? ""
+                : keyword.strip().toLowerCase(Locale.ROOT);
+        return jdbcTemplate.query("""
+                SELECT %s
+                FROM admin_account
+                WHERE (? = ''
+                       OR login_name_normalized LIKE '%%' || ? || '%%'
+                       OR lower(display_name) LIKE '%%' || ? || '%%')
+                  AND (CAST(? AS varchar) IS NULL OR status = ?)
+                ORDER BY created_at DESC, id
+                LIMIT ? OFFSET ?
+                """.formatted(ACCOUNT_COLUMNS),
+                this::mapAccount,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                status == null ? null : status.name(),
+                status == null ? null : status.name(),
+                limit,
+                offset);
+    }
+
+    public long countSearch(String keyword, AdminStatus status) {
+        String normalizedKeyword = keyword == null
+                ? ""
+                : keyword.strip().toLowerCase(Locale.ROOT);
+        Long result = jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                FROM admin_account
+                WHERE (? = ''
+                       OR login_name_normalized LIKE '%%' || ? || '%%'
+                       OR lower(display_name) LIKE '%%' || ? || '%%')
+                  AND (CAST(? AS varchar) IS NULL OR status = ?)
+                """,
+                Long.class,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                status == null ? null : status.name(),
+                status == null ? null : status.name());
+        return result == null ? 0 : result;
+    }
+
+    public long countActiveAdmins() {
+        Long result = jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                FROM admin_account
+                WHERE role = 'ADMIN' AND status = 'ACTIVE'
+                """, Long.class);
+        return result == null ? 0 : result;
+    }
+
+    public boolean update(
+            UUID id,
+            String displayName,
+            AdminRole role,
+            AdminStatus status,
+            long expectedVersion,
+            OffsetDateTime updatedAt) {
+        return jdbcTemplate.update("""
+                UPDATE admin_account
+                SET display_name = ?,
+                    role = ?,
+                    status = ?,
+                    updated_at = ?,
+                    lock_version = lock_version + 1
+                WHERE id = ? AND lock_version = ?
+                """,
+                displayName,
+                role.name(),
+                status.name(),
+                updatedAt,
+                id,
+                expectedVersion) == 1;
+    }
+
+    public boolean resetPassword(
+            UUID id,
+            String passwordHash,
+            long expectedVersion,
+            OffsetDateTime changedAt) {
+        return jdbcTemplate.update("""
+                UPDATE admin_account
+                SET password_hash = ?,
+                    password_changed_at = ?,
+                    updated_at = ?,
+                    lock_version = lock_version + 1
+                WHERE id = ? AND lock_version = ?
+                """,
+                passwordHash,
+                changedAt,
+                changedAt,
+                id,
+                expectedVersion) == 1;
     }
 
     public long countAccounts() {
