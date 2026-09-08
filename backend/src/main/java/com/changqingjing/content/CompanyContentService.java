@@ -6,6 +6,9 @@ import com.changqingjing.admin.api.content.SaveCompanyDraftRequest;
 import com.changqingjing.admin.audit.AdminAuditService;
 import com.changqingjing.admin.auth.AdminPrincipal;
 import com.changqingjing.common.api.BusinessException;
+import com.changqingjing.media.MediaAssetRepository;
+import com.changqingjing.media.MediaPurpose;
+import com.changqingjing.media.MediaService;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -22,13 +25,16 @@ public class CompanyContentService {
 
     private final CompanyContentRepository repository;
     private final AdminAuditService auditService;
+    private final MediaService mediaService;
     private final Clock clock = Clock.systemUTC();
 
     public CompanyContentService(
             CompanyContentRepository repository,
-            AdminAuditService auditService) {
+            AdminAuditService auditService,
+            MediaService mediaService) {
         this.repository = repository;
         this.auditService = auditService;
+        this.mediaService = mediaService;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +69,7 @@ public class CompanyContentService {
         List<CompanyContentBlock> blocks = request.blocks().stream()
                 .map(CompanyContentBlock::normalized)
                 .toList();
+        validateMedia(request.coverMediaId(), blocks);
         String title = request.title().strip();
         String summary = request.summary().strip();
         OffsetDateTime now = now();
@@ -73,9 +80,12 @@ public class CompanyContentService {
                 revisionNumber,
                 title,
                 summary,
+                request.coverMediaId(),
                 blocks,
                 actor.accountId(),
                 now);
+        repository.insertMediaReferences(
+                revision.id(), request.coverMediaId(), blocks);
         if (!repository.pointDraft(
                 entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
             throw versionConflict();
@@ -167,6 +177,43 @@ public class CompanyContentService {
         if (entry.version() != expectedVersion) {
             throw versionConflict();
         }
+    }
+
+    private void validateMedia(
+            UUID coverMediaId,
+            List<CompanyContentBlock> blocks) {
+        if (coverMediaId != null) {
+            requirePurpose(coverMediaId, MediaPurpose.COMPANY_COVER);
+        }
+        for (CompanyContentBlock block : blocks) {
+            if (block.type() == CompanyBlockType.IMAGE) {
+                if (block.mediaId() == null || (block.text() != null && !block.text().isBlank())) {
+                    throw invalidBlock("图片内容块必须选择媒体，且不能包含正文文本");
+                }
+                requirePurpose(block.mediaId(), MediaPurpose.COMPANY_IMAGE);
+            } else if (block.text() == null
+                    || block.text().isBlank()
+                    || block.mediaId() != null) {
+                throw invalidBlock("标题和正文内容块必须填写文本，且不能绑定媒体");
+            }
+        }
+    }
+
+    private void requirePurpose(UUID mediaId, MediaPurpose purpose) {
+        MediaAssetRepository.Asset asset = mediaService.requireReady(mediaId);
+        if (asset.purpose() != purpose) {
+            throw new BusinessException(
+                    HttpStatus.BAD_REQUEST,
+                    "MEDIA_PURPOSE_MISMATCH",
+                    "所选媒体不能用于当前内容位置");
+        }
+    }
+
+    private BusinessException invalidBlock(String message) {
+        return new BusinessException(
+                HttpStatus.BAD_REQUEST,
+                "CONTENT_BLOCK_INVALID",
+                message);
     }
 
     private BusinessException versionConflict() {

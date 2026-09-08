@@ -11,6 +11,10 @@ import com.changqingjing.content.CompanyBlockType;
 import com.changqingjing.content.CompanyContentBlock;
 import com.changqingjing.content.CompanyContentRepository;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.content.HomeVideoContentService;
+import com.changqingjing.content.HomeVideoContentRepository;
+import com.changqingjing.media.MediaService;
+import com.changqingjing.media.MediaStorage;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +39,12 @@ class AppContentControllerTest {
     @MockBean
     private CompanyContentService companyContentService;
 
+    @MockBean
+    private HomeVideoContentService homeVideoContentService;
+
+    @MockBean
+    private MediaService mediaService;
+
     @Test
     void homeIsPublicAndOmitsAnUnpublishedCompany() throws Exception {
         when(companyContentService.getPublished()).thenReturn(Optional.empty());
@@ -57,6 +67,40 @@ class AppContentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title").value("公司介绍"))
                 .andExpect(jsonPath("$.data.blocks[0].type").value("PARAGRAPH"));
+    }
+
+    @Test
+    void homeReturnsShortLivedUrlsForPublishedVideo() throws Exception {
+        UUID coverId = UUID.randomUUID();
+        UUID videoId = UUID.randomUUID();
+        OffsetDateTime createdAt = OffsetDateTime.parse("2026-09-08T08:00:00Z");
+        when(homeVideoContentService.getPublished()).thenReturn(Optional.of(
+                new HomeVideoContentService.PublishedHomeVideo(
+                        new HomeVideoContentRepository.Revision(
+                                UUID.randomUUID(),
+                                1,
+                                "宣传片",
+                                coverId,
+                                videoId,
+                                true,
+                                UUID.randomUUID(),
+                                createdAt))));
+        when(mediaService.signReadyMedia(coverId)).thenReturn(
+                new MediaStorage.SignedObjectUrl(
+                        "https://media.example/cover.jpg?signature=short",
+                        createdAt.plusMinutes(15)));
+        when(mediaService.signReadyMedia(videoId)).thenReturn(
+                new MediaStorage.SignedObjectUrl(
+                        "https://media.example/video.mp4?signature=short",
+                        createdAt.plusMinutes(15)));
+
+        mockMvc.perform(get("/api/v1/app/home"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.video.title").value("宣传片"))
+                .andExpect(jsonPath("$.data.video.coverUrl").value(
+                        "https://media.example/cover.jpg?signature=short"))
+                .andExpect(jsonPath("$.data.video.playbackUrl").value(
+                        "https://media.example/video.mp4?signature=short"));
     }
 
     private CompanyContentService.PublishedCompany publishedCompany() {

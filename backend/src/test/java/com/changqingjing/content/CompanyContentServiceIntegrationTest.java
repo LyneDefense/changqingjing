@@ -15,6 +15,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import com.changqingjing.media.MediaPurpose;
+import com.changqingjing.media.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,6 +135,43 @@ class CompanyContentServiceIntegrationTest {
                 Long.class)).isEqualTo(2);
     }
 
+    @Test
+    void recordsCoverAndBodyImageReferencesForEveryImmutableRevision() {
+        AdminPrincipal actor = bootstrapAdmin();
+        UUID coverId = insertReadyMedia(
+                actor.accountId(), MediaPurpose.COMPANY_COVER, MediaType.IMAGE);
+        UUID imageId = insertReadyMedia(
+                actor.accountId(), MediaPurpose.COMPANY_IMAGE, MediaType.IMAGE);
+
+        var saved = contentService.saveDraft(
+                new SaveCompanyDraftRequest(
+                        "带图片的公司介绍",
+                        "首页简介",
+                        coverId,
+                        List.of(
+                                new CompanyContentBlock(
+                                        CompanyBlockType.IMAGE,
+                                        null,
+                                        imageId,
+                                        "山水图片"),
+                                new CompanyContentBlock(
+                                        CompanyBlockType.PARAGRAPH,
+                                        "正文")),
+                        0),
+                actor,
+                "company-media");
+
+        assertThat(saved.draft().coverMediaId()).isEqualTo(coverId);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM content_revision_media WHERE revision_id = ?",
+                Long.class,
+                saved.draft().id())).isEqualTo(2);
+        contentService.publish(saved.version(), actor, "company-media-publish");
+        assertThat(contentService.getPublished().orElseThrow().revision().blocks())
+                .extracting(CompanyContentBlock::mediaId)
+                .contains(imageId);
+    }
+
     private String saveAfter(
             CountDownLatch start,
             AdminPrincipal actor,
@@ -172,5 +211,28 @@ class CompanyContentServiceIntegrationTest {
                 account.role(),
                 account.lockVersion(),
                 Instant.now());
+    }
+
+    private UUID insertReadyMedia(
+            UUID actorId,
+            MediaPurpose purpose,
+            MediaType mediaType) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO media_asset (
+                    id, object_key, original_filename, media_type, content_type,
+                    size_bytes, etag, status, purpose, uploaded_by, created_at,
+                    updated_at, verified_at, upload_expires_at
+                ) VALUES (?, ?, ?, ?, ?, 8, 'etag', 'READY', ?, ?, now(), now(), now(),
+                          now() + interval '15 minutes')
+                """,
+                id,
+                "test/" + id,
+                id + ".png",
+                mediaType.name(),
+                mediaType == MediaType.IMAGE ? "image/png" : "video/mp4",
+                purpose.name(),
+                actorId);
+        return id;
     }
 }

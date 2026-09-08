@@ -1,30 +1,28 @@
 package com.changqingjing.admin.api.content;
 
-import com.changqingjing.content.CompanyContentBlock;
-import com.changqingjing.content.CompanyContentRepository;
+import com.changqingjing.content.HomeVideoContentRepository;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 
-public record AdminCompanyRevisionResponse(
+public record AdminHomeVideoRevisionResponse(
         UUID id,
         int revisionNumber,
         String title,
-        String summary,
+        UUID videoMediaId,
         UUID coverMediaId,
-        List<CompanyContentBlock> blocks,
+        boolean displayEnabled,
         UUID createdBy,
         OffsetDateTime createdAt) {
 
-    public static AdminCompanyRevisionResponse from(
-            CompanyContentRepository.Revision revision) {
-        return new AdminCompanyRevisionResponse(
+    public static AdminHomeVideoRevisionResponse from(
+            HomeVideoContentRepository.Revision revision) {
+        return new AdminHomeVideoRevisionResponse(
                 revision.id(),
                 revision.revisionNumber(),
                 revision.title(),
-                revision.summary(),
+                revision.videoMediaId(),
                 revision.coverMediaId(),
-                revision.blocks(),
+                revision.displayEnabled(),
                 revision.createdBy(),
                 revision.createdAt());
     }

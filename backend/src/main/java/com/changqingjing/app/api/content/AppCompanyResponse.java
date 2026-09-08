@@ -1,21 +1,30 @@
 package com.changqingjing.app.api.content;
 
-import com.changqingjing.content.CompanyContentBlock;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.media.MediaService;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 public record AppCompanyResponse(
         String title,
         String summary,
-        List<CompanyContentBlock> blocks,
+        String coverUrl,
+        List<AppCompanyBlockResponse> blocks,
         OffsetDateTime firstPublishedAt) {
 
-    public static AppCompanyResponse from(CompanyContentService.PublishedCompany company) {
+    public static AppCompanyResponse from(
+            CompanyContentService.PublishedCompany company,
+            MediaService mediaService) {
+        String coverUrl = company.revision().coverMediaId() == null
+                ? null
+                : mediaService.signReadyMedia(company.revision().coverMediaId()).url();
         return new AppCompanyResponse(
                 company.revision().title(),
                 company.revision().summary(),
-                company.revision().blocks(),
+                coverUrl,
+                company.revision().blocks().stream()
+                        .map(block -> AppCompanyBlockResponse.from(block, mediaService))
+                        .toList(),
                 company.firstPublishedAt());
     }
 }

@@ -16,6 +16,7 @@ import com.changqingjing.admin.staff.AdminStaffService;
 import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.content.HomeVideoContentService;
 import com.changqingjing.media.MediaService;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,6 +62,9 @@ class SecurityBoundaryTest {
 
     @MockBean
     private CompanyContentService companyContentService;
+
+    @MockBean
+    private HomeVideoContentService homeVideoContentService;
 
     @MockBean
     private MediaService mediaService;
