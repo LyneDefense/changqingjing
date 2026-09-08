@@ -29,4 +29,6 @@ Spring Session 使用 PostgreSQL 持久化，会话表由 Flyway 管理，应用
 
 API 成功响应使用 `{ "data": ... }`。错误响应包含稳定的 `code`、可展示的 `message` 和 `traceId`；参数校验失败时还会返回字段级 `violations`。所有 `/api/v1/**` 响应通过 `X-Trace-Id` 响应头返回同一请求的跟踪编号。
 
+分页请求统一使用 `page` 和 `pageSize`，默认值为 1 和 20，`pageSize` 最大为 100；响应数据使用 `items`、`page`、`pageSize`、`total`。业务 ID 使用 UUID 字符串，接口时间使用带时区的 ISO 8601，数据库连接统一使用 UTC。
+
 小程序受保护接口只接受 Bearer 会话，管理后台只接受 Cookie 会话；两套凭据不能互用。后台写请求必须通过 CSRF 校验，未在安全规则中列出的接口默认拒绝。

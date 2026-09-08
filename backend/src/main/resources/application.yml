@@ -5,6 +5,8 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/changqingjing}
     username: ${DB_USERNAME:changqingjing}
     password: ${DB_PASSWORD:changqingjing-local}
+    hikari:
+      connection-init-sql: SET TIME ZONE 'UTC'
   flyway:
     enabled: true
   session:
