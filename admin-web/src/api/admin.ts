@@ -60,6 +60,33 @@ export interface UpdateAdminStaffInput {
   expectedVersion: number
 }
 
+export type CompanyBlockType = 'HEADING' | 'PARAGRAPH'
+
+export interface CompanyContentBlock {
+  type: CompanyBlockType
+  text: string
+}
+
+export interface AdminCompanyRevision {
+  id: string
+  revisionNumber: number
+  title: string
+  summary: string
+  blocks: CompanyContentBlock[]
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminCompanyContent {
+  id?: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt?: string
+  draft?: AdminCompanyRevision
+  published?: AdminCompanyRevision
+}
+
 export class AdminApiError extends Error {
   readonly status: number
   readonly code: string
@@ -212,6 +239,40 @@ export function resetAdminStaffPassword(
       body: JSON.stringify({ newPassword, expectedVersion }),
     },
   )
+}
+
+export function getAdminCompanyContent() {
+  return request<AdminCompanyContent>('/contents/company')
+}
+
+export function saveAdminCompanyDraft(input: {
+  title: string
+  summary: string
+  blocks: CompanyContentBlock[]
+  expectedVersion: number
+}) {
+  return writeRequest<AdminCompanyContent>('/contents/company/draft', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function previewAdminCompanyDraft() {
+  return request<AdminCompanyRevision>('/contents/company/preview')
+}
+
+export function publishAdminCompany(expectedVersion: number) {
+  return writeRequest<AdminCompanyContent>('/contents/company/publish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminCompany(expectedVersion: number) {
+  return writeRequest<AdminCompanyContent>('/contents/company/unpublish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
 }
 
 export const adminApi = {
