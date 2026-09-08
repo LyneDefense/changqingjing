@@ -36,6 +36,12 @@
   padding: 38px 34px 48px;
 }
 
+.company-page__cover {
+  border-radius: 24px;
+  height: 360px;
+  width: 100%;
+}
+
 .company-content-heading {
   color: #203c32;
   font-size: 34px;
@@ -54,6 +60,25 @@
   line-height: 2;
   margin-bottom: 18px;
   white-space: pre-wrap;
+}
+
+.company-content-image-wrap {
+  display: flex;
+  flex-direction: column;
+  margin: 22px 0 30px;
+}
+
+.company-content-image {
+  border-radius: 18px;
+  width: 100%;
+}
+
+.company-content-caption {
+  color: #7a8882;
+  font-size: 23px;
+  line-height: 1.6;
+  margin-top: 12px;
+  text-align: center;
 }
 
 .company-page-state {

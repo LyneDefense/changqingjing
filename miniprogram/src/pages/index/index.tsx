@@ -1,4 +1,4 @@
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Image, Text, Video, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import { getHomeContent } from '../../services/content'
@@ -10,12 +10,14 @@ export default function HomePage() {
   const [content, setContent] = useState<HomeContent>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [videoFailed, setVideoFailed] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       setContent(await getHomeContent())
+      setVideoFailed(false)
     } catch (requestError) {
       setError(
         requestError instanceof ApiRequestError
@@ -56,8 +58,41 @@ export default function HomePage() {
         </View>
       )}
 
+      {!error && content?.video && (
+        <View className='home-video-card'>
+          <Text className='section-kicker'>FEATURED FILM</Text>
+          <Text className='home-video-card__title'>{content.video.title}</Text>
+          {!videoFailed ? (
+            <Video
+              className='home-video'
+              controls
+              enableProgressGesture
+              objectFit='contain'
+              onError={() => setVideoFailed(true)}
+              poster={content.video.coverUrl}
+              showCenterPlayBtn
+              showFullscreenBtn
+              src={content.video.playbackUrl}
+            />
+          ) : (
+            <View className='media-failure'>
+              <Image className='media-failure__cover' mode='aspectFill' src={content.video.coverUrl} />
+              <Text>视频暂时无法播放，可能是访问地址已过期。</Text>
+              <Button className='retry-button' onClick={() => void load()}>刷新视频</Button>
+            </View>
+          )}
+        </View>
+      )}
+
       {!error && content?.company && (
         <View className='company-card' hoverClass='company-card--pressed' onClick={openCompany}>
+          {content.company.coverUrl && (
+            <Image
+              className='company-card__cover'
+              mode='aspectFill'
+              src={content.company.coverUrl}
+            />
+          )}
           <Text className='section-kicker'>ABOUT US</Text>
           <Text className='company-card__title'>{content.company.title}</Text>
           <Text className='company-card__summary'>{content.company.summary}</Text>

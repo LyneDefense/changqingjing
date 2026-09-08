@@ -1,4 +1,4 @@
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import { getCompanyContent } from '../../services/content'
@@ -62,12 +62,34 @@ export default function CompanyPage() {
         <Text className='company-page__title'>{content.title}</Text>
         <Text className='company-page__summary'>{content.summary}</Text>
       </View>
+      {content.coverUrl && (
+        <Image
+          className='company-page__cover'
+          mode='aspectFill'
+          src={content.coverUrl}
+        />
+      )}
       <View className='company-page__body'>
-        {content.blocks.map((block, index) => (
-          block.type === 'HEADING'
-            ? <Text className='company-content-heading' key={index}>{block.text}</Text>
-            : <Text className='company-content-paragraph' key={index}>{block.text}</Text>
-        ))}
+        {content.blocks.map((block, index) => {
+          if (block.type === 'HEADING') {
+            return <Text className='company-content-heading' key={index}>{block.text}</Text>
+          }
+          if (block.type === 'IMAGE' && block.imageUrl) {
+            return (
+              <View className='company-content-image-wrap' key={index}>
+                <Image
+                  className='company-content-image'
+                  mode='widthFix'
+                  src={block.imageUrl}
+                />
+                {block.altText && (
+                  <Text className='company-content-caption'>{block.altText}</Text>
+                )}
+              </View>
+            )
+          }
+          return <Text className='company-content-paragraph' key={index}>{block.text}</Text>
+        })}
       </View>
     </View>
   )

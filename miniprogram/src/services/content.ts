@@ -1,15 +1,18 @@
 import { request } from './request'
 
-export type CompanyBlockType = 'HEADING' | 'PARAGRAPH'
+export type CompanyBlockType = 'HEADING' | 'PARAGRAPH' | 'IMAGE'
 
 export interface CompanyContentBlock {
   type: CompanyBlockType
-  text: string
+  text?: string
+  imageUrl?: string
+  altText?: string
 }
 
 export interface CompanySummary {
   title: string
   summary: string
+  coverUrl?: string
 }
 
 export interface CompanyContent extends CompanySummary {

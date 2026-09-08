@@ -22,6 +22,12 @@ async function main() {
           company: {
             title: '自动化公司介绍',
             summary: '首页公开摘要',
+            coverUrl: 'https://media.example/company-cover.jpg?signature=short',
+          },
+          video: {
+            title: '自动化宣传片',
+            coverUrl: 'https://media.example/video-cover.jpg?signature=short',
+            playbackUrl: 'https://media.example/video.mp4?signature=short',
           },
           scenics: [],
         },
@@ -35,6 +41,12 @@ async function main() {
     const cardTitle = await home.$('.company-card__title')
     assert(cardTitle, '已发布公司卡片应显示')
     assert.equal(await cardTitle.text(), '自动化公司介绍')
+    const companyCover = await home.$('.company-card__cover')
+    assert(companyCover, '首页公司封面应显示')
+    assert.match(await companyCover.attribute('src'), /company-cover\.jpg/)
+    const videoTitle = await home.$('.home-video-card__title')
+    assert(videoTitle, '已发布宣传视频应显示')
+    assert.equal(await videoTitle.text(), '自动化宣传片')
 
     await miniProgram.restoreWxMethod('request')
     await miniProgram.mockWxMethod('request', {
@@ -43,8 +55,14 @@ async function main() {
         data: {
           title: '自动化公司介绍',
           summary: '首页公开摘要',
+          coverUrl: 'https://media.example/company-cover.jpg?signature=short',
           blocks: [
             { type: 'HEADING', text: '我们的使命' },
+            {
+              type: 'IMAGE',
+              imageUrl: 'https://media.example/company-body.jpg?signature=short',
+              altText: '山水与文化',
+            },
             { type: 'PARAGRAPH', text: '连接文化与旅行。' },
           ],
           firstPublishedAt: '2026-09-08T08:00:00Z',
@@ -64,6 +82,9 @@ async function main() {
     assert(heading && paragraph, '结构化内容块应显示')
     assert.equal(await heading.text(), '我们的使命')
     assert.equal(await paragraph.text(), '连接文化与旅行。')
+    const bodyImage = await company.$('.company-content-image')
+    assert(bodyImage, '公司介绍正文图片应显示')
+    assert.match(await bodyImage.attribute('src'), /company-body\.jpg/)
   } finally {
     await miniProgram.close()
   }

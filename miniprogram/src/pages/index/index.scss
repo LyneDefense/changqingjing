@@ -48,6 +48,53 @@
   transition: transform 120ms ease;
 }
 
+.home-video-card {
+  background: #fff;
+  border: 1px solid #e1e8e4;
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 30px;
+}
+
+.home-video-card__title {
+  color: #18241f;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 14px 0 22px;
+}
+
+.home-video {
+  border-radius: 18px;
+  height: 360px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.company-card__cover {
+  border-radius: 18px;
+  height: 280px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.media-failure {
+  align-items: center;
+  color: #68756f;
+  display: flex;
+  flex-direction: column;
+  font-size: 25px;
+  gap: 18px;
+  text-align: center;
+}
+
+.media-failure__cover {
+  border-radius: 18px;
+  height: 300px;
+  width: 100%;
+}
+
 .company-card--pressed {
   opacity: 0.88;
   transform: scale(0.99);
