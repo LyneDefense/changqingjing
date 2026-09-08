@@ -32,3 +32,5 @@ API 成功响应使用 `{ "data": ... }`。错误响应包含稳定的 `code`、
 分页请求统一使用 `page` 和 `pageSize`，默认值为 1 和 20，`pageSize` 最大为 100；响应数据使用 `items`、`page`、`pageSize`、`total`。业务 ID 使用 UUID 字符串，接口时间使用带时区的 ISO 8601，数据库连接统一使用 UTC。
 
 小程序受保护接口只接受 Bearer 会话，管理后台只接受 Cookie 会话；两套凭据不能互用。后台写请求必须通过 CSRF 校验，未在安全规则中列出的接口默认拒绝。
+
+API 访问日志只记录请求方法、路由模板、响应状态和耗时。禁止记录查询参数、请求体、Cookie、Authorization、异常消息，以及密码、手机号、微信临时 code 或业务 token。
