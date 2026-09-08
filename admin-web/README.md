@@ -22,6 +22,7 @@ Vite 会把 `/api` 转发到 `http://localhost:8080`。先按照 `backend/README
 
 ```bash
 pnpm test
+pnpm test:e2e
 pnpm lint
 pnpm build
 ```

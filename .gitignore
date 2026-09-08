@@ -16,6 +16,8 @@ backend/.settings/
 
 admin-web/node_modules/
 admin-web/dist/
+admin-web/playwright-report/
+admin-web/test-results/
 
 miniprogram/node_modules/
 miniprogram/dist/
