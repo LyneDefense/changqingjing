@@ -60,11 +60,13 @@ export interface UpdateAdminStaffInput {
   expectedVersion: number
 }
 
-export type CompanyBlockType = 'HEADING' | 'PARAGRAPH'
+export type CompanyBlockType = 'HEADING' | 'PARAGRAPH' | 'IMAGE'
 
 export interface CompanyContentBlock {
   type: CompanyBlockType
-  text: string
+  text?: string
+  mediaId?: string
+  altText?: string
 }
 
 export interface AdminCompanyRevision {
@@ -72,6 +74,7 @@ export interface AdminCompanyRevision {
   revisionNumber: number
   title: string
   summary: string
+  coverMediaId?: string
   blocks: CompanyContentBlock[]
   createdBy: string
   createdAt: string
@@ -85,6 +88,66 @@ export interface AdminCompanyContent {
   updatedAt?: string
   draft?: AdminCompanyRevision
   published?: AdminCompanyRevision
+}
+
+export type MediaType = 'IMAGE' | 'VIDEO'
+export type MediaStatus = 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'PENDING_DELETE' | 'DELETED'
+export type MediaPurpose = 'COMPANY_IMAGE' | 'COMPANY_COVER' | 'HOME_VIDEO' | 'HOME_VIDEO_COVER'
+
+export interface AdminMedia {
+  id: string
+  originalFilename: string
+  mediaType: MediaType
+  contentType: string
+  sizeBytes: number
+  status: MediaStatus
+  purpose: MediaPurpose
+  failureCode?: string
+  verificationAttempts: number
+  createdAt: string
+  verifiedAt?: string
+  previewUrl?: string
+  previewExpiresAt?: string
+}
+
+export interface MediaUploadAuthorization {
+  bucket: string
+  region: string
+  objectKey: string
+  expiresAt: string
+  credentials: {
+    secretId: string
+    secretKey: string
+    sessionToken: string
+    startTime: number
+    expiredTime: number
+  }
+}
+
+export interface CreateMediaUploadResponse {
+  media: AdminMedia
+  upload: MediaUploadAuthorization
+}
+
+export interface AdminHomeVideoRevision {
+  id: string
+  revisionNumber: number
+  title: string
+  videoMediaId: string
+  coverMediaId: string
+  displayEnabled: boolean
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminHomeVideoContent {
+  id?: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt?: string
+  draft?: AdminHomeVideoRevision
+  published?: AdminHomeVideoRevision
 }
 
 export class AdminApiError extends Error {
@@ -248,6 +311,7 @@ export function getAdminCompanyContent() {
 export function saveAdminCompanyDraft(input: {
   title: string
   summary: string
+  coverMediaId?: string
   blocks: CompanyContentBlock[]
   expectedVersion: number
 }) {
@@ -270,6 +334,65 @@ export function publishAdminCompany(expectedVersion: number) {
 
 export function unpublishAdminCompany(expectedVersion: number) {
   return writeRequest<AdminCompanyContent>('/contents/company/unpublish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function createMediaUpload(input: {
+  originalFilename: string
+  mediaType: MediaType
+  contentType: string
+  sizeBytes: number
+  purpose: MediaPurpose
+}) {
+  return writeRequest<CreateMediaUploadResponse>('/media/uploads', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function completeMediaUpload(mediaId: string) {
+  return writeRequest<AdminMedia>(
+    `/media/uploads/${encodeURIComponent(mediaId)}/complete`,
+    { method: 'POST' },
+  )
+}
+
+export function getAdminMedia(mediaId: string) {
+  return request<AdminMedia>(`/media/${encodeURIComponent(mediaId)}`)
+}
+
+export function getAdminHomeVideoContent() {
+  return request<AdminHomeVideoContent>('/contents/home-video')
+}
+
+export function saveAdminHomeVideoDraft(input: {
+  title: string
+  videoMediaId: string
+  coverMediaId: string
+  displayEnabled: boolean
+  expectedVersion: number
+}) {
+  return writeRequest<AdminHomeVideoContent>('/contents/home-video/draft', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function previewAdminHomeVideoDraft() {
+  return request<AdminHomeVideoRevision>('/contents/home-video/preview')
+}
+
+export function publishAdminHomeVideo(expectedVersion: number) {
+  return writeRequest<AdminHomeVideoContent>('/contents/home-video/publish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminHomeVideo(expectedVersion: number) {
+  return writeRequest<AdminHomeVideoContent>('/contents/home-video/unpublish', {
     method: 'POST',
     body: JSON.stringify({ expectedVersion }),
   })

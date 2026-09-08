@@ -517,6 +517,7 @@
 
 .editor-field input,
 .editor-field textarea,
+.content-block input,
 .content-block textarea,
 .block-toolbar select {
   background: #fff;
@@ -529,6 +530,7 @@
 
 .editor-field input:focus,
 .editor-field textarea:focus,
+.content-block input:focus,
 .content-block textarea:focus,
 .block-toolbar select:focus {
   border-color: #34735e;
@@ -631,6 +633,109 @@
   max-width: 720px;
 }
 
+.home-video-editor {
+  margin-top: 22px;
+}
+
+.home-video-editor form {
+  display: grid;
+  gap: 18px;
+}
+
+.media-editor-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.media-upload-field {
+  background: #f7f9f8;
+  border: 1px solid #e0e8e4;
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.media-upload-field progress {
+  accent-color: #34735e;
+  width: 100%;
+}
+
+.media-upload-field .field-error {
+  color: #9c3529;
+  margin: 0;
+}
+
+.media-upload-field .secondary-button {
+  display: inline-flex;
+}
+
+.media-upload-field .secondary-button.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.media-upload-field input[type='file'] {
+  display: none;
+}
+
+.media-upload-field,
+.media-upload-field * {
+  box-sizing: border-box;
+}
+
+.media-upload-field img,
+.media-upload-field video,
+.content-image-preview,
+.content-video-preview {
+  background: #17251f;
+  border-radius: 10px;
+  display: block;
+  max-height: 360px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.media-upload-field img {
+  aspect-ratio: 16 / 9;
+}
+
+.media-upload-field video {
+  aspect-ratio: 16 / 9;
+}
+
+.media-upload-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.media-upload-copy small {
+  color: #71817b;
+}
+
+.media-upload-actions,
+.toggle-field,
+.video-preview-notice {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.media-ready {
+  color: #28604e;
+  font-size: 13px;
+}
+
+.toggle-field {
+  color: #35453f;
+  font-size: 14px;
+}
+
+.video-preview-notice {
+  justify-content: space-between;
+}
+
 .preview-summary {
   background: #f4f7f5;
   border-radius: 10px;
@@ -707,6 +812,10 @@
   }
 
   .version-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media-editor-grid {
     grid-template-columns: 1fr;
   }
 

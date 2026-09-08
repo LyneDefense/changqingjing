@@ -15,6 +15,9 @@ import type {
   CompanyContentBlock,
 } from '../api/admin'
 import { PageIntro } from '../components/PageIntro'
+import { HomeVideoEditor } from '../components/HomeVideoEditor'
+import { MediaPreview } from '../components/MediaPreview'
+import { MediaUploadField } from '../components/MediaUploadField'
 
 const blankBlock: CompanyContentBlock = { type: 'PARAGRAPH', text: '' }
 
@@ -29,19 +32,22 @@ export function ContentPage() {
   const [content, setContent] = useState<AdminCompanyContent>()
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
+  const [coverMediaId, setCoverMediaId] = useState('')
   const [blocks, setBlocks] = useState<CompanyContentBlock[]>([{ ...blankBlock }])
   const [preview, setPreview] = useState<AdminCompanyRevision>()
   const [dirty, setDirty] = useState(false)
+  const [videoDirty, setVideoDirty] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const blocker = useBlocker(dirty)
+  const blocker = useBlocker(dirty || videoDirty)
 
   const hydrate = useCallback((next: AdminCompanyContent) => {
     const editable = next.draft ?? next.published
     setContent(next)
     setTitle(editable?.title ?? '')
     setSummary(editable?.summary ?? '')
+    setCoverMediaId(editable?.coverMediaId ?? '')
     setBlocks(editable?.blocks.length ? editable.blocks : [{ ...blankBlock }])
     setDirty(false)
   }, [])
@@ -74,7 +80,7 @@ export function ContentPage() {
   }, [blocker])
 
   useBeforeUnload((event) => {
-    if (dirty) {
+    if (dirty || videoDirty) {
       event.preventDefault()
     }
   })
@@ -105,6 +111,7 @@ export function ContentPage() {
       const saved = await saveAdminCompanyDraft({
         title,
         summary,
+        coverMediaId: coverMediaId || undefined,
         blocks,
         expectedVersion: content?.version ?? 0,
       })
@@ -179,6 +186,8 @@ export function ContentPage() {
         </div>
       </div>
 
+      <HomeVideoEditor onDirtyChange={setVideoDirty} />
+
       {error && (
         <div className="notice error-notice content-error" role="alert">
           <span>{error}</span>
@@ -215,6 +224,18 @@ export function ContentPage() {
             value={title}
           />
         </label>
+
+        <MediaUploadField
+          accept="image/jpeg,image/png,image/webp"
+          label="公司介绍列表封面"
+          mediaId={coverMediaId || undefined}
+          mediaType="IMAGE"
+          onReady={(media) => {
+            setCoverMediaId(media.id)
+            setDirty(true)
+          }}
+          purpose="COMPANY_COVER"
+        />
         <label className="editor-field">
           首页简介
           <textarea
@@ -253,13 +274,17 @@ export function ContentPage() {
               <div className="block-toolbar">
                 <select
                   aria-label={`第 ${index + 1} 块类型`}
-                  onChange={(event) => updateBlock(index, {
-                    type: event.target.value as CompanyContentBlock['type'],
-                  })}
+                  onChange={(event) => {
+                    const type = event.target.value as CompanyContentBlock['type']
+                    updateBlock(index, type === 'IMAGE'
+                      ? { type, text: undefined, mediaId: undefined, altText: '' }
+                      : { type, text: block.text ?? '', mediaId: undefined, altText: undefined })
+                  }}
                   value={block.type}
                 >
                   <option value="PARAGRAPH">正文段落</option>
                   <option value="HEADING">小标题</option>
+                  <option value="IMAGE">图片</option>
                 </select>
                 <span>第 {index + 1} 块</span>
                 <button aria-label="上移" className="icon-text-button" disabled={index === 0} onClick={() => moveBlock(index, -1)} type="button">↑</button>
@@ -276,15 +301,35 @@ export function ContentPage() {
                   删除
                 </button>
               </div>
-              <textarea
-                aria-label={`第 ${index + 1} 块内容`}
-                maxLength={10000}
-                onChange={(event) => updateBlock(index, { text: event.target.value })}
-                placeholder={block.type === 'HEADING' ? '输入小标题' : '输入正文段落'}
-                required
-                rows={block.type === 'HEADING' ? 2 : 6}
-                value={block.text}
-              />
+              {block.type === 'IMAGE' ? (
+                <>
+                  <MediaUploadField
+                    accept="image/jpeg,image/png,image/webp"
+                    label={`正文图片 ${index + 1}`}
+                    mediaId={block.mediaId}
+                    mediaType="IMAGE"
+                    onReady={(media) => updateBlock(index, { mediaId: media.id })}
+                    purpose="COMPANY_IMAGE"
+                  />
+                  <input
+                    aria-label={`第 ${index + 1} 块图片说明`}
+                    maxLength={255}
+                    onChange={(event) => updateBlock(index, { altText: event.target.value })}
+                    placeholder="图片说明（便于无障碍阅读）"
+                    value={block.altText ?? ''}
+                  />
+                </>
+              ) : (
+                <textarea
+                  aria-label={`第 ${index + 1} 块内容`}
+                  maxLength={10000}
+                  onChange={(event) => updateBlock(index, { text: event.target.value })}
+                  placeholder={block.type === 'HEADING' ? '输入小标题' : '输入正文段落'}
+                  required
+                  rows={block.type === 'HEADING' ? 2 : 6}
+                  value={block.text ?? ''}
+                />
+              )}
             </section>
           ))}
         </div>
@@ -313,10 +358,13 @@ export function ContentPage() {
               <button aria-label="关闭预览" className="icon-button" onClick={() => setPreview(undefined)} type="button">×</button>
             </div>
             <p className="preview-summary">{preview.summary}</p>
+            <MediaPreview alt={preview.title} mediaId={preview.coverMediaId} />
             <div className="preview-body">
-              {preview.blocks.map((block, index) => block.type === 'HEADING'
-                ? <h3 key={index}>{block.text}</h3>
-                : <p key={index}>{block.text}</p>)}
+              {preview.blocks.map((block, index) => {
+                if (block.type === 'HEADING') return <h3 key={index}>{block.text}</h3>
+                if (block.type === 'IMAGE') return <MediaPreview alt={block.altText} key={index} mediaId={block.mediaId} />
+                return <p key={index}>{block.text}</p>
+              })}
             </div>
           </article>
         </div>

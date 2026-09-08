@@ -72,6 +72,12 @@ test('an administrator logs in and opens staff management', async ({ page }) => 
       await route.fulfill({ json: { data: companyContent } })
       return
     }
+    if (path.endsWith('/contents/home-video') && request.method() === 'GET') {
+      await route.fulfill({
+        json: { data: { version: 0, visibility: 'HIDDEN' } },
+      })
+      return
+    }
     if (path.endsWith('/contents/company/draft')) {
       const input = request.postDataJSON() as {
         title: string
@@ -125,11 +131,11 @@ test('an administrator logs in and opens staff management', async ({ page }) => 
 
   await page.getByRole('link', { name: '内容管理' }).click()
   await expect(page.getByRole('heading', { name: '公司介绍' })).toBeVisible()
-  await page.getByLabel('标题').fill('常清净文旅投介绍')
+  await page.getByLabel('标题', { exact: true }).fill('常清净文旅投介绍')
   await page.getByLabel('首页简介').fill('发现文化与山水的连接')
   await page.getByLabel('第 1 块内容').fill('公司介绍正文')
   await page.getByRole('button', { name: '保存草稿' }).click()
   await expect(page.getByText('第 1 版')).toBeVisible()
-  await page.getByRole('button', { name: '发布' }).click()
+  await page.getByRole('button', { name: '发布', exact: true }).click()
   await expect(page.getByText('线上展示中')).toBeVisible()
 })
