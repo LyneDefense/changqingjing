@@ -14,8 +14,19 @@ spring:
   flyway:
     enabled: true
   session:
+    timeout: 30m
     jdbc:
       initialize-schema: never
+
+app:
+  admin:
+    session:
+      absolute-lifetime: 12h
+    bootstrap:
+      enabled: ${ADMIN_BOOTSTRAP_ENABLED:false}
+      login-name: ${ADMIN_BOOTSTRAP_LOGIN_NAME:}
+      display-name: ${ADMIN_BOOTSTRAP_DISPLAY_NAME:}
+      password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -23,6 +34,11 @@ server:
   tomcat:
     accesslog:
       enabled: false
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 
 management:
   endpoints:

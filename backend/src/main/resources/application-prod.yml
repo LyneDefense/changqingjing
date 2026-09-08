@@ -5,6 +5,10 @@ spring:
 
 server:
   shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        secure: true
 
 logging:
   level:

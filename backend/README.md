@@ -34,3 +34,7 @@ API 成功响应使用 `{ "data": ... }`。错误响应包含稳定的 `code`、
 小程序受保护接口只接受 Bearer 会话，管理后台只接受 Cookie 会话；两套凭据不能互用。后台写请求必须通过 CSRF 校验，未在安全规则中列出的接口默认拒绝。
 
 API 访问日志只记录请求方法、路由模板、响应状态和耗时。禁止记录查询参数、请求体、Cookie、Authorization、异常消息，以及密码、手机号、微信临时 code 或业务 token。
+
+后台使用 Spring Session JDBC Cookie 会话，闲置 30 分钟、最长 12 小时失效；生产 Cookie 启用 `HttpOnly`、`Secure` 和 `SameSite=Lax`。登录前先调用 `GET /api/v1/admin/auth/csrf`，所有后台写请求（包括登录和退出）均携带返回的 CSRF 请求头。
+
+首次创建管理员时，在未提交的环境文件中临时填写 `ADMIN_BOOTSTRAP_LOGIN_NAME`、`ADMIN_BOOTSTRAP_DISPLAY_NAME`、`ADMIN_BOOTSTRAP_PASSWORD` 并将 `ADMIN_BOOTSTRAP_ENABLED` 设为 `true` 后启动一次应用。创建成功后立即关闭开关并删除明文密码；数据库已有后台账号时，该命令会拒绝再次执行。

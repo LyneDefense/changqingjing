@@ -1,5 +1,6 @@
 package com.changqingjing.app.api;
 
+import com.changqingjing.admin.auth.AdminAccountRepository;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -8,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import com.changqingjing.config.SecurityConfig;
@@ -19,6 +21,9 @@ class AppSystemControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private AdminAccountRepository adminAccountRepository;
 
     @Test
     void pingIsPublic() throws Exception {

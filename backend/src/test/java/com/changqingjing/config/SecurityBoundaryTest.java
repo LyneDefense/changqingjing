@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.changqingjing.app.auth.AppPrincipal;
 import com.changqingjing.app.auth.AppTokenAuthenticator;
+import com.changqingjing.admin.auth.AdminAccountRepository;
+import com.changqingjing.admin.auth.AdminAuthService;
 import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import java.util.Optional;
@@ -44,6 +46,12 @@ class SecurityBoundaryTest {
 
     @MockBean
     private AppTokenAuthenticator tokenAuthenticator;
+
+    @MockBean
+    private AdminAccountRepository adminAccountRepository;
+
+    @MockBean
+    private AdminAuthService adminAuthService;
 
     @BeforeEach
     void configureAppToken() {

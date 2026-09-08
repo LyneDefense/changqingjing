@@ -1,11 +1,15 @@
 package com.changqingjing.config;
 
+import com.changqingjing.admin.auth.AdminAccountRepository;
+import com.changqingjing.admin.auth.AdminSessionValidationFilter;
 import com.changqingjing.app.auth.AppBearerAuthenticationFilter;
 import com.changqingjing.app.auth.AppTokenAuthenticator;
 import com.changqingjing.common.web.JsonAccessDeniedHandler;
 import com.changqingjing.common.web.JsonAuthenticationEntryPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +17,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -26,6 +32,8 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain adminSecurityFilterChain(
             HttpSecurity http,
+            AdminAccountRepository adminAccountRepository,
+            @Value("${app.admin.session.absolute-lifetime:12h}") Duration absoluteLifetime,
             AuthenticationEntryPoint jsonAuthenticationEntryPoint,
             AccessDeniedHandler jsonAccessDeniedHandler) throws Exception {
         return http
@@ -49,6 +57,12 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable())
             .logout(logout -> logout.disable())
+            .addFilterBefore(
+                new AdminSessionValidationFilter(
+                    adminAccountRepository,
+                    jsonAuthenticationEntryPoint,
+                    absoluteLifetime),
+                AnonymousAuthenticationFilter.class)
             .build();
     }
 
@@ -119,5 +133,11 @@ public class SecurityConfig {
     @ConditionalOnMissingBean(AppTokenAuthenticator.class)
     AppTokenAuthenticator rejectingAppTokenAuthenticator() {
         return rawToken -> Optional.empty();
+    }
+
+    @Bean
+    PasswordEncoder adminPasswordEncoder(
+            @Value("${app.admin.password.bcrypt-strength:12}") int bcryptStrength) {
+        return new BCryptPasswordEncoder(bcryptStrength);
     }
 }
