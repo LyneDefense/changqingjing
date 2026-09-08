@@ -17,6 +17,10 @@ const admin = {
 
 test('an administrator logs in and opens staff management', async ({ page }) => {
   let loginCsrfHeader = ''
+  let companyContent: Record<string, unknown> = {
+    version: 0,
+    visibility: 'HIDDEN',
+  }
   await page.route('**/api/v1/admin/**', async (route) => {
     const request = route.request()
     const path = new URL(request.url()).pathname
@@ -64,6 +68,44 @@ test('an administrator logs in and opens staff management', async ({ page }) => 
       })
       return
     }
+    if (path.endsWith('/contents/company') && request.method() === 'GET') {
+      await route.fulfill({ json: { data: companyContent } })
+      return
+    }
+    if (path.endsWith('/contents/company/draft')) {
+      const input = request.postDataJSON() as {
+        title: string
+        summary: string
+        blocks: Array<{ type: string; text: string }>
+      }
+      const draft = {
+        id: 'a3feeaad-6e0d-4b02-8455-f0f624349b76',
+        revisionNumber: 1,
+        ...input,
+        createdBy: admin.id,
+        createdAt: '2026-09-08T08:00:00Z',
+      }
+      companyContent = {
+        id: 'b8e14ee4-d727-4164-a82a-196b23c94c3d',
+        version: 1,
+        visibility: 'HIDDEN',
+        updatedAt: '2026-09-08T08:00:00Z',
+        draft,
+      }
+      await route.fulfill({ json: { data: companyContent } })
+      return
+    }
+    if (path.endsWith('/contents/company/publish')) {
+      companyContent = {
+        ...companyContent,
+        version: 2,
+        visibility: 'PUBLISHED',
+        firstPublishedAt: '2026-09-08T08:05:00Z',
+        published: companyContent.draft,
+      }
+      await route.fulfill({ json: { data: companyContent } })
+      return
+    }
     await route.abort()
   })
 
@@ -80,4 +122,14 @@ test('an administrator logs in and opens staff management', async ({ page }) => 
   await page.getByRole('link', { name: '人员管理' }).click()
   await expect(page.getByRole('heading', { name: '人员管理' })).toBeVisible()
   await expect(page.getByText('Roadmap 管理员', { exact: true })).toBeVisible()
+
+  await page.getByRole('link', { name: '内容管理' }).click()
+  await expect(page.getByRole('heading', { name: '公司介绍' })).toBeVisible()
+  await page.getByLabel('标题').fill('常清净文旅投介绍')
+  await page.getByLabel('首页简介').fill('发现文化与山水的连接')
+  await page.getByLabel('第 1 块内容').fill('公司介绍正文')
+  await page.getByRole('button', { name: '保存草稿' }).click()
+  await expect(page.getByText('第 1 版')).toBeVisible()
+  await page.getByRole('button', { name: '发布' }).click()
+  await expect(page.getByText('线上展示中')).toBeVisible()
 })
