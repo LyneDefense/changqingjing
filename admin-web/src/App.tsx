@@ -1,8 +1,17 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import './App.css'
+import { useAuth } from './auth/authContextValue'
 import { Sidebar } from './components/Sidebar'
 
 export function App() {
+  const auth = useAuth()
+  const navigate = useNavigate()
+
+  async function handleLogout() {
+    await auth.logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="admin-shell">
       <Sidebar />
@@ -12,7 +21,15 @@ export function App() {
             <p className="eyebrow">常清净文旅投</p>
             <h1>内容管理后台</h1>
           </div>
-          <span className="environment-badge">本地环境</span>
+          <div className="header-actions">
+            <span className="current-user">
+              {auth.user?.displayName}
+              <small>{auth.user?.role === 'ADMIN' ? '管理员' : '运营'}</small>
+            </span>
+            <button className="text-button" onClick={() => void handleLogout()} type="button">
+              退出
+            </button>
+          </div>
         </header>
         <div className="admin-content">
           <Outlet />
