@@ -38,3 +38,11 @@ API 访问日志只记录请求方法、路由模板、响应状态和耗时。�
 后台使用 Spring Session JDBC Cookie 会话，闲置 30 分钟、最长 12 小时失效；生产 Cookie 启用 `HttpOnly`、`Secure` 和 `SameSite=Lax`。登录前先调用 `GET /api/v1/admin/auth/csrf`，所有后台写请求（包括登录和退出）均携带返回的 CSRF 请求头。
 
 首次创建管理员时，在未提交的环境文件中临时填写 `ADMIN_BOOTSTRAP_LOGIN_NAME`、`ADMIN_BOOTSTRAP_DISPLAY_NAME`、`ADMIN_BOOTSTRAP_PASSWORD` 并将 `ADMIN_BOOTSTRAP_ENABLED` 设为 `true` 后启动一次应用。创建成功后立即关闭开关并删除明文密码；数据库已有后台账号时，该命令会拒绝再次执行。
+
+## COS 媒体
+
+本地默认不启用 COS，媒体接口会明确返回“媒体存储尚未配置”，不会把文件写入数据库或容器磁盘。联调时在未提交的环境文件中配置 `COS_ENABLED=true`、`COS_BUCKET`、`COS_REGION`、`COS_SECRET_ID`、`COS_SECRET_KEY` 和独立的 `COS_OBJECT_PREFIX`。
+
+管理端先申请只允许写入一个随机 Object Key 的 15 分钟临时凭证，浏览器直传后由服务端复核实际大小、Content-Type、ETag 和文件签名。初始限制为 JPEG／PNG／WebP 不超过 10 MiB、MP4 不超过 200 MiB，可通过环境变量调整；生产前应按真实素材确认。COS 永久密钥只能存在于后端秘密配置中。
+
+桶的 CORS、最小权限配置与真实环境验收步骤见 [COS 联调清单](../docs/cos-integration-checklist.md)。

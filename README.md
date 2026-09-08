@@ -8,4 +8,4 @@
 
 产品、技术和实现节点文档见 [docs/README.md](docs/README.md)。
 
-三个工程已经完成初始化，当前进入 [N2：PostgreSQL 与后端公共基础](docs/implementation-roadmap.md)。
+当前进度和剩余外部联调项见 [实现步骤与节点计划](docs/implementation-roadmap.md)。
