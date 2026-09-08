@@ -3,6 +3,12 @@ spring:
     activate:
       on-profile: prod
 
+app:
+  media:
+    object-prefix: ${COS_OBJECT_PREFIX:prod}
+    cos:
+      enabled: true
+
 server:
   shutdown: graceful
   servlet:

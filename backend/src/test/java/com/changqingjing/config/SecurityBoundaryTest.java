@@ -16,6 +16,7 @@ import com.changqingjing.admin.staff.AdminStaffService;
 import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.media.MediaService;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,9 @@ class SecurityBoundaryTest {
 
     @MockBean
     private CompanyContentService companyContentService;
+
+    @MockBean
+    private MediaService mediaService;
 
     @BeforeEach
     void configureAppToken() {
