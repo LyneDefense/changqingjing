@@ -28,3 +28,5 @@ Spring Session 使用 PostgreSQL 持久化，会话表由 Flyway 管理，应用
 ```
 
 API 成功响应使用 `{ "data": ... }`。错误响应包含稳定的 `code`、可展示的 `message` 和 `traceId`；参数校验失败时还会返回字段级 `violations`。所有 `/api/v1/**` 响应通过 `X-Trace-Id` 响应头返回同一请求的跟踪编号。
+
+小程序受保护接口只接受 Bearer 会话，管理后台只接受 Cookie 会话；两套凭据不能互用。后台写请求必须通过 CSRF 校验，未在安全规则中列出的接口默认拒绝。

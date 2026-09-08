@@ -30,8 +30,9 @@ class AppSystemControllerTest {
     }
 
     @Test
-    void unmatchedPathsAreDenied() throws Exception {
+    void unmatchedPathsRequireAuthentication() throws Exception {
         mockMvc.perform(get("/internal/openapi"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
     }
 }

@@ -1,44 +1,123 @@
 package com.changqingjing.config;
 
+import com.changqingjing.app.auth.AppBearerAuthenticationFilter;
+import com.changqingjing.app.auth.AppTokenAuthenticator;
+import com.changqingjing.common.web.JsonAccessDeniedHandler;
+import com.changqingjing.common.web.JsonAuthenticationEntryPoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.context.NullSecurityContextRepository;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
     @Order(1)
-    SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain adminSecurityFilterChain(
+            HttpSecurity http,
+            AuthenticationEntryPoint jsonAuthenticationEntryPoint,
+            AccessDeniedHandler jsonAccessDeniedHandler) throws Exception {
         return http
             .securityMatcher("/api/v1/admin/**")
+            .requestCache(cache -> cache.disable())
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint)
+                .accessDeniedHandler(jsonAccessDeniedHandler))
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/v1/admin/system/ping").permitAll()
-                .anyRequest().authenticated())
-            .httpBasic(Customizer.withDefaults())
+                .requestMatchers(HttpMethod.GET,
+                    "/api/v1/admin/system/ping",
+                    "/api/v1/admin/auth/csrf").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/login").permitAll()
+                .requestMatchers("/api/v1/admin/auth/me", "/api/v1/admin/auth/logout").authenticated()
+                .requestMatchers("/api/v1/admin/staff/**", "/api/v1/admin/users/**").hasRole("ADMIN")
+                .requestMatchers(
+                    "/api/v1/admin/contents/**",
+                    "/api/v1/admin/media/**",
+                    "/api/v1/admin/scenics/**").hasAnyRole("ADMIN", "OPERATOR")
+                .anyRequest().denyAll())
+            .httpBasic(basic -> basic.disable())
+            .formLogin(form -> form.disable())
+            .logout(logout -> logout.disable())
             .build();
     }
 
     @Bean
     @Order(2)
-    SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain appSecurityFilterChain(
+            HttpSecurity http,
+            AppTokenAuthenticator tokenAuthenticator,
+            AuthenticationEntryPoint jsonAuthenticationEntryPoint,
+            AccessDeniedHandler jsonAccessDeniedHandler) throws Exception {
         return http
             .securityMatcher("/api/v1/app/**", "/actuator/health/**")
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/app/**"))
+            .csrf(csrf -> csrf.disable())
+            .requestCache(cache -> cache.disable())
+            .securityContext(context -> context
+                .securityContextRepository(new NullSecurityContextRepository()))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint)
+                .accessDeniedHandler(jsonAccessDeniedHandler))
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/v1/app/system/ping", "/actuator/health/**").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers("/actuator/health/**").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/api/v1/app/system/ping",
+                    "/api/v1/app/home",
+                    "/api/v1/app/company",
+                    "/api/v1/app/scenics/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/app/scenics/*/views").permitAll()
+                .requestMatchers("/api/v1/app/auth/**").permitAll()
+                .requestMatchers(
+                    "/api/v1/app/me",
+                    "/api/v1/app/product-categories/**",
+                    "/api/v1/app/products/**").hasRole("APP_USER")
+                .anyRequest().denyAll())
+            .addFilterBefore(
+                new AppBearerAuthenticationFilter(tokenAuthenticator, jsonAuthenticationEntryPoint),
+                AnonymousAuthenticationFilter.class)
             .build();
     }
 
     @Bean
     @Order(3)
-    SecurityFilterChain fallbackSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain fallbackSecurityFilterChain(
+            HttpSecurity http,
+            AuthenticationEntryPoint jsonAuthenticationEntryPoint,
+            AccessDeniedHandler jsonAccessDeniedHandler) throws Exception {
         return http
+            .requestCache(cache -> cache.disable())
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint)
+                .accessDeniedHandler(jsonAccessDeniedHandler))
             .authorizeHttpRequests(authorize -> authorize.anyRequest().denyAll())
             .build();
+    }
+
+    @Bean
+    AuthenticationEntryPoint jsonAuthenticationEntryPoint(ObjectMapper objectMapper) {
+        return new JsonAuthenticationEntryPoint(objectMapper);
+    }
+
+    @Bean
+    AccessDeniedHandler jsonAccessDeniedHandler(ObjectMapper objectMapper) {
+        return new JsonAccessDeniedHandler(objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AppTokenAuthenticator.class)
+    AppTokenAuthenticator rejectingAppTokenAuthenticator() {
+        return rawToken -> Optional.empty();
     }
 }
