@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -86,6 +87,50 @@ public class MediaAssetRepository {
                 SET status = 'FAILED', failure_code = ?, updated_at = ?
                 WHERE id = ? AND status = 'VERIFYING'
                 """, failureCode, now, id);
+    }
+
+    public List<UUID> findExpiredCleanupCandidates(OffsetDateTime now, int limit) {
+        return jdbcTemplate.queryForList("""
+                SELECT id
+                FROM media_asset
+                WHERE upload_expires_at < ?
+                  AND status IN ('UPLOADING', 'VERIFYING', 'FAILED')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM content_revision_media reference
+                      WHERE reference.media_id = media_asset.id
+                  )
+                ORDER BY upload_expires_at
+                LIMIT ?
+                """, UUID.class, now, limit);
+    }
+
+    public boolean markPendingDeleteIfUnreferenced(UUID id, OffsetDateTime now) {
+        return jdbcTemplate.update("""
+                UPDATE media_asset
+                SET status = 'PENDING_DELETE', deletion_requested_at = ?, updated_at = ?
+                WHERE id = ?
+                  AND status IN ('UPLOADING', 'VERIFYING', 'FAILED')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM content_revision_media reference
+                      WHERE reference.media_id = media_asset.id
+                  )
+                """, now, now, id) == 1;
+    }
+
+    public void markDeleted(UUID id, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE media_asset
+                SET status = 'DELETED', deleted_at = ?, updated_at = ?
+                WHERE id = ? AND status = 'PENDING_DELETE'
+                """, now, now, id);
+    }
+
+    public void markCleanupFailed(UUID id, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE media_asset
+                SET status = 'FAILED', cleanup_attempts = cleanup_attempts + 1, updated_at = ?
+                WHERE id = ? AND status = 'PENDING_DELETE'
+                """, now, id);
     }
 
     private Asset mapAsset(ResultSet rows, int rowNumber) throws SQLException {

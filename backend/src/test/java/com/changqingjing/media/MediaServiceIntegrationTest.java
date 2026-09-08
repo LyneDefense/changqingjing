@@ -54,6 +54,9 @@ class MediaServiceIntegrationTest {
     private MediaService mediaService;
 
     @Autowired
+    private MediaCleanupService cleanupService;
+
+    @Autowired
     private FakeMediaStorage storage;
 
     @Autowired
@@ -163,6 +166,27 @@ class MediaServiceIntegrationTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(error -> ((BusinessException) error).getCode())
                 .isEqualTo("MEDIA_SIZE_EXCEEDED");
+    }
+
+    @Test
+    void cleanupDeletesExpiredUnreferencedUploads() {
+        AdminPrincipal actor = bootstrapAdmin();
+        var created = mediaService.createUpload(
+                new CreateMediaUploadRequest(
+                        "abandoned.webp",
+                        MediaType.IMAGE,
+                        "image/webp",
+                        12,
+                        MediaPurpose.COMPANY_IMAGE),
+                actor,
+                "media-abandoned");
+        jdbcTemplate.update(
+                "UPDATE media_asset SET upload_expires_at = now() - interval '1 minute' WHERE id = ?",
+                created.media().id());
+
+        cleanupService.cleanExpiredUploads();
+
+        assertThat(mediaService.getAdminMedia(created.media().id()).status()).isEqualTo("DELETED");
     }
 
     private AdminPrincipal bootstrapAdmin() {

@@ -25,6 +25,9 @@ app:
     read-url-ttl: 15m
     max-image-bytes: ${MEDIA_MAX_IMAGE_BYTES:10485760}
     max-video-bytes: ${MEDIA_MAX_VIDEO_BYTES:209715200}
+    cleanup:
+      interval-ms: ${MEDIA_CLEANUP_INTERVAL_MS:600000}
+      initial-delay-ms: ${MEDIA_CLEANUP_INITIAL_DELAY_MS:600000}
     cos:
       enabled: ${COS_ENABLED:false}
       bucket: ${COS_BUCKET:}
