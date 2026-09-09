@@ -5,7 +5,8 @@
 | 验收日期 | 2026-09-09 |
 | 自动化基线 | 后端 58 项；管理后台 16 项组件测试、1 项浏览器端到端测试；小程序微信开发者工具端到端测试 |
 | 数据库 | PostgreSQL 16 Testcontainers 从空库执行 Flyway V1～V5，并验证重复迁移为 0 |
-| 构建产物 | `backend/target/backend-*.jar`、`admin-web/dist/`、`miniprogram/dist/` |
+| 构建产物 | JDK 18 非 root 后端镜像、`admin-web` Nginx 镜像、`miniprogram/dist/` |
+| 部署演练 | 生产 Compose 配置通过；Nginx 首次 HTTP／正式 HTTPS 两种模式通过；隔离 PostgreSQL 16 实际执行 Flyway V1～V5、生产 Profile 后端健康检查、custom format 备份及临时库恢复 |
 | 真机现状 | 用户已确认 iOS 手机可播放 COS 中的宣传视频；其余真机项目见下方待验项 |
 
 ## AC-01～AC-22
@@ -60,5 +61,7 @@
 - Android：真实 MP4 播放；iOS 播放已由用户确认。
 - 用最终视频、产品多图、公司长文和长地址验证 10 MiB 图片、200 MiB MP4 的实际容量边界。
 - 在测试服务器上复核 Secure Cookie、HTTPS、COS 精确 CORS、STS 越权写入被拒绝和反向代理后的真实客户端 IP 限流。
+- 提供真实域名和 Ubuntu 访问后执行 `deploy.sh bootstrap`，完成 Let's Encrypt 首次签发、续签 dry-run、重启持久化及服务器恢复演练。
+- 完成微信后台合法域名、体验版、审核和正式发布；这些外部状态不能由仓库内自动化代替。
 
 自动化验收统一入口为 `JAVA_HOME=/path/to/jdk-18 ./scripts/verify-release.sh`；小程序端到端步骤要求本机已安装并登录微信开发者工具。
