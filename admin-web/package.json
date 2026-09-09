@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:api": "openapi-typescript ../contracts/openapi.json -o src/api/openapi.generated.ts",
+    "check:api-contract": "pnpm generate:api && git diff --exit-code -- src/api/openapi.generated.ts",
     "lint": "oxlint",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "jsdom": "^30.0.1",
+    "openapi-typescript": "7.13.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",

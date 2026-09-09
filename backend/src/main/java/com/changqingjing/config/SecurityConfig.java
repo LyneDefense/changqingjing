@@ -112,7 +112,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(3)
+    @Order(4)
     SecurityFilterChain fallbackSecurityFilterChain(
             HttpSecurity http,
             AuthenticationEntryPoint jsonAuthenticationEntryPoint,

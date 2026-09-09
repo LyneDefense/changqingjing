@@ -81,7 +81,9 @@ management:
       show-details: never
 
 springdoc:
-  swagger-ui:
-    path: /internal/swagger-ui.html
   api-docs:
+    enabled: ${OPENAPI_ENABLED:false}
     path: /internal/openapi
+  swagger-ui:
+    enabled: false
+    path: /internal/swagger-ui.html

@@ -11,6 +11,8 @@
   },
   "scripts": {
     "build:weapp": "taro build --type weapp",
+    "generate:api": "openapi-typescript ../contracts/openapi.json -o src/services/openapi.generated.ts",
+    "check:api-contract": "pnpm generate:api && git diff --exit-code -- src/services/openapi.generated.ts",
     "dev:weapp": "taro build --type weapp --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "test:e2e": "node tests/content.e2e.cjs",
@@ -49,6 +51,7 @@
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.4.0",
     "miniprogram-automator": "^0.12.1",
+    "openapi-typescript": "7.13.0",
     "postcss": "^8.5.6",
     "react-refresh": "^0.14.0",
     "sass": "^1.75.0",
