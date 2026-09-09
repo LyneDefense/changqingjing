@@ -1,0 +1,50 @@
+.profile-page {
+  align-content: start;
+}
+
+.profile-card {
+  align-items: center;
+  background: linear-gradient(135deg, #174d3e, #286c57);
+  border-radius: 30px;
+  color: #fff;
+  display: flex;
+  gap: 26px;
+  padding: 42px 36px;
+}
+
+.profile-avatar {
+  align-items: center;
+  background: #ddc47e;
+  border-radius: 50%;
+  color: #174d3e;
+  display: flex;
+  flex: 0 0 100px;
+  font-size: 42px;
+  font-weight: 700;
+  height: 100px;
+  justify-content: center;
+}
+
+.profile-card__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-card__name {
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.profile-card__phone {
+  color: #d8e8e2;
+  font-size: 25px;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+.profile-restoring {
+  color: #60716a;
+  font-size: 26px;
+  text-align: center;
+}

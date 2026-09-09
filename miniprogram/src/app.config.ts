@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/company/index',
     'pages/scenics/index',
     'pages/scenic-detail/index',
+    'pages/login/index',
     'pages/member/index',
     'pages/cooperation/index',
     'pages/profile/index'

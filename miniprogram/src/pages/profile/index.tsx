@@ -1,19 +1,44 @@
 import { Button, Text, View } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { PageSection } from '../../components/PageSection'
-import { isLoggedIn } from '../../services/auth'
+import { useAuth } from '../../hooks/useAuth'
+import './index.scss'
 
 export default function ProfilePage() {
-  const loggedIn = isLoggedIn()
+  const auth = useAuth()
+  const user = auth.user
 
   return (
-    <View className='page'>
-      <View className='page-heading'>
-        <Text className='page-heading__title'>{loggedIn ? '微信用户' : '未登录用户'}</Text>
-        <Text className='page-heading__description'>可在个人中心主动发起微信登录</Text>
+    <View className='page profile-page'>
+      <View className='profile-card'>
+        <View className='profile-avatar'>常</View>
+        <View className='profile-card__copy'>
+          <Text className='profile-card__name'>
+            {auth.status === 'authenticated' ? user?.displayName : '未登录用户'}
+          </Text>
+          <Text className='profile-card__phone'>
+            {auth.status === 'authenticated'
+              ? user?.maskedPhone || '手机号未绑定'
+              : '登录后可查看会员福利与个人资料'}
+          </Text>
+        </View>
       </View>
-      {!loggedIn && <Button className='primary-button'>微信一键登录</Button>}
-      <PageSection title='个人资料'>会员等级、余额、功德和会员号</PageSection>
-      <PageSection title='更多功能'>我的订单、充值记录、地址管理、我的推荐：敬请期待</PageSection>
+      {auth.status === 'initializing' && (
+        <Text className='profile-restoring'>正在恢复登录状态…</Text>
+      )}
+      {auth.status === 'guest' && (
+        <Button
+          className='primary-button'
+          onClick={() => void Taro.navigateTo({ url: '/pages/login/index?target=profile' })}
+        >微信手机号一键登录</Button>
+      )}
+      <PageSection title='账号信息'>
+        {auth.status === 'authenticated'
+          ? `用户编号：${user?.id}`
+          : '尚未登录，暂无账号资料'}
+      </PageSection>
+      <PageSection title='会员能力'>等级、余额、功德等能力暂未开放</PageSection>
+      <PageSection title='更多功能'>订单、充值记录、地址管理与推荐功能：敬请期待</PageSection>
     </View>
   )
 }

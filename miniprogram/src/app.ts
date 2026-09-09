@@ -1,11 +1,12 @@
 import { PropsWithChildren } from 'react'
 import { useLaunch } from '@tarojs/taro'
+import { initializeAuth } from './services/auth'
 
 import './app.scss'
 
 function App({ children }: PropsWithChildren<any>) {
   useLaunch(() => {
-    console.log('App launched.')
+    void initializeAuth()
   })
 
   // children 是将要会渲染的页面
