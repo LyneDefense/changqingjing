@@ -282,6 +282,12 @@
   color: #28604e;
 }
 
+.warning-notice {
+  background: #fff8e7;
+  border: 1px solid #ead49b;
+  color: #765b18;
+}
+
 .page-heading-row,
 .filter-bar,
 .pagination,
@@ -392,6 +398,11 @@
 .status-pill.disabled {
   background: #f0f1f0;
   color: #68716d;
+}
+
+.status-pill.paused {
+  background: #fff3df;
+  color: #8a5b11;
 }
 
 .row-actions {
@@ -547,6 +558,7 @@
 
 .editor-field input,
 .editor-field textarea,
+.editor-field select,
 .content-block input,
 .content-block textarea,
 .block-toolbar select {
@@ -560,11 +572,111 @@
 
 .editor-field input:focus,
 .editor-field textarea:focus,
+.editor-field select:focus,
 .content-block input:focus,
 .content-block textarea:focus,
 .block-toolbar select:focus {
   border-color: #34735e;
   outline: 3px solid rgba(52, 115, 94, 0.12);
+}
+
+.two-column-fields {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.editor-section-heading {
+  align-items: center;
+  border-bottom: 1px solid #e7ece9;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.editor-section-heading > span {
+  align-items: center;
+  background: #e7f5ef;
+  border-radius: 50%;
+  color: #28604e;
+  display: flex;
+  flex: 0 0 30px;
+  font-size: 13px;
+  font-weight: 700;
+  height: 30px;
+  justify-content: center;
+}
+
+.editor-section-heading h3,
+.editor-section-heading p,
+.editor-title-row h3,
+.editor-title-row p {
+  margin: 0;
+}
+
+.editor-section-heading p,
+.editor-title-row p {
+  color: #71817b;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.editor-title-row,
+.map-location-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.editor-title-row {
+  margin: 24px 0 16px;
+}
+
+.map-location-field {
+  border: 1px solid #dce6e1;
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.map-location-heading {
+  gap: 18px;
+}
+
+.map-location-heading > div,
+.selected-location-card {
+  display: grid;
+  gap: 5px;
+}
+
+.map-location-heading small,
+.selected-location-card small,
+.empty-inline {
+  color: #71817b;
+  font-size: 12px;
+}
+
+.selected-location-card {
+  background: #f4f8f6;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.selected-location-card span {
+  color: #53645e;
+  font-size: 14px;
+}
+
+.map-picker-modal {
+  max-width: 920px;
+}
+
+.map-picker-frame {
+  border: 1px solid #dce6e1;
+  border-radius: 10px;
+  height: min(620px, 65vh);
+  width: 100%;
 }
 
 .block-heading,

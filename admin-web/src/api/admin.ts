@@ -92,7 +92,12 @@ export interface AdminCompanyContent {
 
 export type MediaType = 'IMAGE' | 'VIDEO'
 export type MediaStatus = 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'PENDING_DELETE' | 'DELETED'
-export type MediaPurpose = 'COMPANY_IMAGE' | 'COMPANY_COVER' | 'HOME_VIDEO' | 'HOME_VIDEO_COVER'
+export type MediaPurpose =
+  | 'COMPANY_IMAGE'
+  | 'COMPANY_COVER'
+  | 'HOME_VIDEO'
+  | 'HOME_VIDEO_COVER'
+  | 'SCENIC_IMAGE'
 
 export interface AdminMedia {
   id: string
@@ -161,6 +166,83 @@ export interface AdminHomeVideoListItem {
   hasUnpublishedChanges: boolean
   firstPublishedAt?: string
   updatedAt: string
+}
+
+export type ScenicPublicationStatus = 'DRAFT' | 'ONLINE' | 'OFFLINE'
+export type ScenicOpenStatus = 'OPEN' | 'PAUSED'
+
+export interface ScenicContentBlock {
+  type: CompanyBlockType
+  text?: string
+  mediaId?: string
+  altText?: string
+}
+
+export interface ScenicLocation {
+  providerName: string
+  providerAddress: string
+  displayName: string
+  nameCustomized: boolean
+  longitude: number
+  latitude: number
+  coordinateSystem: 'GCJ02'
+}
+
+export interface MapSelection {
+  id: string
+  providerName: string
+  providerAddress: string
+  longitude: number
+  latitude: number
+  coordinateSystem: 'GCJ02'
+  expiresAt: string
+}
+
+export interface AdminScenicRevision {
+  id: string
+  revisionNumber: number
+  title: string
+  summary: string
+  coverMediaId?: string
+  blocks: ScenicContentBlock[]
+  openStatus: ScenicOpenStatus
+  displayOrder: number
+  location?: ScenicLocation
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminScenicContent {
+  id: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt: string
+  draft?: AdminScenicRevision
+  published?: AdminScenicRevision
+}
+
+export interface AdminScenicListItem {
+  id: string
+  version: number
+  title: string
+  coverMediaId?: string
+  status: ScenicPublicationStatus
+  openStatus: ScenicOpenStatus
+  displayOrder: number
+  hasUnpublishedChanges: boolean
+  viewCount: number
+  updatedAt: string
+}
+
+export interface MapSelection {
+  id: string
+  providerName: string
+  providerAddress: string
+  longitude: number
+  latitude: number
+  coordinateSystem: 'GCJ02'
+  expiresAt: string
 }
 
 export class AdminApiError extends Error {
@@ -437,6 +519,87 @@ export function deleteAdminHomeVideo(videoId: string, expectedVersion: number) {
   return writeRequest<{ deleted: boolean }>(`/contents/home-videos/${encodeURIComponent(videoId)}`, {
     method: 'DELETE',
     body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function searchAdminScenics(input: {
+  keyword?: string
+  status?: ScenicPublicationStatus | ''
+  page?: number
+  pageSize?: number
+}) {
+  const query = new URLSearchParams()
+  if (input.keyword) query.set('keyword', input.keyword)
+  if (input.status) query.set('status', input.status)
+  query.set('page', String(input.page ?? 1))
+  query.set('pageSize', String(input.pageSize ?? 20))
+  return request<PageResponse<AdminScenicListItem>>(`/scenics?${query}`)
+}
+
+export function getAdminScenic(scenicId: string) {
+  return request<AdminScenicContent>(`/scenics/${encodeURIComponent(scenicId)}`)
+}
+
+export interface SaveScenicInput {
+  title: string
+  summary: string
+  coverMediaId?: string
+  blocks: ScenicContentBlock[]
+  openStatus: ScenicOpenStatus
+  displayOrder: number
+  displayName?: string
+  locationSelectionId?: string
+  expectedVersion: number
+}
+
+export function createAdminScenic(input: SaveScenicInput) {
+  return writeRequest<AdminScenicContent>('/scenics', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function saveAdminScenicDraft(scenicId: string, input: SaveScenicInput) {
+  return writeRequest<AdminScenicContent>(`/scenics/${encodeURIComponent(scenicId)}/draft`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function previewAdminScenic(scenicId: string) {
+  return request<AdminScenicRevision>(`/scenics/${encodeURIComponent(scenicId)}/preview`)
+}
+
+export function publishAdminScenic(scenicId: string, expectedVersion: number) {
+  return writeRequest<AdminScenicContent>(`/scenics/${encodeURIComponent(scenicId)}/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminScenic(scenicId: string, expectedVersion: number) {
+  return writeRequest<AdminScenicContent>(`/scenics/${encodeURIComponent(scenicId)}/unpublish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function deleteAdminScenic(scenicId: string, expectedVersion: number) {
+  return writeRequest<{ deleted: boolean }>(`/scenics/${encodeURIComponent(scenicId)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function confirmMapSelection(input: {
+  providerName: string
+  providerAddress: string
+  longitude: number
+  latitude: number
+}) {
+  return writeRequest<MapSelection>('/map-selections', {
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 

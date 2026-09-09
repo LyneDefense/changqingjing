@@ -23,6 +23,7 @@ const groups: NavigationGroup[] = [
     links: [
       { to: '/home-videos', label: '首页宣传视频', permission: 'content:read' },
       { to: '/company', label: '公司介绍', permission: 'content:read' },
+      { to: '/scenics', label: '景区管理', permission: 'content:read' },
     ],
   },
   {
