@@ -25,12 +25,12 @@ POSTGRES_PASSWORD=a-test-password-with-24-chars
 BACKEND_IMAGE=changqingjing-backend:verification
 WEB_IMAGE=changqingjing-web:verification
 WECHAT_APP_ID=wx-test
-WECHAT_APP_SECRET=test-secret
+WECHAT_APP_SECRET=test
 APP_PHONE_ENCRYPTION_KEY_BASE64=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 COS_BUCKET=test-0000000000
 COS_REGION=ap-guangzhou
 COS_SECRET_ID=test-id
-COS_SECRET_KEY=test-key
+COS_SECRET_KEY=test
 COS_OBJECT_PREFIX=prod
 VITE_TENCENT_MAP_KEY=test-map-key
 VITE_TENCENT_MAP_REFERER=test-map-referer

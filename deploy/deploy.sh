@@ -24,7 +24,7 @@ usage() {
 Usage: ./deploy.sh <command>
 
 Commands:
-  bootstrap             首次检查服务器、建库迁移、申请证书并安装续签定时器
+  bootstrap             首次检查服务器、建库迁移、申请证书并安装全部运维定时器
   deploy                备份、迁移、发布、健康检查，失败时自动回退应用镜像
   backup                立即生成并校验一份 PostgreSQL 备份
   restore-check [file]  把指定或最新备份恢复到临时数据库并校验，然后删除临时库
@@ -114,7 +114,7 @@ check_server_prerequisites() {
   [[ "${ID:-}" == "ubuntu" ]] || die "bootstrap 仅支持 Ubuntu；当前系统是 ${ID:-unknown}。"
 
   local command_name
-  for command_name in docker curl getent ss openssl flock systemctl base64; do
+  for command_name in docker curl getent ss openssl flock systemctl base64 sudo; do
     command -v "$command_name" >/dev/null || die "缺少命令：$command_name。"
   done
   docker info >/dev/null || die "Docker 服务不可用，或当前用户没有 Docker 权限。"
@@ -272,20 +272,29 @@ rollback_services_to() {
   check_external_health
 }
 
-install_certbot_timer() {
+install_operations_timers() {
   [[ "$deploy_dir" =~ ^/[A-Za-z0-9._/-]+$ ]] || die "部署目录含 systemd 不支持的字符：$deploy_dir"
-  local service_file timer_file
-  service_file="$(mktemp)"
-  timer_file="$(mktemp)"
-  sed -e "s|@@DEPLOY_DIR@@|$deploy_dir|g" -e "s|@@DEPLOY_SCRIPT@@|$deploy_dir/deploy.sh|g" \
-    "$deploy_dir/systemd/changqingjing-cert-renew.service" > "$service_file"
-  cp "$deploy_dir/systemd/changqingjing-cert-renew.timer" "$timer_file"
-  sudo install -m 0644 "$service_file" /etc/systemd/system/changqingjing-cert-renew.service
-  sudo install -m 0644 "$timer_file" /etc/systemd/system/changqingjing-cert-renew.timer
-  rm -f "$service_file" "$timer_file"
+  local unit temporary_unit service_user
+  service_user="${SUDO_USER:-$(id -un)}"
+  [[ "$service_user" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]] || die "无法确定安全的 systemd 运行用户。"
+  local units=(
+    changqingjing-cert-renew.service changqingjing-cert-renew.timer
+    changqingjing-backup.service changqingjing-backup.timer
+    changqingjing-monitor.service changqingjing-monitor.timer
+  )
+  for unit in "${units[@]}"; do
+    temporary_unit="$(mktemp)"
+    sed -e "s|@@DEPLOY_DIR@@|$deploy_dir|g" \
+      -e "s|@@DEPLOY_SCRIPT@@|$deploy_dir/deploy.sh|g" \
+      -e "s|@@SERVICE_USER@@|$service_user|g" \
+      "$deploy_dir/systemd/$unit" > "$temporary_unit"
+    sudo install -m 0644 "$temporary_unit" "/etc/systemd/system/$unit"
+    rm -f "$temporary_unit"
+  done
   sudo systemctl daemon-reload
-  sudo systemctl enable --now changqingjing-cert-renew.timer
-  log "证书续签定时器已启用"
+  sudo systemctl enable --now \
+    changqingjing-cert-renew.timer changqingjing-backup.timer changqingjing-monitor.timer
+  log "证书续签、每日备份和健康监控定时器已启用"
 }
 
 check_acme_route() {
@@ -341,7 +350,7 @@ bootstrap() {
   check_external_health || die "HTTPS 健康检查失败。"
   create_backup
   write_release_state "$BACKEND_IMAGE" "$WEB_IMAGE" "" ""
-  install_certbot_timer
+  install_operations_timers
   log "首次部署完成：https://$DOMAIN/admin/"
 }
 

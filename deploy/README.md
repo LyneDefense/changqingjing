@@ -20,7 +20,7 @@ chmod 600 deploy/.env.production
 ./deploy/deploy.sh bootstrap
 ```
 
-`bootstrap` 会核对 Ubuntu、Docker、DNS 和端口，构建镜像，启动数据库，单独执行 Flyway，启动 HTTP ACME 入口，申请 Let's Encrypt 证书，切换 HTTPS，生成首份数据库备份，并安装 `changqingjing-cert-renew.timer`。
+`bootstrap` 会核对 Ubuntu、Docker、DNS 和端口，构建镜像，启动数据库，单独执行 Flyway，启动 HTTP ACME 入口，申请 Let's Encrypt 证书，切换 HTTPS，生成首份数据库备份，并安装证书续签、每日备份和五分钟健康检查三个 timer。
 
 首个管理员创建并确认可以登录后，把 `ADMIN_BOOTSTRAP_ENABLED` 改回 `false`，同时清空三个初始化字段，再使用新镜像标签执行日常发布：
 
@@ -46,7 +46,9 @@ chmod 600 deploy/.env.production
 证书定时器每天检查两次。检查状态：
 
 ```bash
-systemctl status changqingjing-cert-renew.timer
+systemctl list-timers 'changqingjing-*'
+journalctl -u changqingjing-monitor.service
+journalctl -u changqingjing-backup.service
 journalctl -u changqingjing-cert-renew.service
 ```
 
@@ -57,4 +59,3 @@ journalctl -u changqingjing-cert-renew.service
 ```bash
 ./deploy/test-config.sh
 ```
-
