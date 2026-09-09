@@ -15,7 +15,6 @@ import type {
   CompanyContentBlock,
 } from '../api/admin'
 import { PageIntro } from '../components/PageIntro'
-import { HomeVideoEditor } from '../components/HomeVideoEditor'
 import { MediaPreview } from '../components/MediaPreview'
 import { MediaUploadField } from '../components/MediaUploadField'
 
@@ -36,11 +35,10 @@ export function ContentPage() {
   const [blocks, setBlocks] = useState<CompanyContentBlock[]>([{ ...blankBlock }])
   const [preview, setPreview] = useState<AdminCompanyRevision>()
   const [dirty, setDirty] = useState(false)
-  const [videoDirty, setVideoDirty] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const blocker = useBlocker(dirty || videoDirty)
+  const blocker = useBlocker(dirty)
 
   const hydrate = useCallback((next: AdminCompanyContent) => {
     const editable = next.draft ?? next.published
@@ -80,7 +78,7 @@ export function ContentPage() {
   }, [blocker])
 
   useBeforeUnload((event) => {
-    if (dirty || videoDirty) {
+    if (dirty) {
       event.preventDefault()
     }
   })
@@ -175,8 +173,8 @@ export function ContentPage() {
     <>
       <div className="page-heading-row">
         <PageIntro
-          title="公司介绍"
-          description="以结构化段落维护介绍内容。保存只更新草稿，发布后才会替换小程序当前内容。"
+          title="公司介绍管理"
+          description="维护小程序中的公司封面、简介和详细介绍。保存后不会立即影响线上内容，发布后才会更新。"
         />
         <div className="content-status">
           <span className={`status-pill ${content?.visibility === 'PUBLISHED' ? 'active' : 'disabled'}`}>
@@ -185,8 +183,6 @@ export function ContentPage() {
           {hasUnpublishedDraft && <small>有未发布草稿</small>}
         </div>
       </div>
-
-      <HomeVideoEditor onDirtyChange={setVideoDirty} />
 
       {error && (
         <div className="notice error-notice content-error" role="alert">

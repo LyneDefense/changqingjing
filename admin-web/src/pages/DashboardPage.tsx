@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom'
 import { PageIntro } from '../components/PageIntro'
 
 const modules = [
-  ['注册用户', '查看微信登录后自动创建的用户'],
-  ['首页内容', '维护宣传视频、公司介绍和景区功能'],
-  ['会员福利', '维护福利产品及多图详情'],
+  ['/home-videos', '首页宣传视频', '上传、核对并发布首页宣传视频'],
+  ['/company', '公司介绍', '维护公司简介和可排序的详细内容'],
+  ['/users', '注册用户', '查看微信登录后自动创建的用户'],
 ]
 
 export function DashboardPage() {
@@ -11,11 +12,12 @@ export function DashboardPage() {
     <>
       <PageIntro title="工作台" description="从这里进入用户与内容管理功能。" />
       <div className="module-grid">
-        {modules.map(([title, description]) => (
-          <article className="module-card" key={title}>
+        {modules.map(([to, title, description]) => (
+          <Link className="module-card" key={title} to={to}>
             <h3>{title}</h3>
             <p>{description}</p>
-          </article>
+            <span>进入管理 →</span>
+          </Link>
         ))}
       </div>
     </>

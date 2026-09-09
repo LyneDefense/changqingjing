@@ -13,7 +13,7 @@ describe('DashboardPage', () => {
 
     expect(screen.getByRole('heading', { name: '工作台' })).toBeInTheDocument()
     expect(screen.getByText('注册用户')).toBeInTheDocument()
-    expect(screen.getByText('首页内容')).toBeInTheDocument()
-    expect(screen.getByText('会员福利')).toBeInTheDocument()
+    expect(screen.getByText('首页宣传视频')).toBeInTheDocument()
+    expect(screen.getByText('公司介绍')).toBeInTheDocument()
   })
 })

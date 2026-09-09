@@ -33,8 +33,9 @@ describe('Sidebar', () => {
       </AuthContext.Provider>,
     )
 
-    expect(screen.getByRole('link', { name: '内容管理' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '用户管理' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '人员管理' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '首页宣传视频' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '公司介绍' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '注册用户' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '后台人员' })).not.toBeInTheDocument()
   })
 })

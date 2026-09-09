@@ -1,9 +1,10 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { AdminOnlyRoute, AuthRoot, ProtectedRoute } from './auth/AuthRoutes'
 import { ContentPage } from './pages/ContentPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
+import { HomeVideoPage } from './pages/HomeVideoPage'
 import { LoginPage } from './pages/LoginPage'
 import { RouteErrorPage } from './pages/RouteErrorPage'
 import { StaffPage } from './pages/StaffPage'
@@ -23,7 +24,9 @@ export const routes = [
             Component: App,
             children: [
               { index: true, Component: DashboardPage },
-              { path: 'content', Component: ContentPage },
+              { path: 'home-videos', Component: HomeVideoPage },
+              { path: 'company', Component: ContentPage },
+              { path: 'content', element: <Navigate replace to="/company" /> },
               { path: 'forbidden', Component: ForbiddenPage },
               {
                 Component: AdminOnlyRoute,

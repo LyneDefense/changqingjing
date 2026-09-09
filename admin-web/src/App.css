@@ -25,7 +25,19 @@
 
 .sidebar nav {
   display: grid;
-  gap: 8px;
+  gap: 22px;
+}
+
+.nav-group {
+  display: grid;
+  gap: 6px;
+}
+
+.nav-group > p {
+  color: #91aaa1;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin: 0 0 3px 14px;
 }
 
 .nav-link {
@@ -132,6 +144,18 @@
   border: 1px solid #e4eae7;
   border-radius: 16px;
   padding: 24px;
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.module-card:hover {
+  border-color: #8fb4a7;
+  transform: translateY(-2px);
+}
+
+.module-card span {
+  color: #28604e;
+  font-size: 13px;
 }
 
 .route-error {
@@ -787,7 +811,16 @@
   }
 
   .sidebar nav {
+    display: grid;
+  }
+
+  .nav-group {
     display: flex;
+    flex-wrap: wrap;
+  }
+
+  .nav-group > p {
+    flex-basis: 100%;
   }
 
   .admin-header,
