@@ -10,12 +10,19 @@ Spring Boot 后端，同时提供：
 本地启动前先在仓库根目录启动 PostgreSQL：
 
 ```bash
-docker compose -f compose.local.yaml up -d postgres
+cp .env.local.example .env.local
+chmod 600 .env.local
+docker compose --env-file .env.local -f compose.local.yaml up -d postgres
 ```
 
-然后在 JDK 18 环境运行：
+`POSTGRES_PASSWORD` 是 PostgreSQL 容器首次初始化使用的密码，`DB_PASSWORD` 是后端连接密码，两者必须一致。已经存在数据卷时，修改环境变量不会自动修改数据库内部密码。
+
+然后进入 `backend/`，把本地文件加载为环境变量并在 JDK 18 环境运行：
 
 ```bash
+set -a
+source ../.env.local
+set +a
 ./mvnw spring-boot:run
 ```
 
@@ -37,7 +44,7 @@ API 访问日志只记录请求方法、路由模板、响应状态和耗时。�
 
 后台使用 Spring Session JDBC Cookie 会话，闲置 30 分钟、最长 12 小时失效；生产 Cookie 启用 `HttpOnly`、`Secure` 和 `SameSite=Lax`。登录前先调用 `GET /api/v1/admin/auth/csrf`，所有后台写请求（包括登录和退出）均携带返回的 CSRF 请求头。
 
-首次创建管理员时，在未提交的环境文件中临时填写 `ADMIN_BOOTSTRAP_LOGIN_NAME`、`ADMIN_BOOTSTRAP_DISPLAY_NAME`、`ADMIN_BOOTSTRAP_PASSWORD` 并将 `ADMIN_BOOTSTRAP_ENABLED` 设为 `true` 后启动一次应用。创建成功后立即关闭开关并删除明文密码；数据库已有后台账号时，该命令会拒绝再次执行。
+首次创建管理员时，在未提交的环境文件中临时填写 `ADMIN_BOOTSTRAP_LOGIN_NAME`、`ADMIN_BOOTSTRAP_DISPLAY_NAME`、`ADMIN_BOOTSTRAP_PASSWORD` 并将 `ADMIN_BOOTSTRAP_ENABLED` 设为 `true` 后启动一次应用。登录名为 3 至 100 位，只使用字母、数字、点、下划线或连字符；显示名称为 1 至 100 个字符；密码为 12 至 128 位，并同时包含字母和数字。创建成功后立即关闭开关并删除明文密码；数据库已有后台账号时，该命令会拒绝再次执行。
 
 ## COS 媒体
 
