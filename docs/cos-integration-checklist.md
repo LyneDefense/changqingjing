@@ -28,3 +28,12 @@
 7. 验证视频响应 `206 Partial Content`、`Accept-Ranges: bytes` 和正确的 `Content-Range`，再在微信开发者工具、iOS 与 Android 真机完成播放、拖动、暂停和全屏检查。
 8. 让签名 URL 到期后重新进入页面，确认接口刷新并返回新地址；日志中不得出现签名查询参数。
 9. 运行过期上传清理，确认失败／中断且无引用的对象被清理，历史草稿或已发布版本引用的对象保留。
+
+## 2026-09-09 开发环境联调记录
+
+- 开发 Bucket 保持私有；`http://localhost:5173` 的 CORS 预检返回 200，允许 `PUT`、`GET`、`HEAD`，并暴露 `ETag`。
+- 当前 CAM 子用户可以调用 STS，并具备后端核验、读取和清理开发对象所需权限。临时凭证成功写入指定 Object Key，写入相邻 Object Key 返回 403；生产部署仍应换成专用、最小权限的服务身份。
+- 真实 Chromium 管理后台完成登录、COS 浏览器直传、服务端完成确认、宣传视频发布和公司图文发布；永久密钥没有进入浏览器。
+- JPEG 与 1 MiB H.264 MP4 均通过实际大小、Content-Type、ETag 和文件签名复核并进入 READY。匿名接口取得短期签名地址，读取内容与源文件一致。
+- MP4 签名地址对 `bytes=1024-2047` 返回 `206 Partial Content`、`Accept-Ranges: bytes` 和 `Content-Range: bytes 1024-2047/1048576`。
+- 微信开发者工具的模拟数据渲染 E2E 已通过；实时本地 HTTP 接口受开发者工具沙箱限制。剩余验收需要公网 HTTPS API、微信合法域名，以及 iOS、Android 真机上的播放、拖动、暂停和全屏测试。
