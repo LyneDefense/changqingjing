@@ -4,6 +4,9 @@ spring:
       on-profile: prod
 
 app:
+  wechat:
+    enabled: true
+    mock-enabled: false
   media:
     object-prefix: ${COS_OBJECT_PREFIX:prod}
     cos:

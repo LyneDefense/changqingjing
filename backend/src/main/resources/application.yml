@@ -19,6 +19,14 @@ spring:
       initialize-schema: never
 
 app:
+  wechat:
+    enabled: ${WECHAT_ENABLED:false}
+    mock-enabled: ${WECHAT_MOCK_ENABLED:false}
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+    mock-phone: ${WECHAT_MOCK_PHONE:13800138000}
+    phone-encryption-key-base64: ${APP_PHONE_ENCRYPTION_KEY_BASE64:}
+    session-ttl: ${APP_SESSION_TTL:7d}
   media:
     object-prefix: ${COS_OBJECT_PREFIX:local}
     upload-credential-ttl: 15m

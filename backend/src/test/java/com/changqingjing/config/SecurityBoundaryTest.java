@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.changqingjing.app.auth.AppPrincipal;
 import com.changqingjing.app.auth.AppTokenAuthenticator;
+import com.changqingjing.app.api.content.AppContentController;
 import com.changqingjing.admin.auth.AdminAccountRepository;
 import com.changqingjing.admin.auth.AdminAuthService;
 import com.changqingjing.admin.staff.AdminStaffService;
@@ -18,7 +19,6 @@ import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import com.changqingjing.content.CompanyContentService;
 import com.changqingjing.content.HomeVideoContentService;
-import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.media.MediaService;
 import java.util.Optional;
@@ -41,7 +41,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@WebMvcTest
+@WebMvcTest(controllers = {
+    SecurityBoundaryTest.SecurityTestController.class,
+    AppContentController.class
+})
 @Import({SecurityConfig.class, ApiTraceFilter.class, SecurityBoundaryTest.SecurityTestController.class})
 class SecurityBoundaryTest {
 

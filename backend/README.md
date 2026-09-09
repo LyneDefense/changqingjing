@@ -46,6 +46,14 @@ API 访问日志只记录请求方法、路由模板、响应状态和耗时。�
 
 首次创建管理员时，在未提交的环境文件中临时填写 `ADMIN_BOOTSTRAP_LOGIN_NAME`、`ADMIN_BOOTSTRAP_DISPLAY_NAME`、`ADMIN_BOOTSTRAP_PASSWORD` 并将 `ADMIN_BOOTSTRAP_ENABLED` 设为 `true` 后启动一次应用。登录名为 3 至 100 位，只使用字母、数字、点、下划线或连字符；显示名称为 1 至 100 个字符；密码为 12 至 128 位，并同时包含字母和数字。创建成功后立即关闭开关并删除明文密码；数据库已有后台账号时，该命令会拒绝再次执行。
 
+## 微信登录
+
+真实联调时在未提交的环境文件中配置 `WECHAT_ENABLED=true`、`WECHAT_APP_ID`、`WECHAT_APP_SECRET` 和 `APP_PHONE_ENCRYPTION_KEY_BASE64`。加密密钥必须是 Base64 编码的 32 字节随机值，可用 `openssl rand -base64 32` 生成；产生真实用户数据后不可随意更换，否则既有手机号将无法继续用于安全比对。
+
+首次手机号授权调用 `/api/v1/app/auth/wechat/register-login`，后续使用新的微信登录 code 调用 `/api/v1/app/auth/wechat/session` 只恢复已有账号。服务端不接受客户端提交的 OpenID 或明文手机号，数据库只保存手机号密文、查询摘要与脱敏值，并且只保存随机业务 token 的摘要。
+
+本地需要脱离微信服务调试时，必须启用 `local` Profile，并设置 `WECHAT_MOCK_ENABLED=true` 与手机号加密密钥；mock 在生产 Profile 下会阻止应用启动。正式联调和发布前必须关闭 mock。
+
 ## COS 媒体
 
 本地默认不启用 COS，媒体接口会明确返回“媒体存储尚未配置”，不会把文件写入数据库或容器磁盘。联调时在未提交的环境文件中配置 `COS_ENABLED=true`、`COS_BUCKET`、`COS_REGION`、`COS_SECRET_ID`、`COS_SECRET_KEY` 和独立的 `COS_OBJECT_PREFIX`。

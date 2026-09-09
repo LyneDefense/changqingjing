@@ -1,0 +1,210 @@
+package com.changqingjing.app.user;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class AppUserRepository {
+
+    private static final String USER_COLUMNS = """
+            u.id, u.display_name, u.status, u.registered_at, u.last_login_at,
+            p.masked_phone, (p.user_id IS NOT NULL) AS phone_bound,
+            EXISTS (SELECT 1 FROM wechat_identity wi2 WHERE wi2.user_id = u.id) AS wechat_bound
+            """;
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public AppUserRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public Optional<AppUserView> findById(UUID id) {
+        return findOne("""
+                SELECT %s
+                FROM app_user u
+                LEFT JOIN user_phone p ON p.user_id = u.id
+                WHERE u.id = ?
+                """.formatted(USER_COLUMNS), id);
+    }
+
+    public Optional<AppUserView> findByWechatIdentity(String appId, String openid) {
+        return findOne("""
+                SELECT %s
+                FROM wechat_identity wi
+                JOIN app_user u ON u.id = wi.user_id
+                LEFT JOIN user_phone p ON p.user_id = u.id
+                WHERE wi.app_id = ? AND wi.openid = ?
+                """.formatted(USER_COLUMNS), appId, openid);
+    }
+
+    public Optional<UUID> findPhoneOwner(byte[] queryDigest) {
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(
+                    "SELECT user_id FROM user_phone WHERE phone_query_digest = ?",
+                    UUID.class,
+                    queryDigest));
+        } catch (EmptyResultDataAccessException exception) {
+            return Optional.empty();
+        }
+    }
+
+    public void lockRegistrationKeys(String identityKey, String phoneKey) {
+        List<String> keys = List.of(identityKey, phoneKey).stream().sorted().toList();
+        for (String key : keys) {
+            jdbcTemplate.queryForObject(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+                    (resultSet, rowNumber) -> Boolean.TRUE,
+                    key);
+        }
+    }
+
+    public void insertUser(UUID userId, String displayName, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                INSERT INTO app_user (
+                    id, display_name, status, registered_at, last_login_at, updated_at, lock_version
+                ) VALUES (?, ?, 'ACTIVE', ?, ?, ?, 0)
+                """, userId, displayName, now, now, now);
+    }
+
+    public void insertWechatIdentity(
+            UUID identityId,
+            UUID userId,
+            String appId,
+            String openid,
+            String unionid,
+            OffsetDateTime now) {
+        jdbcTemplate.update("""
+                INSERT INTO wechat_identity (
+                    id, user_id, app_id, openid, unionid, created_at, last_verified_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, identityId, userId, appId, openid, unionid, now, now);
+    }
+
+    public void markWechatVerified(
+            String appId,
+            String openid,
+            String unionid,
+            OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE wechat_identity
+                SET last_verified_at = ?,
+                    unionid = COALESCE(?, unionid)
+                WHERE app_id = ? AND openid = ?
+                """, now, unionid, appId, openid);
+    }
+
+    public void upsertPhone(UUID userId, ProtectedPhone phone, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                INSERT INTO user_phone (
+                    user_id, phone_ciphertext, phone_query_digest, masked_phone,
+                    encryption_key_version, bound_at, updated_at
+                ) VALUES (?, ?, ?, ?, 1, ?, ?)
+                ON CONFLICT (user_id) DO UPDATE SET
+                    phone_ciphertext = EXCLUDED.phone_ciphertext,
+                    phone_query_digest = EXCLUDED.phone_query_digest,
+                    masked_phone = EXCLUDED.masked_phone,
+                    encryption_key_version = EXCLUDED.encryption_key_version,
+                    updated_at = EXCLUDED.updated_at
+                """,
+                userId,
+                phone.ciphertext(),
+                phone.queryDigest(),
+                phone.maskedPhone(),
+                now,
+                now);
+    }
+
+    public void markLogin(UUID userId, OffsetDateTime now) {
+        jdbcTemplate.update(
+                "UPDATE app_user SET last_login_at = ?, updated_at = ? WHERE id = ?",
+                now,
+                now,
+                userId);
+    }
+
+    public List<AppUserView> search(
+            String keyword,
+            AppUserStatus status,
+            Boolean phoneBound,
+            int limit,
+            long offset) {
+        String normalizedKeyword = keyword == null ? "" : keyword.strip().toLowerCase(Locale.ROOT);
+        return jdbcTemplate.query("""
+                SELECT %s
+                FROM app_user u
+                LEFT JOIN user_phone p ON p.user_id = u.id
+                WHERE (? = ''
+                       OR lower(COALESCE(u.display_name, '')) LIKE '%%' || ? || '%%'
+                       OR lower(CAST(u.id AS text)) LIKE '%%' || ? || '%%'
+                       OR lower(COALESCE(p.masked_phone, '')) LIKE '%%' || ? || '%%')
+                  AND (CAST(? AS varchar) IS NULL OR u.status = ?)
+                  AND (CAST(? AS boolean) IS NULL OR (p.user_id IS NOT NULL) = ?)
+                ORDER BY u.registered_at DESC, u.id
+                LIMIT ? OFFSET ?
+                """.formatted(USER_COLUMNS),
+                this::mapUser,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                status == null ? null : status.name(),
+                status == null ? null : status.name(),
+                phoneBound,
+                phoneBound,
+                limit,
+                offset);
+    }
+
+    public long countSearch(String keyword, AppUserStatus status, Boolean phoneBound) {
+        String normalizedKeyword = keyword == null ? "" : keyword.strip().toLowerCase(Locale.ROOT);
+        Long count = jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                FROM app_user u
+                LEFT JOIN user_phone p ON p.user_id = u.id
+                WHERE (? = ''
+                       OR lower(COALESCE(u.display_name, '')) LIKE '%%' || ? || '%%'
+                       OR lower(CAST(u.id AS text)) LIKE '%%' || ? || '%%'
+                       OR lower(COALESCE(p.masked_phone, '')) LIKE '%%' || ? || '%%')
+                  AND (CAST(? AS varchar) IS NULL OR u.status = ?)
+                  AND (CAST(? AS boolean) IS NULL OR (p.user_id IS NOT NULL) = ?)
+                """,
+                Long.class,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                normalizedKeyword,
+                status == null ? null : status.name(),
+                status == null ? null : status.name(),
+                phoneBound,
+                phoneBound);
+        return count == null ? 0 : count;
+    }
+
+    private Optional<AppUserView> findOne(String sql, Object... parameters) {
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapUser, parameters));
+        } catch (EmptyResultDataAccessException exception) {
+            return Optional.empty();
+        }
+    }
+
+    private AppUserView mapUser(ResultSet resultSet, int rowNumber) throws SQLException {
+        return new AppUserView(
+                resultSet.getObject("id", UUID.class),
+                resultSet.getString("display_name"),
+                AppUserStatus.valueOf(resultSet.getString("status")),
+                resultSet.getObject("registered_at", OffsetDateTime.class),
+                resultSet.getObject("last_login_at", OffsetDateTime.class),
+                resultSet.getString("masked_phone"),
+                resultSet.getBoolean("phone_bound"),
+                resultSet.getBoolean("wechat_bound"));
+    }
+}
