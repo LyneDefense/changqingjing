@@ -27,7 +27,6 @@
     "@babel/runtime": "^7.24.4",
     "@tarojs/components": "4.2.1",
     "@tarojs/helper": "4.2.1",
-    "@tarojs/plugin-framework-react": "4.2.1",
     "@tarojs/plugin-platform-weapp": "4.2.1",
     "@tarojs/react": "4.2.1",
     "@tarojs/runtime": "4.2.1",
@@ -41,6 +40,7 @@
     "@babel/plugin-transform-class-properties": "7.25.9",
     "@babel/preset-react": "^7.24.1",
     "@tarojs/cli": "4.2.1",
+    "@tarojs/plugin-framework-react": "4.2.1",
     "@tarojs/vite-runner": "4.2.1",
     "@types/minimatch": "^5",
     "@types/react": "^18.0.0",
@@ -60,5 +60,10 @@
     "terser": "^5.30.4",
     "typescript": "^5.4.5",
     "vite": "^4.2.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "swiper": "12.1.2"
+    }
   }
 }
