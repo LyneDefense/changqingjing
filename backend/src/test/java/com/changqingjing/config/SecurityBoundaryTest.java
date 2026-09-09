@@ -1,6 +1,7 @@
 package com.changqingjing.config;
 
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,6 +18,8 @@ import com.changqingjing.common.api.ApiResponse;
 import com.changqingjing.common.web.ApiTraceFilter;
 import com.changqingjing.content.CompanyContentService;
 import com.changqingjing.content.HomeVideoContentService;
+import com.changqingjing.content.ScenicContentService;
+import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.media.MediaService;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -67,12 +71,17 @@ class SecurityBoundaryTest {
     private HomeVideoContentService homeVideoContentService;
 
     @MockBean
+    private ScenicContentService scenicContentService;
+
+    @MockBean
     private MediaService mediaService;
 
     @BeforeEach
     void configureAppToken() {
         when(tokenAuthenticator.authenticate("valid-app-token"))
                 .thenReturn(Optional.of(new AppPrincipal(APP_USER_ID)));
+        when(scenicContentService.recordView(any(UUID.class), any(UUID.class)))
+                .thenReturn(1L);
     }
 
     @Test
@@ -93,9 +102,11 @@ class SecurityBoundaryTest {
 
     @Test
     void scenicViewCanBeReportedAnonymously() throws Exception {
-        mockMvc.perform(post("/api/v1/app/scenics/42/views"))
+        mockMvc.perform(post("/api/v1/app/scenics/3bd74129-49ff-47b8-a464-1124d2f80b27/views")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"viewId\":\"9a6fc1c5-5173-449c-8606-9486ec5fb173\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").value("counted"));
+                .andExpect(jsonPath("$.data.viewCount").value(1));
     }
 
     @Test
@@ -178,11 +189,6 @@ class SecurityBoundaryTest {
         @GetMapping("/api/v1/admin/users")
         ApiResponse<String> adminUsers() {
             return ApiResponse.of("admin");
-        }
-
-        @PostMapping("/api/v1/app/scenics/{id}/views")
-        ApiResponse<String> reportScenicView() {
-            return ApiResponse.of("counted");
         }
 
         @PostMapping("/api/v1/admin/contents")

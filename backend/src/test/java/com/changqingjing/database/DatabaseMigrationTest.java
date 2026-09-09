@@ -27,6 +27,7 @@ class DatabaseMigrationTest {
             "content_revision_media",
             "flyway_schema_history",
             "media_asset",
+            "map_selection",
             "scenic_stats",
             "scenic_view_receipt",
             "schema_marker",
@@ -46,7 +47,7 @@ class DatabaseMigrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
         assertThat(flyway.migrate().migrationsExecuted).isZero();
 
         Set<String> actualTables = new TreeSet<>();

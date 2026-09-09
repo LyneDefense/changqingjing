@@ -13,6 +13,7 @@ import com.changqingjing.content.CompanyContentRepository;
 import com.changqingjing.content.CompanyContentService;
 import com.changqingjing.content.HomeVideoContentService;
 import com.changqingjing.content.HomeVideoContentRepository;
+import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.media.MediaService;
 import com.changqingjing.media.MediaStorage;
 import java.time.OffsetDateTime;
@@ -43,11 +44,18 @@ class AppContentControllerTest {
     private HomeVideoContentService homeVideoContentService;
 
     @MockBean
+    private ScenicContentService scenicContentService;
+
+    @MockBean
     private MediaService mediaService;
 
     @Test
     void homeIsPublicAndOmitsAnUnpublishedCompany() throws Exception {
         when(companyContentService.getPublished()).thenReturn(Optional.empty());
+        when(scenicContentService.getPublished(
+                org.mockito.ArgumentMatchers.any(com.changqingjing.common.api.PageQuery.class)))
+                .thenReturn(new com.changqingjing.common.api.PageResponse<>(
+                        List.of(), 1, 20, 0));
 
         mockMvc.perform(get("/api/v1/app/home"))
                 .andExpect(status().isOk())
@@ -85,6 +93,10 @@ class AppContentControllerTest {
                                 true,
                                 UUID.randomUUID(),
                                 createdAt))));
+        when(scenicContentService.getPublished(
+                org.mockito.ArgumentMatchers.any(com.changqingjing.common.api.PageQuery.class)))
+                .thenReturn(new com.changqingjing.common.api.PageResponse<>(
+                        List.of(), 1, 20, 0));
         when(mediaService.signReadyMedia(coverId)).thenReturn(
                 new MediaStorage.SignedObjectUrl(
                         "https://media.example/cover.jpg?signature=short",
