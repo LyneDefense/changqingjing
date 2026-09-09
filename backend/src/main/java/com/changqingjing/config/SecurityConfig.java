@@ -24,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.context.NullSecurityContextRepository;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 @Configuration
 public class SecurityConfig {
@@ -42,6 +43,7 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(jsonAuthenticationEntryPoint)
                 .accessDeniedHandler(jsonAccessDeniedHandler))
+            .headers(headers -> addApiSecurityHeaders(headers))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/admin/system/ping",
@@ -87,6 +89,7 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(jsonAuthenticationEntryPoint)
                 .accessDeniedHandler(jsonAccessDeniedHandler))
+            .headers(headers -> addApiSecurityHeaders(headers))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
@@ -119,6 +122,7 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(jsonAuthenticationEntryPoint)
                 .accessDeniedHandler(jsonAccessDeniedHandler))
+            .headers(headers -> addApiSecurityHeaders(headers))
             .authorizeHttpRequests(authorize -> authorize.anyRequest().denyAll())
             .build();
     }
@@ -143,5 +147,15 @@ public class SecurityConfig {
     PasswordEncoder adminPasswordEncoder(
             @Value("${app.admin.password.bcrypt-strength:12}") int bcryptStrength) {
         return new BCryptPasswordEncoder(bcryptStrength);
+    }
+
+    private void addApiSecurityHeaders(
+            org.springframework.security.config.annotation.web.configurers.HeadersConfigurer<HttpSecurity> headers) {
+        headers
+            .addHeaderWriter(new StaticHeadersWriter(
+                "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))
+            .addHeaderWriter(new StaticHeadersWriter("Referrer-Policy", "no-referrer"))
+            .addHeaderWriter(new StaticHeadersWriter(
+                "Permissions-Policy", "camera=(), geolocation=(), microphone=()"));
     }
 }
