@@ -39,6 +39,19 @@ export interface AdminStaff {
   version: number
 }
 
+export type AppUserStatus = 'ACTIVE' | 'DISABLED'
+
+export interface RegisteredAppUser {
+  id: string
+  displayName: string
+  maskedPhone?: string
+  phoneBound: boolean
+  wechatBound: boolean
+  status: AppUserStatus
+  registeredAt: string
+  lastLoginAt?: string
+}
+
 export interface PageResponse<T> {
   items: T[]
   page: number
@@ -369,6 +382,27 @@ export function searchAdminStaff(options: {
     query.set('status', options.status)
   }
   return request<PageResponse<AdminStaff>>(`/staff?${query}`)
+}
+
+export function searchRegisteredUsers(options: {
+  keyword: string
+  status: '' | AppUserStatus
+  phoneBound: '' | 'true' | 'false'
+  page: number
+  pageSize?: number
+}) {
+  const query = new URLSearchParams({
+    keyword: options.keyword,
+    page: String(options.page),
+    pageSize: String(options.pageSize ?? 20),
+  })
+  if (options.status) query.set('status', options.status)
+  if (options.phoneBound) query.set('phoneBound', options.phoneBound)
+  return request<PageResponse<RegisteredAppUser>>(`/users?${query}`)
+}
+
+export function getRegisteredUser(userId: string) {
+  return request<RegisteredAppUser>(`/users/${encodeURIComponent(userId)}`)
 }
 
 export function createAdminStaff(input: CreateAdminStaffInput) {
