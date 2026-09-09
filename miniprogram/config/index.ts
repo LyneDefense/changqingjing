@@ -5,7 +5,26 @@ import prodConfig from './prod'
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'vite'>(async (merge) => {
-  const apiBaseUrl = process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:8080/api/v1/app'
+  const configuredApiBaseUrl = process.env.TARO_APP_API_BASE_URL?.trim()
+  const releaseBuild = process.env.TARO_APP_REQUIRE_PRODUCTION_API === 'true'
+  const apiBaseUrl = (configuredApiBaseUrl || 'http://127.0.0.1:8080/api/v1/app').replace(/\/$/, '')
+
+  if (releaseBuild) {
+    if (!configuredApiBaseUrl) {
+      throw new Error('正式发布构建缺少 TARO_APP_API_BASE_URL')
+    }
+    const parsedApiUrl = new URL(apiBaseUrl)
+    if (parsedApiUrl.protocol !== 'https:'
+      || parsedApiUrl.username
+      || parsedApiUrl.password
+      || parsedApiUrl.port
+      || parsedApiUrl.hostname === 'localhost'
+      || parsedApiUrl.hostname.endsWith('.local')
+      || /^\d+\.\d+\.\d+\.\d+$/.test(parsedApiUrl.hostname)
+      || parsedApiUrl.pathname !== '/api/v1/app') {
+      throw new Error('正式 TARO_APP_API_BASE_URL 必须是无账号、无自定义端口的 HTTPS 域名，并以 /api/v1/app 结尾')
+    }
+  }
   const baseConfig: UserConfigExport<'vite'> = {
     projectName: 'miniprogram',
     date: '2026-9-8',
