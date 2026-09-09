@@ -1,11 +1,14 @@
 package com.changqingjing.content;
 
 import com.changqingjing.admin.api.content.AdminHomeVideoContentResponse;
+import com.changqingjing.admin.api.content.AdminHomeVideoListItemResponse;
+import com.changqingjing.admin.api.content.AdminHomeVideoQuery;
 import com.changqingjing.admin.api.content.AdminHomeVideoRevisionResponse;
 import com.changqingjing.admin.api.content.SaveHomeVideoDraftRequest;
 import com.changqingjing.admin.audit.AdminAuditService;
 import com.changqingjing.admin.auth.AdminPrincipal;
 import com.changqingjing.common.api.BusinessException;
+import com.changqingjing.common.api.PageResponse;
 import com.changqingjing.media.MediaAssetRepository;
 import com.changqingjing.media.MediaPurpose;
 import com.changqingjing.media.MediaService;
@@ -37,78 +40,74 @@ public class HomeVideoContentService {
     }
 
     @Transactional(readOnly = true)
-    public AdminHomeVideoContentResponse getAdminContent() {
-        return repository.findEntry(false)
-                .map(this::toAdminResponse)
-                .orElseGet(AdminHomeVideoContentResponse::empty);
+    public PageResponse<AdminHomeVideoListItemResponse> search(AdminHomeVideoQuery query) {
+        var entries = repository.search(query.getKeyword(), query.getStatus(), query);
+        var items = entries.stream().map(this::toListItem).toList();
+        return PageResponse.of(
+                items,
+                query,
+                repository.count(query.getKeyword(), query.getStatus()));
     }
 
     @Transactional(readOnly = true)
-    public AdminHomeVideoRevisionResponse getDraftPreview() {
-        HomeVideoContentRepository.Entry entry = requiredEntry(false);
+    public AdminHomeVideoContentResponse getAdminContent(UUID entryId) {
+        return toAdminResponse(requiredEntry(entryId, false));
+    }
+
+    @Transactional(readOnly = true)
+    public AdminHomeVideoRevisionResponse getDraftPreview(UUID entryId) {
+        HomeVideoContentRepository.Entry entry = requiredEntry(entryId, false);
         return repository.findRevision(entry.draftRevisionId())
                 .map(AdminHomeVideoRevisionResponse::from)
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.NOT_FOUND,
                         "CONTENT_DRAFT_NOT_FOUND",
-                        "尚未保存宣传视频草稿"));
+                        "这条宣传视频还没有保存草稿"));
+    }
+
+    @Transactional
+    public AdminHomeVideoContentResponse create(
+            SaveHomeVideoDraftRequest request,
+            AdminPrincipal actor,
+            String traceId) {
+        if (request.expectedVersion() != 0) throw versionConflict();
+        repository.lockVideoSet();
+        OffsetDateTime now = now();
+        HomeVideoContentRepository.Entry entry = repository.insertEntry(
+                UUID.randomUUID(), actor.accountId(), now);
+        return saveRevision(entry, request, actor, traceId, now);
     }
 
     @Transactional
     public AdminHomeVideoContentResponse saveDraft(
+            UUID entryId,
             SaveHomeVideoDraftRequest request,
             AdminPrincipal actor,
             String traceId) {
-        repository.lockSingletonCreation();
-        HomeVideoContentRepository.Entry entry = repository.findEntry(true)
-                .orElseGet(() -> repository.insertEntry(
-                        UUID.randomUUID(), actor.accountId(), now()));
+        HomeVideoContentRepository.Entry entry = requiredEntry(entryId, true);
         verifyVersion(entry, request.expectedVersion());
-        requirePurpose(request.videoMediaId(), MediaPurpose.HOME_VIDEO);
-        requirePurpose(request.coverMediaId(), MediaPurpose.HOME_VIDEO_COVER);
-
-        OffsetDateTime now = now();
-        int revisionNumber = repository.nextRevisionNumber(entry.id());
-        HomeVideoContentRepository.Revision revision = repository.insertRevision(
-                UUID.randomUUID(),
-                entry.id(),
-                revisionNumber,
-                request.title().strip(),
-                request.coverMediaId(),
-                request.videoMediaId(),
-                request.displayEnabled(),
-                actor.accountId(),
-                now);
-        if (!repository.pointDraft(
-                entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
-            throw versionConflict();
-        }
-        auditService.recordSuccess(
-                actor.accountId(),
-                "HOME_VIDEO_DRAFT_SAVE",
-                "CONTENT_ENTRY",
-                entry.id(),
-                traceId,
-                Map.of("revisionNumber", revisionNumber));
-        return toAdminResponse(requiredEntry(false));
+        return saveRevision(entry, request, actor, traceId, now());
     }
 
     @Transactional
     public AdminHomeVideoContentResponse publish(
+            UUID entryId,
             long expectedVersion,
             AdminPrincipal actor,
             String traceId) {
-        HomeVideoContentRepository.Entry entry = requiredEntry(true);
+        repository.lockVideoSet();
+        HomeVideoContentRepository.Entry entry = requiredEntry(entryId, true);
         verifyVersion(entry, expectedVersion);
         HomeVideoContentRepository.Revision revision = repository
                 .findRevision(entry.draftRevisionId())
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.CONFLICT,
                         "CONTENT_DRAFT_REQUIRED",
-                        "请先保存宣传视频草稿"));
+                        "请先保存这条宣传视频"));
         requirePurpose(revision.videoMediaId(), MediaPurpose.HOME_VIDEO);
         requirePurpose(revision.coverMediaId(), MediaPurpose.HOME_VIDEO_COVER);
         OffsetDateTime now = now();
+        repository.unpublishOtherEntries(entry.id(), actor.accountId(), now);
         if (!repository.publish(
                 entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
             throw versionConflict();
@@ -120,15 +119,16 @@ public class HomeVideoContentService {
                 entry.id(),
                 traceId,
                 Map.of("revisionId", revision.id()));
-        return toAdminResponse(requiredEntry(false));
+        return toAdminResponse(requiredEntry(entry.id(), false));
     }
 
     @Transactional
     public AdminHomeVideoContentResponse unpublish(
+            UUID entryId,
             long expectedVersion,
             AdminPrincipal actor,
             String traceId) {
-        HomeVideoContentRepository.Entry entry = requiredEntry(true);
+        HomeVideoContentRepository.Entry entry = requiredEntry(entryId, true);
         verifyVersion(entry, expectedVersion);
         OffsetDateTime now = now();
         if (!repository.unpublish(
@@ -142,16 +142,73 @@ public class HomeVideoContentService {
                 entry.id(),
                 traceId,
                 Map.of());
-        return toAdminResponse(requiredEntry(false));
+        return toAdminResponse(requiredEntry(entry.id(), false));
+    }
+
+    @Transactional
+    public void delete(
+            UUID entryId,
+            long expectedVersion,
+            AdminPrincipal actor,
+            String traceId) {
+        HomeVideoContentRepository.Entry entry = requiredEntry(entryId, true);
+        verifyVersion(entry, expectedVersion);
+        if (entry.status() == HomeVideoStatus.ONLINE) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "HOME_VIDEO_ONLINE",
+                    "请先下架这条宣传视频，再执行删除");
+        }
+        if (!repository.deleteHidden(entry.id(), entry.version())) {
+            throw versionConflict();
+        }
+        auditService.recordSuccess(
+                actor.accountId(),
+                "HOME_VIDEO_DELETE",
+                "CONTENT_ENTRY",
+                entry.id(),
+                traceId,
+                Map.of());
     }
 
     @Transactional(readOnly = true)
     public Optional<PublishedHomeVideo> getPublished() {
-        return repository.findEntry(false)
-                .filter(entry -> "PUBLISHED".equals(entry.visibility()))
+        return repository.findPublishedEntry()
                 .flatMap(entry -> repository.findRevision(entry.publishedRevisionId()))
                 .filter(HomeVideoContentRepository.Revision::displayEnabled)
                 .map(PublishedHomeVideo::new);
+    }
+
+    private AdminHomeVideoContentResponse saveRevision(
+            HomeVideoContentRepository.Entry entry,
+            SaveHomeVideoDraftRequest request,
+            AdminPrincipal actor,
+            String traceId,
+            OffsetDateTime now) {
+        requirePurpose(request.videoMediaId(), MediaPurpose.HOME_VIDEO);
+        requirePurpose(request.coverMediaId(), MediaPurpose.HOME_VIDEO_COVER);
+        int revisionNumber = repository.nextRevisionNumber(entry.id());
+        HomeVideoContentRepository.Revision revision = repository.insertRevision(
+                UUID.randomUUID(),
+                entry.id(),
+                revisionNumber,
+                request.title().strip(),
+                request.coverMediaId(),
+                request.videoMediaId(),
+                actor.accountId(),
+                now);
+        if (!repository.pointDraft(
+                entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
+            throw versionConflict();
+        }
+        auditService.recordSuccess(
+                actor.accountId(),
+                "HOME_VIDEO_DRAFT_SAVE",
+                "CONTENT_ENTRY",
+                entry.id(),
+                traceId,
+                Map.of("revisionNumber", revisionNumber));
+        return toAdminResponse(requiredEntry(entry.id(), false));
     }
 
     private void requirePurpose(UUID mediaId, MediaPurpose expectedPurpose) {
@@ -160,28 +217,47 @@ public class HomeVideoContentService {
             throw new BusinessException(
                     HttpStatus.BAD_REQUEST,
                     "MEDIA_PURPOSE_MISMATCH",
-                    "所选媒体不能用于当前内容位置");
+                    "所选文件不能用于这个位置");
         }
     }
 
-    private HomeVideoContentRepository.Entry requiredEntry(boolean forUpdate) {
-        return repository.findEntry(forUpdate).orElseThrow(() -> new BusinessException(
+    private HomeVideoContentRepository.Entry requiredEntry(UUID entryId, boolean forUpdate) {
+        return repository.findEntry(entryId, forUpdate).orElseThrow(() -> new BusinessException(
                 HttpStatus.NOT_FOUND,
                 "CONTENT_NOT_FOUND",
-                "宣传视频尚未创建"));
+                "未找到这条宣传视频"));
     }
 
-    private void verifyVersion(HomeVideoContentRepository.Entry entry, long expectedVersion) {
-        if (entry.version() != expectedVersion) {
-            throw versionConflict();
-        }
+    private void verifyVersion(
+            HomeVideoContentRepository.Entry entry,
+            long expectedVersion) {
+        if (entry.version() != expectedVersion) throw versionConflict();
     }
 
     private BusinessException versionConflict() {
         return new BusinessException(
                 HttpStatus.CONFLICT,
                 "CONTENT_VERSION_CONFLICT",
-                "内容已被其他人员修改，请刷新后重试");
+                "这条宣传视频已被其他人员修改，请刷新后重试");
+    }
+
+    private AdminHomeVideoListItemResponse toListItem(
+            HomeVideoContentRepository.Entry entry) {
+        HomeVideoContentRepository.Revision revision = repository
+                .findRevision(entry.draftRevisionId())
+                .or(() -> repository.findRevision(entry.publishedRevisionId()))
+                .orElseThrow(() -> new IllegalStateException(
+                        "Home video entry has no editable revision: " + entry.id()));
+        return new AdminHomeVideoListItemResponse(
+                entry.id(),
+                entry.version(),
+                revision.title(),
+                revision.coverMediaId(),
+                entry.status(),
+                entry.draftRevisionId() != null
+                        && !entry.draftRevisionId().equals(entry.publishedRevisionId()),
+                entry.firstPublishedAt(),
+                entry.updatedAt());
     }
 
     private AdminHomeVideoContentResponse toAdminResponse(

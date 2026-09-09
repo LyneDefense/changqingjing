@@ -276,6 +276,12 @@
   color: #8d2f21;
 }
 
+.success-notice {
+  background: #edf8f3;
+  border: 1px solid #bfdfd1;
+  color: #28604e;
+}
+
 .page-heading-row,
 .filter-bar,
 .pagination,
@@ -732,6 +738,41 @@
 .home-video-editor form {
   display: grid;
   gap: 18px;
+}
+
+.editor-heading-actions,
+.video-list-title,
+.section-content-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.editor-heading-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.video-list-title {
+  min-width: 280px;
+}
+
+.video-list-cover {
+  align-items: center;
+  background: #edf1ef;
+  border-radius: 8px;
+  display: flex;
+  height: 54px;
+  justify-content: center;
+  overflow: hidden;
+  width: 88px;
+}
+
+.video-list-cover .content-image-preview {
+  border-radius: 0;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .media-editor-grid {

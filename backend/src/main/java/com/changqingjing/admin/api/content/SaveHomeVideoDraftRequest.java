@@ -10,6 +10,5 @@ public record SaveHomeVideoDraftRequest(
         @NotBlank @Size(max = 255) String title,
         @NotNull UUID videoMediaId,
         @NotNull UUID coverMediaId,
-        boolean displayEnabled,
         @Min(0) long expectedVersion) {
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.changqingjing.admin.api.content.SaveHomeVideoDraftRequest;
+import com.changqingjing.admin.api.content.AdminHomeVideoQuery;
 import com.changqingjing.admin.auth.AdminAccount;
 import com.changqingjing.admin.auth.AdminAccountRepository;
 import com.changqingjing.admin.auth.AdminBootstrapService;
@@ -62,9 +63,9 @@ class HomeVideoContentServiceIntegrationTest {
         UUID videoId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO, "READY");
         UUID coverId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO_COVER, "READY");
 
-        var draft = contentService.saveDraft(
+        var draft = contentService.create(
                 new SaveHomeVideoDraftRequest(
-                        "山水宣传片", videoId, coverId, true, 0),
+                        "山水宣传片", videoId, coverId, 0),
                 actor,
                 "video-draft");
         assertThat(contentService.getPublished()).isEmpty();
@@ -74,15 +75,16 @@ class HomeVideoContentServiceIntegrationTest {
                 draft.draft().id())).isEqualTo(2);
 
         var published = contentService.publish(
-                draft.version(), actor, "video-publish");
+                draft.id(), draft.version(), actor, "video-publish");
         assertThat(contentService.getPublished().orElseThrow().revision().videoMediaId())
                 .isEqualTo(videoId);
 
         UUID failedReplacement = insertMedia(
                 actor.accountId(), MediaPurpose.HOME_VIDEO, "FAILED");
         assertThatThrownBy(() -> contentService.saveDraft(
+                published.id(),
                 new SaveHomeVideoDraftRequest(
-                        "失败替换", failedReplacement, coverId, true, published.version()),
+                        "失败替换", failedReplacement, coverId, published.version()),
                 actor,
                 "video-replacement"))
                 .isInstanceOf(BusinessException.class)
@@ -90,6 +92,65 @@ class HomeVideoContentServiceIntegrationTest {
                 .isEqualTo("MEDIA_NOT_READY");
         assertThat(contentService.getPublished().orElseThrow().revision().videoMediaId())
                 .isEqualTo(videoId);
+    }
+
+    @Test
+    void listsFiltersReplacesAndDeletesHomeVideos() {
+        AdminPrincipal actor = bootstrapAdmin();
+        UUID firstVideoId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO, "READY");
+        UUID firstCoverId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO_COVER, "READY");
+        var first = contentService.create(
+                new SaveHomeVideoDraftRequest(
+                        "第一条山水宣传片", firstVideoId, firstCoverId, 0),
+                actor,
+                "first-create");
+        first = contentService.publish(first.id(), first.version(), actor, "first-publish");
+
+        UUID secondVideoId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO, "READY");
+        UUID secondCoverId = insertMedia(actor.accountId(), MediaPurpose.HOME_VIDEO_COVER, "READY");
+        var second = contentService.create(
+                new SaveHomeVideoDraftRequest(
+                        "第二条文化宣传片", secondVideoId, secondCoverId, 0),
+                actor,
+                "second-create");
+        second = contentService.publish(second.id(), second.version(), actor, "second-publish");
+
+        assertThat(contentService.getPublished().orElseThrow().revision().videoMediaId())
+                .isEqualTo(secondVideoId);
+        assertThat(contentService.getAdminContent(first.id()).visibility())
+                .isEqualTo("HIDDEN");
+
+        AdminHomeVideoQuery onlineQuery = new AdminHomeVideoQuery();
+        onlineQuery.setStatus(HomeVideoStatus.ONLINE);
+        var online = contentService.search(onlineQuery);
+        assertThat(online.total()).isEqualTo(1);
+        assertThat(online.items().get(0).title()).isEqualTo("第二条文化宣传片");
+
+        AdminHomeVideoQuery keywordQuery = new AdminHomeVideoQuery();
+        keywordQuery.setKeyword("山水");
+        assertThat(contentService.search(keywordQuery).items())
+                .extracting(item -> item.title())
+                .containsExactly("第一条山水宣传片");
+
+        var publishedSecond = second;
+        assertThatThrownBy(() -> contentService.delete(
+                publishedSecond.id(),
+                publishedSecond.version(),
+                actor,
+                "delete-online"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getCode())
+                .isEqualTo("HOME_VIDEO_ONLINE");
+
+        var offline = contentService.unpublish(
+                second.id(), second.version(), actor, "second-unpublish");
+        contentService.delete(
+                offline.id(), offline.version(), actor, "second-delete");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM content_entry WHERE id = ?",
+                Long.class,
+                second.id())).isZero();
+        assertThat(contentService.getPublished()).isEmpty();
     }
 
     private UUID insertMedia(UUID actorId, MediaPurpose purpose, String status) {

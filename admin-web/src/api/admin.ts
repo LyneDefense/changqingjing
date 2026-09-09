@@ -150,6 +150,19 @@ export interface AdminHomeVideoContent {
   published?: AdminHomeVideoRevision
 }
 
+export type HomeVideoStatus = 'DRAFT' | 'ONLINE' | 'OFFLINE'
+
+export interface AdminHomeVideoListItem {
+  id: string
+  version: number
+  title: string
+  coverMediaId: string
+  status: HomeVideoStatus
+  hasUnpublishedChanges: boolean
+  firstPublishedAt?: string
+  updatedAt: string
+}
+
 export class AdminApiError extends Error {
   readonly status: number
   readonly code: string
@@ -363,37 +376,66 @@ export function getAdminMedia(mediaId: string) {
   return request<AdminMedia>(`/media/${encodeURIComponent(mediaId)}`)
 }
 
-export function getAdminHomeVideoContent() {
-  return request<AdminHomeVideoContent>('/contents/home-video')
+export function searchAdminHomeVideos(input: {
+  keyword?: string
+  status?: HomeVideoStatus | ''
+  page?: number
+  pageSize?: number
+}) {
+  const query = new URLSearchParams()
+  if (input.keyword) query.set('keyword', input.keyword)
+  if (input.status) query.set('status', input.status)
+  query.set('page', String(input.page ?? 1))
+  query.set('pageSize', String(input.pageSize ?? 20))
+  return request<PageResponse<AdminHomeVideoListItem>>(`/contents/home-videos?${query}`)
 }
 
-export function saveAdminHomeVideoDraft(input: {
+export function getAdminHomeVideoContent(videoId: string) {
+  return request<AdminHomeVideoContent>(`/contents/home-videos/${encodeURIComponent(videoId)}`)
+}
+
+export interface SaveHomeVideoInput {
   title: string
   videoMediaId: string
   coverMediaId: string
-  displayEnabled: boolean
   expectedVersion: number
-}) {
-  return writeRequest<AdminHomeVideoContent>('/contents/home-video/draft', {
+}
+
+export function createAdminHomeVideo(input: SaveHomeVideoInput) {
+  return writeRequest<AdminHomeVideoContent>('/contents/home-videos', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function saveAdminHomeVideoDraft(videoId: string, input: SaveHomeVideoInput) {
+  return writeRequest<AdminHomeVideoContent>(`/contents/home-videos/${encodeURIComponent(videoId)}/draft`, {
     method: 'PUT',
     body: JSON.stringify(input),
   })
 }
 
-export function previewAdminHomeVideoDraft() {
-  return request<AdminHomeVideoRevision>('/contents/home-video/preview')
+export function previewAdminHomeVideoDraft(videoId: string) {
+  return request<AdminHomeVideoRevision>(`/contents/home-videos/${encodeURIComponent(videoId)}/preview`)
 }
 
-export function publishAdminHomeVideo(expectedVersion: number) {
-  return writeRequest<AdminHomeVideoContent>('/contents/home-video/publish', {
+export function publishAdminHomeVideo(videoId: string, expectedVersion: number) {
+  return writeRequest<AdminHomeVideoContent>(`/contents/home-videos/${encodeURIComponent(videoId)}/publish`, {
     method: 'POST',
     body: JSON.stringify({ expectedVersion }),
   })
 }
 
-export function unpublishAdminHomeVideo(expectedVersion: number) {
-  return writeRequest<AdminHomeVideoContent>('/contents/home-video/unpublish', {
+export function unpublishAdminHomeVideo(videoId: string, expectedVersion: number) {
+  return writeRequest<AdminHomeVideoContent>(`/contents/home-videos/${encodeURIComponent(videoId)}/unpublish`, {
     method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function deleteAdminHomeVideo(videoId: string, expectedVersion: number) {
+  return writeRequest<{ deleted: boolean }>(`/contents/home-videos/${encodeURIComponent(videoId)}`, {
+    method: 'DELETE',
     body: JSON.stringify({ expectedVersion }),
   })
 }
