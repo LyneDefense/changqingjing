@@ -1,10 +1,7 @@
-FROM maven:3.9.9-eclipse-temurin-18 AS build
+FROM eclipse-temurin:18-jdk-jammy AS build
 WORKDIR /workspace
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw -B -DskipTests dependency:go-offline
-COPY src src
-RUN ./mvnw -B package
+COPY . .
+RUN ./mvnw -B -DskipTests package
 
 FROM eclipse-temurin:18-jre-jammy
 WORKDIR /app
