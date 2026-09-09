@@ -112,6 +112,7 @@ export type MediaPurpose =
   | 'HOME_VIDEO_COVER'
   | 'SCENIC_IMAGE'
   | 'PRODUCT_IMAGE'
+  | 'COOPERATION_IMAGE'
 
 export interface AdminMedia {
   id: string
@@ -266,6 +267,42 @@ export interface AdminProductListItem {
   hasUnpublishedChanges: boolean
   version: number
   updatedAt: string
+}
+
+export interface CooperationRevenueSection {
+  title: string
+  description: string
+  icon: string
+  displayOrder: number
+}
+
+export interface CooperationValueSection {
+  title: string
+  description: string
+  imageMediaId?: string
+  imageAltText?: string
+  displayOrder: number
+}
+
+export interface AdminCooperationRevision {
+  id: string
+  revisionNumber: number
+  title: string
+  summary: string
+  revenueSections: CooperationRevenueSection[]
+  valueSections: CooperationValueSection[]
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminCooperationContent {
+  id?: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt?: string
+  draft?: AdminCooperationRevision
+  published?: AdminCooperationRevision
 }
 
 export interface AdminScenicRevision {
@@ -798,6 +835,43 @@ export function unpublishAdminProduct(productId: string, expectedVersion: number
 export function deleteAdminProduct(productId: string, expectedVersion: number) {
   return writeRequest<{ deleted: boolean }>(`/products/${encodeURIComponent(productId)}`, {
     method: 'DELETE',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function getAdminCooperationContent() {
+  return request<AdminCooperationContent>('/contents/cooperation')
+}
+
+export interface SaveCooperationInput {
+  title: string
+  summary: string
+  revenueSections: CooperationRevenueSection[]
+  valueSections: CooperationValueSection[]
+  expectedVersion: number
+}
+
+export function saveAdminCooperationDraft(input: SaveCooperationInput) {
+  return writeRequest<AdminCooperationContent>('/contents/cooperation/draft', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function previewAdminCooperation() {
+  return request<AdminCooperationRevision>('/contents/cooperation/preview')
+}
+
+export function publishAdminCooperation(expectedVersion: number) {
+  return writeRequest<AdminCooperationContent>('/contents/cooperation/publish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminCooperation(expectedVersion: number) {
+  return writeRequest<AdminCooperationContent>('/contents/cooperation/unpublish', {
+    method: 'POST',
     body: JSON.stringify({ expectedVersion }),
   })
 }

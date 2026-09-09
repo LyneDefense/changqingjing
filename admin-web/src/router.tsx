@@ -2,6 +2,8 @@ import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { AdminOnlyRoute, AuthRoot, ProtectedRoute } from './auth/AuthRoutes'
 import { ContentPage } from './pages/ContentPage'
+import { ComingSoonPage } from './pages/ComingSoonPage'
+import { CooperationPage } from './pages/CooperationPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
 import { HomeVideoPage } from './pages/HomeVideoPage'
@@ -30,6 +32,9 @@ export const routes = [
               { path: 'company', Component: ContentPage },
               { path: 'scenics', Component: ScenicPage },
               { path: 'products', Component: ProductPage },
+              { path: 'cooperation', Component: CooperationPage },
+              { path: 'cooperation/branch', element: <ComingSoonPage title="分公司方案" /> },
+              { path: 'cooperation/membership', element: <ComingSoonPage title="会员体系" /> },
               { path: 'content', element: <Navigate replace to="/company" /> },
               { path: 'forbidden', Component: ForbiddenPage },
               {

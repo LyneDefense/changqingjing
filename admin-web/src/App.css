@@ -907,6 +907,98 @@
   margin-top: 16px;
 }
 
+.coming-soon-card {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e2e9e5;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 28px;
+  padding: 64px 28px;
+  text-align: center;
+}
+
+.coming-soon-card > span {
+  background: #edf6f2;
+  border-radius: 999px;
+  color: #28604e;
+  font-size: 13px;
+  padding: 7px 12px;
+}
+
+.coming-soon-card h3 {
+  font-size: 24px;
+  margin: 18px 0 4px;
+}
+
+.coming-soon-card p {
+  color: #71817b;
+  margin: 8px 0 22px;
+}
+
+.cooperation-editor-list {
+  display: grid;
+  gap: 16px;
+}
+
+.cooperation-editor-card {
+  background: #f7f9f8;
+  border: 1px solid #dce6e1;
+  border-radius: 14px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.cooperation-editor-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.cooperation-editor-toolbar strong {
+  color: #20362f;
+  flex: 1;
+}
+
+.cooperation-revenue-fields {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 130px minmax(0, 1fr);
+}
+
+.add-full-button {
+  justify-self: start;
+}
+
+.cooperation-preview-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cooperation-preview-grid > div,
+.cooperation-preview-value {
+  background: #f5f8f6;
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.cooperation-preview-grid span {
+  font-size: 24px;
+}
+
+.cooperation-preview-grid p,
+.cooperation-preview-value p {
+  color: #65736e;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .content-preview {
   max-width: 720px;
 }
@@ -1146,6 +1238,11 @@
   }
 
   .media-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cooperation-revenue-fields,
+  .cooperation-preview-grid {
     grid-template-columns: 1fr;
   }
 

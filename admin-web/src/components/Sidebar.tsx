@@ -28,6 +28,14 @@ const groups: NavigationGroup[] = [
     ],
   },
   {
+    label: '合作权益',
+    links: [
+      { to: '/cooperation', label: '收益板块管理', permission: 'content:read' },
+      { to: '/cooperation/branch', label: '分公司方案', permission: 'content:read' },
+      { to: '/cooperation/membership', label: '会员体系', permission: 'content:read' },
+    ],
+  },
+  {
     label: '系统管理',
     links: [
       { to: '/users', label: '注册用户', permission: 'user:read' },
