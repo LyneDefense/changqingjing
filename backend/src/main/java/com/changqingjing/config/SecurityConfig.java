@@ -93,6 +93,7 @@ public class SecurityConfig {
                     "/api/v1/app/system/ping",
                     "/api/v1/app/home",
                     "/api/v1/app/company",
+                    "/api/v1/app/cooperation",
                     "/api/v1/app/scenics/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/app/scenics/*/views").permitAll()
                 .requestMatchers("/api/v1/app/auth/**").permitAll()

@@ -6,7 +6,8 @@ public enum MediaPurpose {
     HOME_VIDEO(MediaType.VIDEO),
     HOME_VIDEO_COVER(MediaType.IMAGE),
     SCENIC_IMAGE(MediaType.IMAGE),
-    PRODUCT_IMAGE(MediaType.IMAGE);
+    PRODUCT_IMAGE(MediaType.IMAGE),
+    COOPERATION_IMAGE(MediaType.IMAGE);
 
     private final MediaType mediaType;
 
