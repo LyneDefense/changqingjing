@@ -34,6 +34,35 @@ export interface HomeScenicSummary {
   displayOrder: number
 }
 
+export type ScenicOpenStatus = 'OPEN' | 'PAUSED'
+
+export interface ScenicSummary extends HomeScenicSummary {
+  openStatus: ScenicOpenStatus
+}
+
+export interface ScenicContent {
+  id: string
+  title: string
+  summary: string
+  coverUrl: string
+  blocks: CompanyContentBlock[]
+  openStatus: ScenicOpenStatus
+  displayName: string
+  address: string
+  longitude: number
+  latitude: number
+  coordinateSystem: 'GCJ02'
+  firstPublishedAt: string
+  viewCount: number
+}
+
+export interface PageResponse<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  total: number
+}
+
 export interface HomeContent {
   video?: HomeVideo
   company?: CompanySummary
@@ -46,4 +75,22 @@ export function getHomeContent() {
 
 export function getCompanyContent() {
   return request<CompanyContent>({ path: '/company' })
+}
+
+export function getScenics(page = 1, pageSize = 20) {
+  return request<PageResponse<ScenicSummary>>({
+    path: `/scenics?page=${page}&pageSize=${pageSize}`
+  })
+}
+
+export function getScenicContent(scenicId: string) {
+  return request<ScenicContent>({ path: `/scenics/${encodeURIComponent(scenicId)}` })
+}
+
+export function recordScenicView(scenicId: string, viewId: string) {
+  return request<{ viewCount: number }, { viewId: string }>({
+    path: `/scenics/${encodeURIComponent(scenicId)}/views`,
+    method: 'POST',
+    data: { viewId }
+  })
 }

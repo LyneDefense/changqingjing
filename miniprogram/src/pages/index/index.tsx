@@ -37,6 +37,10 @@ export default function HomePage() {
     void Taro.navigateTo({ url: '/pages/company/index' })
   }
 
+  function openScenic(scenicId: string) {
+    void Taro.navigateTo({ url: `/pages/scenic-detail/index?id=${scenicId}` })
+  }
+
   return (
     <View className='page home-page'>
       <View className='home-hero'>
@@ -97,6 +101,37 @@ export default function HomePage() {
           <Text className='company-card__title'>{content.company.title}</Text>
           <Text className='company-card__summary'>{content.company.summary}</Text>
           <Text className='company-card__link'>了解更多 →</Text>
+        </View>
+      )}
+
+      {!error && Boolean(content?.scenics.length) && (
+        <View className='home-scenics'>
+          <View className='home-section-heading'>
+            <View>
+              <Text className='section-kicker'>DESTINATIONS</Text>
+              <Text className='home-section-title'>景区介绍</Text>
+            </View>
+            <Text
+              className='home-section-link'
+              onClick={() => void Taro.navigateTo({ url: '/pages/scenics/index' })}
+            >查看全部 →</Text>
+          </View>
+          <View className='home-scenic-list'>
+            {content?.scenics.map((scenic) => (
+              <View
+                className='home-scenic-card'
+                hoverClass='home-scenic-card--pressed'
+                key={scenic.id}
+                onClick={() => openScenic(scenic.id)}
+              >
+                <Image className='home-scenic-card__cover' mode='aspectFill' src={scenic.coverUrl} />
+                <View className='home-scenic-card__copy'>
+                  <Text className='home-scenic-card__title'>{scenic.title}</Text>
+                  <Text className='home-scenic-card__summary'>{scenic.summary}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       )}
 

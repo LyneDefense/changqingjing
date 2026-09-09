@@ -1,0 +1,141 @@
+.scenic-detail-page {
+  gap: 22px;
+}
+
+.scenic-detail-cover {
+  border-radius: 26px;
+  height: 420px;
+  width: 100%;
+}
+
+.scenic-detail-heading,
+.scenic-detail-body,
+.scenic-location-card {
+  background: #fff;
+  border: 1px solid #e1e8e4;
+  border-radius: 26px;
+  padding: 32px;
+}
+
+.scenic-detail-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scenic-detail-title {
+  color: #18392f;
+  font-size: 42px;
+  font-weight: 700;
+}
+
+.scenic-detail-status {
+  align-self: flex-start;
+  border-radius: 999px;
+  font-size: 23px;
+  padding: 7px 15px;
+}
+
+.scenic-detail-status--open {
+  background: #e8f5ef;
+  color: #1d6a50;
+}
+
+.scenic-detail-status--paused {
+  background: #fff1da;
+  color: #8b5c12;
+}
+
+.scenic-detail-summary,
+.scenic-content-paragraph {
+  color: #52645d;
+  font-size: 28px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.scenic-detail-meta,
+.scenic-content-caption,
+.scenic-location-label {
+  color: #84918b;
+  font-size: 23px;
+}
+
+.scenic-detail-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.scenic-content-heading {
+  color: #203c32;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+}
+
+.scenic-content-heading:first-child {
+  margin-top: 0;
+}
+
+.scenic-content-image-wrap {
+  display: flex;
+  flex-direction: column;
+  margin: 22px 0;
+}
+
+.scenic-content-image {
+  border-radius: 18px;
+  width: 100%;
+}
+
+.scenic-content-caption {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.scenic-location-card,
+.scenic-location-copy {
+  display: flex;
+}
+
+.scenic-location-card {
+  align-items: center;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.scenic-location-copy {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scenic-location-name {
+  color: #203c32;
+  font-size: 31px;
+  font-weight: 700;
+}
+
+.scenic-location-address {
+  color: #617069;
+  font-size: 25px;
+  line-height: 1.6;
+}
+
+.scenic-navigation-button {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 24px;
+}
+
+.scenic-detail-state {
+  align-items: center;
+  color: #68756f;
+  display: flex;
+  font-size: 27px;
+  justify-content: center;
+}
+
+.scenic-detail-state--error {
+  flex-direction: column;
+  gap: 24px;
+}

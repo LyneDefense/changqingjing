@@ -151,6 +151,84 @@
   font-weight: 700;
 }
 
+.home-scenics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-section-heading {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.home-section-heading > view {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-section-title {
+  color: #18392f;
+  font-size: 36px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.home-section-link {
+  color: #1d6a50;
+  font-size: 24px;
+}
+
+.home-scenic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.home-scenic-card {
+  background: #fff;
+  border: 1px solid #e1e8e4;
+  border-radius: 24px;
+  display: flex;
+  overflow: hidden;
+}
+
+.home-scenic-card--pressed {
+  opacity: 0.86;
+}
+
+.home-scenic-card__cover {
+  flex: 0 0 230px;
+  height: 210px;
+  width: 230px;
+}
+
+.home-scenic-card__copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+  padding: 24px;
+}
+
+.home-scenic-card__title {
+  color: #18392f;
+  font-size: 31px;
+  font-weight: 700;
+}
+
+.home-scenic-card__summary {
+  color: #66736e;
+  display: -webkit-box;
+  font-size: 25px;
+  line-height: 1.65;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .retry-button {
   background: #1d6a50;
   border-radius: 18px;
