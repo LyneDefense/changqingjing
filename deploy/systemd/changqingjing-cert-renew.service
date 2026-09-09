@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew Changqingjing TLS certificate and reload Nginx
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@@DEPLOY_DIR@@
+ExecStart=@@DEPLOY_SCRIPT@@ renew-cert
+

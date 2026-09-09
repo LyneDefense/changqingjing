@@ -28,5 +28,7 @@ pnpm --dir miniprogram test:e2e
 pnpm --dir miniprogram audit --prod --audit-level high --registry="$audit_registry"
 
 docker build --tag changqingjing-backend:verification backend
+./deploy/test-config.sh
+./deploy/test-stack.sh
 
 echo "Release verification passed."

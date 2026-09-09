@@ -1,0 +1,30 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ${DOMAIN};
+
+    location = /nginx-health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location = /healthz {
+        proxy_pass http://backend:8080/actuator/health/readiness;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        access_log off;
+    }
+
+    location / {
+        default_type text/plain;
+        return 503 "HTTPS certificate is not installed yet.\n";
+    }
+}
+

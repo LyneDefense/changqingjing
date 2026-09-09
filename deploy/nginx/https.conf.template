@@ -1,0 +1,107 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ${DOMAIN};
+
+    location = /nginx-health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 2m;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location = /nginx-health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /healthz {
+        proxy_pass http://backend:8080/actuator/health/readiness;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        access_log off;
+    }
+
+    location = /admin {
+        return 301 /admin/;
+    }
+
+    location /admin/assets/ {
+        root /usr/share/nginx/html;
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'none'; connect-src 'self' https:; frame-ancestors 'none'; frame-src https://apis.map.qq.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    }
+
+    location /admin/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /admin/index.html;
+        add_header Cache-Control "no-cache";
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'none'; connect-src 'self' https:; frame-ancestors 'none'; frame-src https://apis.map.qq.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    }
+
+    location /api/v1/admin/ {
+        proxy_pass http://backend:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+    }
+
+    location /api/v1/app/ {
+        proxy_pass http://backend:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+    }
+
+    location / {
+        return 404;
+    }
+}

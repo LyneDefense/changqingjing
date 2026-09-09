@@ -1,0 +1,153 @@
+name: changqingjing
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+x-backend-environment: &backend-environment
+  SPRING_PROFILES_ACTIVE: prod
+  DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+  DB_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+  WECHAT_ENABLED: "true"
+  WECHAT_MOCK_ENABLED: "false"
+  WECHAT_APP_ID: ${WECHAT_APP_ID:?WECHAT_APP_ID is required}
+  WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:?WECHAT_APP_SECRET is required}
+  APP_PHONE_ENCRYPTION_KEY_BASE64: ${APP_PHONE_ENCRYPTION_KEY_BASE64:?APP_PHONE_ENCRYPTION_KEY_BASE64 is required}
+  APP_SESSION_TTL: ${APP_SESSION_TTL:-7d}
+  COS_ENABLED: "true"
+  COS_BUCKET: ${COS_BUCKET:?COS_BUCKET is required}
+  COS_REGION: ${COS_REGION:?COS_REGION is required}
+  COS_SECRET_ID: ${COS_SECRET_ID:?COS_SECRET_ID is required}
+  COS_SECRET_KEY: ${COS_SECRET_KEY:?COS_SECRET_KEY is required}
+  COS_OBJECT_PREFIX: ${COS_OBJECT_PREFIX:?COS_OBJECT_PREFIX is required}
+  ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED:-false}
+  ADMIN_BOOTSTRAP_LOGIN_NAME: ${ADMIN_BOOTSTRAP_LOGIN_NAME:-}
+  ADMIN_BOOTSTRAP_DISPLAY_NAME: ${ADMIN_BOOTSTRAP_DISPLAY_NAME:-}
+  ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+  RATE_LIMIT_APP_AUTH_PER_MINUTE: ${RATE_LIMIT_APP_AUTH_PER_MINUTE:-30}
+  RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE: ${RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE:-30}
+  RATE_LIMIT_MEDIA_UPLOAD_PER_MINUTE: ${RATE_LIMIT_MEDIA_UPLOAD_PER_MINUTE:-60}
+  RATE_LIMIT_SCENIC_VIEW_PER_MINUTE: ${RATE_LIMIT_SCENIC_VIEW_PER_MINUTE:-120}
+  SERVER_FORWARD_HEADERS_STRATEGY: framework
+  JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - internal
+    logging: *default-logging
+
+  migrate:
+    image: flyway/flyway:10.22.0-alpine
+    profiles: ["tools"]
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      FLYWAY_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      FLYWAY_CONNECT_RETRIES: "60"
+      FLYWAY_VALIDATE_MIGRATION_NAMING: "true"
+    command: migrate
+    volumes:
+      - ../backend/src/main/resources/db/migration:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: "no"
+    logging: *default-logging
+
+  backend:
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
+    build:
+      context: ../backend
+    environment: *backend-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+    restart: unless-stopped
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - internal
+    logging: *default-logging
+
+  web:
+    image: ${WEB_IMAGE:?WEB_IMAGE is required}
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        MAP_BROWSER_ID: ${VITE_TENCENT_MAP_KEY:?VITE_TENCENT_MAP_KEY is required}
+        MAP_REFERER_NAME: ${VITE_TENCENT_MAP_REFERER:?VITE_TENCENT_MAP_REFERER is required}
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/nginx-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    stop_grace_period: 15s
+    read_only: true
+    tmpfs:
+      - /etc/nginx/conf.d:size=1m
+      - /var/cache/nginx:size=32m
+      - /var/run:size=2m
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - internal
+    logging: *default-logging
+
+  certbot:
+    image: certbot/certbot:v3.1.0
+    profiles: ["tools"]
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    restart: "no"
+    logging: *default-logging
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:

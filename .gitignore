@@ -25,7 +25,10 @@ miniprogram/project.private.config.json
 
 deploy/certbot/conf/
 deploy/certbot/www/
+deploy/backups/
 deploy/data/
+deploy/.deploy.lock
+deploy/.release-state
 
 *.log
 coverage/
