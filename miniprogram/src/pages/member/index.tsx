@@ -8,10 +8,10 @@ export default function MemberPage() {
 
   function openBenefits() {
     if (auth.status === 'authenticated') {
-      void Taro.showToast({ title: '福利产品即将接入', icon: 'none' })
+      void Taro.navigateTo({ url: '/pages/products/index' })
       return
     }
-    void Taro.navigateTo({ url: '/pages/login/index?target=member' })
+    void Taro.navigateTo({ url: '/pages/login/index?target=products' })
   }
 
   function showComingSoon() {

@@ -63,6 +63,32 @@ export interface PageResponse<T> {
   total: number
 }
 
+export interface ProductCategory {
+  id: string
+  name: string
+}
+
+export interface ProductSummary {
+  id: string
+  name: string
+  summary: string
+  coverUrl: string
+  categoryId?: string
+  categoryName?: string
+}
+
+export interface ProductContentBlock {
+  type: CompanyBlockType
+  text?: string
+  imageUrl?: string
+  altText?: string
+}
+
+export interface ProductContent extends ProductSummary {
+  blocks: ProductContentBlock[]
+  specification?: string
+}
+
 export interface HomeContent {
   video?: HomeVideo
   company?: CompanySummary
@@ -93,4 +119,27 @@ export function recordScenicView(scenicId: string, viewId: string) {
     method: 'POST',
     data: { viewId }
   })
+}
+
+export function getProductCategories() {
+  return request<ProductCategory[]>({ path: '/product-categories' })
+}
+
+export function getProducts(options: {
+  page?: number
+  pageSize?: number
+  keyword?: string
+  categoryId?: string
+}) {
+  const query = [
+    `page=${options.page ?? 1}`,
+    `pageSize=${options.pageSize ?? 12}`
+  ]
+  if (options.keyword) query.push(`keyword=${encodeURIComponent(options.keyword)}`)
+  if (options.categoryId) query.push(`categoryId=${encodeURIComponent(options.categoryId)}`)
+  return request<PageResponse<ProductSummary>>({ path: `/products?${query.join('&')}` })
+}
+
+export function getProductContent(productId: string) {
+  return request<ProductContent>({ path: `/products/${encodeURIComponent(productId)}` })
 }

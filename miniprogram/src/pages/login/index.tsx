@@ -12,7 +12,14 @@ interface PhoneEventDetail {
 }
 
 export default function LoginPage() {
-  const target = getCurrentInstance().router?.params.target === 'profile' ? 'profile' : 'member'
+  const params = getCurrentInstance().router?.params
+  const requestedTarget = params?.target
+  const target = requestedTarget === 'profile'
+    || requestedTarget === 'products'
+    || requestedTarget === 'product'
+    ? requestedTarget
+    : 'member'
+  const productId = params?.productId ?? ''
   const completed = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -44,11 +51,19 @@ export default function LoginPage() {
     try {
       await registerWithPhoneCode(phoneCode)
       completed.current = true
-      await Taro.navigateBack({ delta: 1 }).catch(() => (
-        Taro.switchTab({
-          url: target === 'profile' ? '/pages/profile/index' : '/pages/member/index'
-        })
-      ))
+      try {
+        await Taro.navigateBack({ delta: 1 })
+      } catch {
+        if (target === 'product' && productId) {
+          await Taro.redirectTo({ url: `/pages/product-detail/index?id=${encodeURIComponent(productId)}` })
+        } else if (target === 'products') {
+          await Taro.redirectTo({ url: '/pages/products/index' })
+        } else {
+          await Taro.switchTab({
+            url: target === 'profile' ? '/pages/profile/index' : '/pages/member/index'
+          })
+        }
+      }
     } catch (loginError) {
       setError(loginError instanceof AuthApiError
         ? loginError.message
@@ -71,7 +86,7 @@ export default function LoginPage() {
     <View className='login-flow'>
       <View className='login-flow__mark'>常</View>
       <Text className='login-flow__title'>
-        登录后查看{target === 'profile' ? '个人中心' : '会员福利'}
+        登录后查看{target === 'profile' ? '个人中心' : target === 'product' ? '产品详情' : '会员福利'}
       </Text>
       <Text className='login-flow__description'>
         首次登录需要你主动授权微信绑定的手机号，以后会优先恢复已有账号，不会反复要求授权。
