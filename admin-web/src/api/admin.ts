@@ -111,6 +111,7 @@ export type MediaPurpose =
   | 'HOME_VIDEO'
   | 'HOME_VIDEO_COVER'
   | 'SCENIC_IMAGE'
+  | 'PRODUCT_IMAGE'
 
 export interface AdminMedia {
   id: string
@@ -209,6 +210,62 @@ export interface MapSelection {
   latitude: number
   coordinateSystem: 'GCJ02'
   expiresAt: string
+}
+
+export type ProductPublicationStatus = 'DRAFT' | 'ONLINE' | 'OFFLINE'
+
+export interface AdminProductCategory {
+  id: string
+  name: string
+  displayOrder: number
+  status: ProductPublicationStatus
+  hasUnpublishedChanges: boolean
+  version: number
+  updatedAt: string
+}
+
+export interface ProductContentBlock {
+  type: CompanyBlockType
+  text?: string
+  mediaId?: string
+  altText?: string
+}
+
+export interface AdminProductRevision {
+  id: string
+  revisionNumber: number
+  name: string
+  summary: string
+  categoryId?: string
+  coverMediaId?: string
+  blocks: ProductContentBlock[]
+  specification?: string
+  displayOrder: number
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminProductContent {
+  id: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt: string
+  draft?: AdminProductRevision
+  published?: AdminProductRevision
+}
+
+export interface AdminProductListItem {
+  id: string
+  name: string
+  coverMediaId?: string
+  categoryId?: string
+  categoryName?: string
+  status: ProductPublicationStatus
+  displayOrder: number
+  hasUnpublishedChanges: boolean
+  version: number
+  updatedAt: string
 }
 
 export interface AdminScenicRevision {
@@ -634,6 +691,114 @@ export function confirmMapSelection(input: {
   return writeRequest<MapSelection>('/map-selections', {
     method: 'POST',
     body: JSON.stringify(input),
+  })
+}
+
+export function getAdminProductCategories() {
+  return request<AdminProductCategory[]>('/product-categories')
+}
+
+export interface SaveProductCategoryInput {
+  name: string
+  displayOrder: number
+  expectedVersion: number
+}
+
+export function createAdminProductCategory(input: SaveProductCategoryInput) {
+  return writeRequest<AdminProductCategory>('/product-categories', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function saveAdminProductCategory(categoryId: string, input: SaveProductCategoryInput) {
+  return writeRequest<AdminProductCategory>(`/product-categories/${encodeURIComponent(categoryId)}/draft`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function publishAdminProductCategory(categoryId: string, expectedVersion: number) {
+  return writeRequest<AdminProductCategory>(`/product-categories/${encodeURIComponent(categoryId)}/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminProductCategory(categoryId: string, expectedVersion: number) {
+  return writeRequest<AdminProductCategory>(`/product-categories/${encodeURIComponent(categoryId)}/unpublish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function searchAdminProducts(input: {
+  keyword?: string
+  status?: ProductPublicationStatus | ''
+  categoryId?: string
+  page?: number
+  pageSize?: number
+}) {
+  const query = new URLSearchParams()
+  if (input.keyword) query.set('keyword', input.keyword)
+  if (input.status) query.set('status', input.status)
+  if (input.categoryId) query.set('categoryId', input.categoryId)
+  query.set('page', String(input.page ?? 1))
+  query.set('pageSize', String(input.pageSize ?? 20))
+  return request<PageResponse<AdminProductListItem>>(`/products?${query}`)
+}
+
+export function getAdminProduct(productId: string) {
+  return request<AdminProductContent>(`/products/${encodeURIComponent(productId)}`)
+}
+
+export interface SaveProductInput {
+  name: string
+  summary: string
+  categoryId?: string
+  coverMediaId?: string
+  blocks: ProductContentBlock[]
+  specification?: string
+  displayOrder: number
+  expectedVersion: number
+}
+
+export function createAdminProduct(input: SaveProductInput) {
+  return writeRequest<AdminProductContent>('/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function saveAdminProductDraft(productId: string, input: SaveProductInput) {
+  return writeRequest<AdminProductContent>(`/products/${encodeURIComponent(productId)}/draft`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function previewAdminProduct(productId: string) {
+  return request<AdminProductRevision>(`/products/${encodeURIComponent(productId)}/preview`)
+}
+
+export function publishAdminProduct(productId: string, expectedVersion: number) {
+  return writeRequest<AdminProductContent>(`/products/${encodeURIComponent(productId)}/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminProduct(productId: string, expectedVersion: number) {
+  return writeRequest<AdminProductContent>(`/products/${encodeURIComponent(productId)}/unpublish`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function deleteAdminProduct(productId: string, expectedVersion: number) {
+  return writeRequest<{ deleted: boolean }>(`/products/${encodeURIComponent(productId)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ expectedVersion }),
   })
 }
 

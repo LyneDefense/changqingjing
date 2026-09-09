@@ -328,6 +328,32 @@
   min-width: 280px;
 }
 
+.section-tabs {
+  background: #eef3f0;
+  border-radius: 12px;
+  display: inline-flex;
+  gap: 4px;
+  margin: 22px 0 16px;
+  padding: 4px;
+}
+
+.section-tabs button {
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: #5f6f69;
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 40px;
+  padding: 9px 18px;
+}
+
+.section-tabs button.active {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(24, 57, 47, 0.08);
+  color: #28604e;
+}
+
 .secondary-button {
   background: #fff;
   border: 1px solid #b9c8c1;
@@ -866,6 +892,21 @@
   margin: -10px 0 0;
 }
 
+.publication-checklist {
+  background: #fff8e7;
+  border: 1px solid #ead49b;
+  border-radius: 10px;
+  color: #765b18;
+  display: grid;
+  font-size: 13px;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.category-table {
+  margin-top: 16px;
+}
+
 .content-preview {
   max-width: 720px;
 }
@@ -1084,6 +1125,14 @@
   .filter-bar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .section-tabs {
+    display: flex;
+  }
+
+  .section-tabs button {
+    flex: 1;
   }
 
   .filter-bar input,

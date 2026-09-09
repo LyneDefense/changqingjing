@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
 import { HomeVideoPage } from './pages/HomeVideoPage'
 import { LoginPage } from './pages/LoginPage'
+import { ProductPage } from './pages/ProductPage'
 import { RouteErrorPage } from './pages/RouteErrorPage'
 import { ScenicPage } from './pages/ScenicPage'
 import { StaffPage } from './pages/StaffPage'
@@ -28,6 +29,7 @@ export const routes = [
               { path: 'home-videos', Component: HomeVideoPage },
               { path: 'company', Component: ContentPage },
               { path: 'scenics', Component: ScenicPage },
+              { path: 'products', Component: ProductPage },
               { path: 'content', element: <Navigate replace to="/company" /> },
               { path: 'forbidden', Component: ForbiddenPage },
               {

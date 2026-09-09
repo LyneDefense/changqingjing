@@ -19,7 +19,7 @@ export function App() {
         <header className="admin-header">
           <div>
             <p className="eyebrow">常清净文旅投</p>
-            <h1>内容管理后台</h1>
+            <h1>运营管理后台</h1>
           </div>
           <div className="header-actions">
             <span className="current-user">
