@@ -89,6 +89,26 @@ export interface ProductContent extends ProductSummary {
   specification?: string
 }
 
+export interface CooperationRevenueSection {
+  title: string
+  description: string
+  icon: string
+}
+
+export interface CooperationValueSection {
+  title: string
+  description: string
+  imageUrl?: string
+  imageAltText?: string
+}
+
+export interface CooperationContent {
+  title: string
+  summary: string
+  revenueSections: CooperationRevenueSection[]
+  valueSections: CooperationValueSection[]
+}
+
 export interface HomeContent {
   video?: HomeVideo
   company?: CompanySummary
@@ -142,4 +162,8 @@ export function getProducts(options: {
 
 export function getProductContent(productId: string) {
   return request<ProductContent>({ path: `/products/${encodeURIComponent(productId)}` })
+}
+
+export function getCooperationContent() {
+  return request<CooperationContent>({ path: '/cooperation' })
 }

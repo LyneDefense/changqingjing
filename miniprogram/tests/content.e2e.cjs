@@ -85,6 +85,34 @@ async function main() {
     const bodyImage = await company.$('.company-content-image')
     assert(bodyImage, '公司介绍正文图片应显示')
     assert.match(await bodyImage.attribute('src'), /company-body\.jpg/)
+
+    await miniProgram.restoreWxMethod('request')
+    await miniProgram.mockWxMethod('request', {
+      statusCode: 200,
+      data: {
+        data: {
+          title: '自动化合作权益',
+          summary: '共同连接文化与旅行资源',
+          revenueSections: [
+            { title: '招商收益', description: '分公司合作', icon: '商' },
+            { title: '供应链', description: '产品流转收益', icon: '链' },
+          ],
+          valueSections: [
+            { title: '资源整合', description: '连接长期合作资源' },
+          ],
+        },
+      },
+    })
+    await miniProgram.callWxMethod('reLaunch', { url: '/pages/cooperation/index' })
+    await new Promise((resolve) => setTimeout(resolve, 2_000))
+    const cooperation = await miniProgram.currentPage()
+    assert(cooperation, '合作权益页应成功打开')
+    assert.equal(cooperation.path, 'pages/cooperation/index')
+    const revenueTitle = await cooperation.$('.revenue-card__title')
+    const valueTitle = await cooperation.$('.cooperation-value-card__title')
+    assert(revenueTitle && valueTitle, '收益分类和合作价值应显示')
+    assert.equal(await revenueTitle.text(), '招商收益')
+    assert.equal(await valueTitle.text(), '资源整合')
   } finally {
     await miniProgram.close()
   }

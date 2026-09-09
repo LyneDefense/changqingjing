@@ -8,6 +8,19 @@ export default function ProfilePage() {
   const auth = useAuth()
   const user = auth.user
 
+  function showComingSoon() {
+    void Taro.showToast({ title: '敬请期待', icon: 'none' })
+  }
+
+  const unavailableValue = auth.status === 'authenticated' ? '暂未开放' : '—'
+  const services = [
+    ['会', '成为会员'],
+    ['单', '我的订单'],
+    ['充', '充值记录'],
+    ['址', '地址管理'],
+    ['荐', '我的推荐'],
+  ]
+
   return (
     <View className='page profile-page'>
       <View className='profile-card'>
@@ -37,8 +50,25 @@ export default function ProfilePage() {
           ? `用户编号：${user?.id}`
           : '尚未登录，暂无账号资料'}
       </PageSection>
-      <PageSection title='会员能力'>等级、余额、功德等能力暂未开放</PageSection>
-      <PageSection title='更多功能'>订单、充值记录、地址管理与推荐功能：敬请期待</PageSection>
+      <View className='profile-metrics'>
+        {['会员等级', '余额', '功德', '会员号'].map((label) => (
+          <View className='profile-metric' key={label}>
+            <Text className='profile-metric__value'>{unavailableValue}</Text>
+            <Text className='profile-metric__label'>{label}</Text>
+          </View>
+        ))}
+      </View>
+      <View className='profile-services'>
+        <Text className='profile-services__heading'>更多服务</Text>
+        {services.map(([icon, label]) => (
+          <View className='profile-service-row' hoverClass='profile-service-row--pressed' key={label} onClick={showComingSoon}>
+            <Text className='profile-service-row__icon'>{icon}</Text>
+            <Text className='profile-service-row__label'>{label}</Text>
+            <Text className='profile-service-row__status'>敬请期待</Text>
+            <Text className='profile-service-row__arrow'>›</Text>
+          </View>
+        ))}
+      </View>
     </View>
   )
 }

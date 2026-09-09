@@ -1,0 +1,169 @@
+.cooperation-page {
+  background:
+    radial-gradient(circle at 85% 4%, rgba(237, 204, 92, 0.24), transparent 22%),
+    linear-gradient(180deg, #fff8df 0, #f5efe2 100%);
+}
+
+.cooperation-hero {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 4px 4px;
+}
+
+.cooperation-hero__eyebrow {
+  color: #b4892f;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 4px;
+}
+
+.cooperation-hero__title {
+  color: #26342e;
+  font-size: 46px;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+.cooperation-hero__summary {
+  color: #6e746f;
+  font-size: 26px;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+
+.cooperation-tabs {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(209, 194, 154, 0.45);
+  border-radius: 22px;
+  display: flex;
+  padding: 8px;
+}
+
+.cooperation-tab {
+  align-items: center;
+  border-radius: 16px;
+  color: #626862;
+  display: flex;
+  flex: 1;
+  font-size: 26px;
+  justify-content: center;
+  min-height: 78px;
+}
+
+.cooperation-tab--active {
+  background: #1d6a50;
+  color: #fff;
+  font-weight: 700;
+}
+
+.cooperation-section-heading {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.cooperation-section-heading--value {
+  margin-top: 24px;
+}
+
+.cooperation-section-heading__mark {
+  color: #e0b600;
+  font-size: 42px;
+}
+
+.cooperation-section-heading__title {
+  color: #30352f;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.revenue-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.revenue-card {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(222, 211, 181, 0.58);
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(99, 79, 35, 0.07);
+  box-sizing: border-box;
+  display: flex;
+  gap: 14px;
+  min-height: 165px;
+  padding: 24px 18px;
+  width: calc(50% - 10px);
+}
+
+.revenue-card__icon {
+  flex: 0 0 auto;
+  font-size: 36px;
+}
+
+.revenue-card__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.revenue-card__title,
+.cooperation-value-card__title {
+  color: #30352f;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.revenue-card__description {
+  color: #70766f;
+  font-size: 22px;
+  line-height: 1.55;
+  margin-top: 9px;
+}
+
+.cooperation-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cooperation-value-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(222, 211, 181, 0.58);
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(99, 79, 35, 0.07);
+  overflow: hidden;
+}
+
+.cooperation-value-card__image {
+  height: 280px;
+  width: 100%;
+}
+
+.cooperation-value-card__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+}
+
+.cooperation-value-card__description {
+  color: #666e68;
+  font-size: 26px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.cooperation-state {
+  align-items: center;
+  color: #716f66;
+  display: flex;
+  flex-direction: column;
+  font-size: 27px;
+  gap: 22px;
+  padding: 100px 20px;
+  text-align: center;
+}
