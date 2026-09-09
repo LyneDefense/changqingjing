@@ -588,6 +588,74 @@
   gap: 12px;
 }
 
+.company-sections,
+.section-content-list {
+  display: grid;
+  gap: 16px;
+}
+
+.company-section-card {
+  background: #f7f9f8;
+  border: 1px solid #dce6e1;
+  border-radius: 14px;
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.company-section-toolbar,
+.section-content-item__heading,
+.section-content-actions,
+.section-add-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.company-section-toolbar strong {
+  color: #20362f;
+}
+
+.company-section-toolbar span {
+  color: #71817b;
+  flex: 1;
+  font-size: 12px;
+}
+
+.section-content-item {
+  background: #fff;
+  border: 1px solid #e2e9e5;
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.section-content-item__heading {
+  justify-content: space-between;
+}
+
+.section-content-item__heading span {
+  color: #53645e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.section-content-item textarea,
+.section-content-item > input {
+  background: #fff;
+  border: 1px solid #cdd8d3;
+  border-radius: 10px;
+  color: #17251f;
+  padding: 11px 13px;
+  resize: vertical;
+  width: 100%;
+}
+
+.section-add-actions {
+  flex-wrap: wrap;
+}
+
 .content-block {
   background: #f7f9f8;
   border: 1px solid #e4eae7;

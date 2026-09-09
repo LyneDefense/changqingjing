@@ -95,14 +95,30 @@ describe('ContentPage', () => {
     fireEvent.change(screen.getByLabelText('首页简介'), {
       target: { value: revision.summary },
     })
-    fireEvent.change(screen.getByLabelText('第 1 块内容'), {
+    fireEvent.change(screen.getByLabelText('第 1 个板块标题'), {
+      target: { value: '公司简介' },
+    })
+    fireEvent.change(screen.getByLabelText('第 1 个板块第 1 段内容'), {
       target: { value: revision.blocks[0].text },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '添加板块' }))
+    fireEvent.change(screen.getByLabelText('第 2 个板块标题'), {
+      target: { value: '企业定位' },
+    })
+    fireEvent.change(screen.getByLabelText('第 2 个板块第 1 段内容'), {
+      target: { value: '专注文旅融合发展。' },
     })
     fireEvent.click(screen.getByRole('button', { name: '保存草稿' }))
 
     await waitFor(() => {
       expect(screen.getByText('第 1 版')).toBeInTheDocument()
     })
+    expect(current.draft?.blocks).toEqual([
+      { type: 'HEADING', text: '公司简介' },
+      { type: 'PARAGRAPH', text: revision.blocks[0].text },
+      { type: 'HEADING', text: '企业定位' },
+      { type: 'PARAGRAPH', text: '专注文旅融合发展。' },
+    ])
     const draftCall = fetchMock.mock.calls.find(
       ([url]) => String(url).endsWith('/contents/company/draft'),
     )
