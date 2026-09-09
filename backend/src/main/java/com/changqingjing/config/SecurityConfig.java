@@ -53,7 +53,9 @@ public class SecurityConfig {
                     "/api/v1/admin/contents/**",
                     "/api/v1/admin/media/**",
                     "/api/v1/admin/map-selections/**",
-                    "/api/v1/admin/scenics/**").hasAnyRole("ADMIN", "OPERATOR")
+                    "/api/v1/admin/scenics/**",
+                    "/api/v1/admin/product-categories/**",
+                    "/api/v1/admin/products/**").hasAnyRole("ADMIN", "OPERATOR")
                 .anyRequest().denyAll())
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable())
