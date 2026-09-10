@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -62,7 +63,8 @@ final class RealWechatGateway implements WechatGateway {
                     .uri(uri -> uri.path("/wxa/business/getuserphonenumber")
                             .queryParam("access_token", accessToken())
                             .build())
-                    .body(new PhoneRequest(phoneCode))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(writeJson(new PhoneRequest(phoneCode)))
                     .retrieve()
                     .body(String.class);
             PhonePayload payload = parseJson(responseBody, PhonePayload.class);
@@ -135,6 +137,14 @@ final class RealWechatGateway implements WechatGateway {
         }
         try {
             return objectMapper.readValue(responseBody, responseType);
+        } catch (JsonProcessingException exception) {
+            throw serviceFailure();
+        }
+    }
+
+    private String writeJson(Object requestBody) {
+        try {
+            return objectMapper.writeValueAsString(requestBody);
         } catch (JsonProcessingException exception) {
             throw serviceFailure();
         }
