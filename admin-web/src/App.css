@@ -765,6 +765,55 @@
   gap: 16px;
 }
 
+.company-gallery-editor {
+  border-top: 1px solid #e6ece9;
+  display: grid;
+  gap: 16px;
+  padding-top: 22px;
+}
+
+.gallery-count {
+  background: #eef4f1;
+  border-radius: 999px;
+  color: #456158;
+  font-size: 12px;
+  padding: 7px 11px;
+}
+
+.company-gallery-list {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-gallery-item {
+  background: #f7f9f8;
+  border: 1px solid #dce6e1;
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.company-gallery-item__toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.company-gallery-item__toolbar strong {
+  color: #20362f;
+  font-size: 13px;
+}
+
+.company-gallery-item .media-upload-field {
+  background: #fff;
+}
+
+.company-gallery-uploader {
+  max-width: 460px;
+}
+
 .company-section-card {
   background: #f7f9f8;
   border: 1px solid #dce6e1;
@@ -1183,6 +1232,28 @@
   margin: 28px 0 8px;
 }
 
+.preview-media-section {
+  margin-top: 22px;
+}
+
+.preview-media-section h3 {
+  color: #35453f;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.preview-gallery {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preview-gallery .content-image-preview {
+  aspect-ratio: 3 / 2;
+  height: 100%;
+  object-fit: cover;
+}
+
 .error-notice {
   background: #fff1ee;
   color: #9c3529;
@@ -1272,7 +1343,9 @@
   }
 
   .cooperation-revenue-fields,
-  .cooperation-preview-grid {
+  .cooperation-preview-grid,
+  .company-gallery-list,
+  .preview-gallery {
     grid-template-columns: 1fr;
   }
 

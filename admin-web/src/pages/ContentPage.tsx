@@ -18,41 +18,39 @@ import { PageIntro } from '../components/PageIntro'
 import { MediaPreview } from '../components/MediaPreview'
 import { MediaUploadField } from '../components/MediaUploadField'
 
-const blankBlock: CompanyContentBlock = { type: 'PARAGRAPH', text: '' }
-
 interface EditableCompanySection {
   key: string
   title: string
-  content: CompanyContentBlock[]
+  text: string
 }
 
 let sectionSequence = 0
 
-function newSection(title = '', content: CompanyContentBlock[] = [{ ...blankBlock }]): EditableCompanySection {
+function newSection(title = '', text = ''): EditableCompanySection {
   sectionSequence += 1
-  return { key: `company-section-${sectionSequence}`, title, content }
+  return { key: `company-section-${sectionSequence}`, title, text }
 }
 
 function sectionsFromBlocks(blocks: CompanyContentBlock[]): EditableCompanySection[] {
   const sections: EditableCompanySection[] = []
   for (const block of blocks) {
     if (block.type === 'HEADING') {
-      sections.push(newSection(block.text ?? '', []))
+      sections.push(newSection(block.text ?? ''))
       continue
     }
-    if (sections.length === 0) sections.push(newSection('公司简介', []))
-    sections[sections.length - 1].content.push(block)
+    if (block.type !== 'PARAGRAPH') continue
+    if (sections.length === 0) sections.push(newSection('公司简介'))
+    const section = sections[sections.length - 1]
+    section.text = [section.text, block.text ?? ''].filter(Boolean).join('\n\n')
   }
   if (sections.length === 0) return [newSection()]
-  return sections.map((section) => (
-    section.content.length > 0 ? section : { ...section, content: [{ ...blankBlock }] }
-  ))
+  return sections
 }
 
 function blocksFromSections(sections: EditableCompanySection[]): CompanyContentBlock[] {
   return sections.flatMap((section) => [
     { type: 'HEADING' as const, text: section.title },
-    ...section.content,
+    { type: 'PARAGRAPH' as const, text: section.text },
   ])
 }
 
@@ -68,6 +66,8 @@ export function ContentPage() {
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [coverMediaId, setCoverMediaId] = useState('')
+  const [galleryMediaIds, setGalleryMediaIds] = useState<string[]>([])
+  const [galleryUploadKey, setGalleryUploadKey] = useState(0)
   const [sections, setSections] = useState<EditableCompanySection[]>([newSection()])
   const [preview, setPreview] = useState<AdminCompanyRevision>()
   const [dirty, setDirty] = useState(false)
@@ -82,6 +82,7 @@ export function ContentPage() {
     setTitle(editable?.title ?? '')
     setSummary(editable?.summary ?? '')
     setCoverMediaId(editable?.coverMediaId ?? '')
+    setGalleryMediaIds(editable?.galleryMediaIds ?? [])
     setSections(sectionsFromBlocks(editable?.blocks ?? []))
     setDirty(false)
   }, [])
@@ -126,24 +127,6 @@ export function ContentPage() {
     setDirty(true)
   }
 
-  function updateSectionContent(
-    sectionIndex: number,
-    contentIndex: number,
-    patch: Partial<CompanyContentBlock>,
-  ) {
-    setSections((current) => current.map((section, currentSectionIndex) => (
-      currentSectionIndex === sectionIndex
-        ? {
-            ...section,
-            content: section.content.map((block, currentContentIndex) => (
-              currentContentIndex === contentIndex ? { ...block, ...patch } : block
-            )),
-          }
-        : section
-    )))
-    setDirty(true)
-  }
-
   function moveSection(index: number, direction: -1 | 1) {
     const target = index + direction
     if (target < 0 || target >= sections.length) return
@@ -155,13 +138,15 @@ export function ContentPage() {
     setDirty(true)
   }
 
-  function moveSectionContent(sectionIndex: number, contentIndex: number, direction: -1 | 1) {
-    const target = contentIndex + direction
-    const section = sections[sectionIndex]
-    if (!section || target < 0 || target >= section.content.length) return
-    const content = [...section.content]
-    ;[content[contentIndex], content[target]] = [content[target], content[contentIndex]]
-    updateSection(sectionIndex, { content })
+  function moveGalleryImage(index: number, direction: -1 | 1) {
+    const target = index + direction
+    if (target < 0 || target >= galleryMediaIds.length) return
+    setGalleryMediaIds((current) => {
+      const next = [...current]
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+    setDirty(true)
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -173,6 +158,7 @@ export function ContentPage() {
         title,
         summary,
         coverMediaId: coverMediaId || undefined,
+        galleryMediaIds,
         blocks: blocksFromSections(sections),
         expectedVersion: content?.version ?? 0,
       })
@@ -310,6 +296,81 @@ export function ContentPage() {
           />
         </label>
 
+        <section className="company-gallery-editor" aria-labelledby="company-gallery-title">
+          <div className="block-heading">
+            <div>
+              <h3 id="company-gallery-title">公司详情图片</h3>
+              <p>进入公司介绍后展示，可上传多张并调整左右滑动的顺序，最多 10 张。</p>
+            </div>
+            <span className="gallery-count">已添加 {galleryMediaIds.length} / 10 张</span>
+          </div>
+          {galleryMediaIds.length > 0 && (
+            <div className="company-gallery-list">
+              {galleryMediaIds.map((mediaId, imageIndex) => (
+                <div className="company-gallery-item" key={mediaId}>
+                  <div className="company-gallery-item__toolbar">
+                    <strong>详情图片 {imageIndex + 1}</strong>
+                    <div className="section-content-actions">
+                      <button
+                        aria-label={`上移第 ${imageIndex + 1} 张详情图片`}
+                        className="icon-text-button"
+                        disabled={imageIndex === 0}
+                        onClick={() => moveGalleryImage(imageIndex, -1)}
+                        type="button"
+                      >上移</button>
+                      <button
+                        aria-label={`下移第 ${imageIndex + 1} 张详情图片`}
+                        className="icon-text-button"
+                        disabled={imageIndex === galleryMediaIds.length - 1}
+                        onClick={() => moveGalleryImage(imageIndex, 1)}
+                        type="button"
+                      >下移</button>
+                      <button
+                        aria-label={`删除第 ${imageIndex + 1} 张详情图片`}
+                        className="icon-text-button danger"
+                        onClick={() => {
+                          setGalleryMediaIds((current) => current.filter((_, index) => index !== imageIndex))
+                          setDirty(true)
+                        }}
+                        type="button"
+                      >删除</button>
+                    </div>
+                  </div>
+                  <MediaUploadField
+                    accept="image/jpeg,image/png,image/webp"
+                    label={`详情图片 ${imageIndex + 1}`}
+                    mediaId={mediaId}
+                    mediaType="IMAGE"
+                    onReady={(media) => {
+                      setGalleryMediaIds((current) => current.map(
+                        (currentId, index) => index === imageIndex ? media.id : currentId,
+                      ))
+                      setDirty(true)
+                    }}
+                    purpose="COMPANY_IMAGE"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {galleryMediaIds.length < 10 && (
+            <div className="company-gallery-uploader">
+              <MediaUploadField
+                key={galleryUploadKey}
+                accept="image/jpeg,image/png,image/webp"
+                label={galleryMediaIds.length === 0 ? '上传第一张详情图片' : '继续添加详情图片'}
+                mediaType="IMAGE"
+                onReady={(media) => {
+                  setGalleryMediaIds((current) => [...current, media.id])
+                  setGalleryUploadKey((current) => current + 1)
+                  setDirty(true)
+                }}
+                purpose="COMPANY_IMAGE"
+              />
+            </div>
+          )}
+        </section>
+
         <div className="block-heading">
           <div>
             <h3>公司介绍板块</h3>
@@ -358,64 +419,18 @@ export function ContentPage() {
                   value={section.title}
                 />
               </label>
-              <div className="section-content-list">
-                {section.content.map((block, contentIndex) => (
-                  <div className="section-content-item" key={contentIndex}>
-                    <div className="section-content-item__heading">
-                      <span>{block.type === 'IMAGE' ? '板块图片' : '文字内容'} {contentIndex + 1}</span>
-                      <div className="section-content-actions">
-                        <button aria-label={`上移第 ${sectionIndex + 1} 个板块的第 ${contentIndex + 1} 项内容`} className="icon-text-button" disabled={contentIndex === 0} onClick={() => moveSectionContent(sectionIndex, contentIndex, -1)} type="button">上移</button>
-                        <button aria-label={`下移第 ${sectionIndex + 1} 个板块的第 ${contentIndex + 1} 项内容`} className="icon-text-button" disabled={contentIndex === section.content.length - 1} onClick={() => moveSectionContent(sectionIndex, contentIndex, 1)} type="button">下移</button>
-                        <button
-                          className="icon-text-button danger"
-                          disabled={section.content.length === 1}
-                          onClick={() => updateSection(sectionIndex, {
-                            content: section.content.filter((_, index) => index !== contentIndex),
-                          })}
-                          type="button"
-                        >删除</button>
-                      </div>
-                    </div>
-                    {block.type === 'IMAGE' ? (
-                      <>
-                        <MediaUploadField
-                          accept="image/jpeg,image/png,image/webp"
-                          label={`第 ${sectionIndex + 1} 个板块图片 ${contentIndex + 1}`}
-                          mediaId={block.mediaId}
-                          mediaType="IMAGE"
-                          onReady={(media) => updateSectionContent(sectionIndex, contentIndex, { mediaId: media.id })}
-                          purpose="COMPANY_IMAGE"
-                        />
-                        <input
-                          aria-label={`第 ${sectionIndex + 1} 个板块第 ${contentIndex + 1} 张图片说明`}
-                          maxLength={255}
-                          onChange={(event) => updateSectionContent(sectionIndex, contentIndex, { altText: event.target.value })}
-                          placeholder="图片说明（选填）"
-                          value={block.altText ?? ''}
-                        />
-                      </>
-                    ) : (
-                      <textarea
-                        aria-label={`第 ${sectionIndex + 1} 个板块第 ${contentIndex + 1} 段内容`}
-                        maxLength={10000}
-                        onChange={(event) => updateSectionContent(sectionIndex, contentIndex, { text: event.target.value })}
-                        placeholder="输入该板块的详细介绍"
-                        required
-                        rows={6}
-                        value={block.text ?? ''}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="section-add-actions">
-                <button className="secondary-button" onClick={() => updateSection(sectionIndex, {
-                  content: [...section.content, { ...blankBlock }],
-                })} type="button">添加一段文字</button>
-                <button className="secondary-button" onClick={() => updateSection(sectionIndex, {
-                  content: [...section.content, { type: 'IMAGE', altText: '' }],
-                })} type="button">添加一张图片</button>
-              </div>
+              <label className="editor-field">
+                文字内容
+                <textarea
+                  aria-label={`第 ${sectionIndex + 1} 个板块文字内容`}
+                  maxLength={10000}
+                  onChange={(event) => updateSection(sectionIndex, { text: event.target.value })}
+                  placeholder="输入该板块的详细介绍，可使用换行组织段落"
+                  required
+                  rows={7}
+                  value={section.text}
+                />
+              </label>
             </section>
           ))}
         </div>
@@ -444,11 +459,26 @@ export function ContentPage() {
               <button aria-label="关闭预览" className="icon-button" onClick={() => setPreview(undefined)} type="button">×</button>
             </div>
             <p className="preview-summary">{preview.summary}</p>
-            <MediaPreview alt={preview.title} mediaId={preview.coverMediaId} />
+            {preview.coverMediaId && (
+              <section className="preview-media-section">
+                <h3>首页列表封面</h3>
+                <MediaPreview alt={preview.title} mediaId={preview.coverMediaId} />
+              </section>
+            )}
+            {Boolean(preview.galleryMediaIds?.length) && (
+              <section className="preview-media-section">
+                <h3>公司详情图片</h3>
+                <div className="preview-gallery">
+                  {preview.galleryMediaIds?.map((mediaId, index) => (
+                    <MediaPreview alt={`公司详情图片 ${index + 1}`} key={mediaId} mediaId={mediaId} />
+                  ))}
+                </div>
+              </section>
+            )}
             <div className="preview-body">
               {preview.blocks.map((block, index) => {
                 if (block.type === 'HEADING') return <h3 key={index}>{block.text}</h3>
-                if (block.type === 'IMAGE') return <MediaPreview alt={block.altText} key={index} mediaId={block.mediaId} />
+                if (block.type === 'IMAGE') return null
                 return <p key={index}>{block.text}</p>
               })}
             </div>

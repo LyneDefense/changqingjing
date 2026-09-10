@@ -88,6 +88,7 @@ export interface AdminCompanyRevision {
   title: string
   summary: string
   coverMediaId?: string
+  galleryMediaIds?: string[]
   blocks: CompanyContentBlock[]
   createdBy: string
   createdAt: string
@@ -590,6 +591,7 @@ export function saveAdminCompanyDraft(input: {
   title: string
   summary: string
   coverMediaId?: string
+  galleryMediaIds: string[]
   blocks: CompanyContentBlock[]
   expectedVersion: number
 }) {

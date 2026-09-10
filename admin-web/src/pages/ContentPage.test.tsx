@@ -10,6 +10,7 @@ const revision: AdminCompanyRevision = {
   revisionNumber: 1,
   title: '常清净文旅投',
   summary: '连接文化与旅行',
+  galleryMediaIds: [],
   blocks: [{ type: 'PARAGRAPH', text: '这是公司介绍正文。' }],
   createdBy: '5be477df-6394-4037-aa38-d2b901f5eaf4',
   createdAt: '2026-09-08T08:00:00Z',
@@ -45,6 +46,7 @@ describe('ContentPage', () => {
         const body = JSON.parse(String(init?.body)) as {
           title: string
           summary: string
+          galleryMediaIds: string[]
           blocks: AdminCompanyRevision['blocks']
           expectedVersion: number
         }
@@ -98,14 +100,14 @@ describe('ContentPage', () => {
     fireEvent.change(screen.getByLabelText('第 1 个板块标题'), {
       target: { value: '公司简介' },
     })
-    fireEvent.change(screen.getByLabelText('第 1 个板块第 1 段内容'), {
+    fireEvent.change(screen.getByLabelText('第 1 个板块文字内容'), {
       target: { value: revision.blocks[0].text },
     })
     fireEvent.click(screen.getByRole('button', { name: '添加板块' }))
     fireEvent.change(screen.getByLabelText('第 2 个板块标题'), {
       target: { value: '企业定位' },
     })
-    fireEvent.change(screen.getByLabelText('第 2 个板块第 1 段内容'), {
+    fireEvent.change(screen.getByLabelText('第 2 个板块文字内容'), {
       target: { value: '专注文旅融合发展。' },
     })
     fireEvent.click(screen.getByRole('button', { name: '保存草稿' }))
@@ -123,8 +125,10 @@ describe('ContentPage', () => {
       ([url]) => String(url).endsWith('/contents/company/draft'),
     )
     expect(JSON.parse(String(draftCall?.[1]?.body))).toEqual(
-      expect.objectContaining({ expectedVersion: 0, title: revision.title }),
+      expect.objectContaining({ expectedVersion: 0, title: revision.title, galleryMediaIds: [] }),
     )
+    expect(screen.queryByRole('button', { name: '添加一张图片' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '添加一段文字' })).not.toBeInTheDocument()
     expect(draftCall?.[1]?.headers).toEqual(
       expect.objectContaining({ 'X-CSRF-TOKEN': 'content-csrf' }),
     )
