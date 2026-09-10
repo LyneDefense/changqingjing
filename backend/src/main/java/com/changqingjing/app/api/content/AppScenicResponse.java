@@ -38,11 +38,11 @@ public record AppScenicResponse(
                         .map(block -> AppScenicBlockResponse.from(block, mediaService))
                         .toList(),
                 revision.openStatus(),
-                location.displayName(),
-                location.providerAddress(),
-                location.longitude(),
-                location.latitude(),
-                location.coordinateSystem(),
+                location == null ? null : location.displayName(),
+                location == null ? null : location.providerAddress(),
+                location == null ? null : location.longitude(),
+                location == null ? null : location.latitude(),
+                location == null ? null : location.coordinateSystem(),
                 scenic.firstPublishedAt(),
                 scenic.viewCount());
     }

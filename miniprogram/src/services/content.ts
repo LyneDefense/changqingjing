@@ -56,11 +56,11 @@ export interface ScenicContent {
   coverUrl: string
   blocks: CompanyContentBlock[]
   openStatus: ScenicOpenStatus
-  displayName: string
-  address: string
-  longitude: number
-  latitude: number
-  coordinateSystem: 'GCJ02'
+  displayName?: string
+  address?: string
+  longitude?: number
+  latitude?: number
+  coordinateSystem?: 'GCJ02'
   firstPublishedAt: string
   viewCount: number
 }

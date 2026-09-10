@@ -53,7 +53,6 @@ load_environment() {
     DOMAIN SERVER_PUBLIC_IP CERTBOT_EMAIL POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD
     BACKEND_IMAGE WEB_IMAGE WECHAT_APP_ID WECHAT_APP_SECRET APP_PHONE_ENCRYPTION_KEY_BASE64
     COS_BUCKET COS_REGION COS_SECRET_ID COS_SECRET_KEY COS_OBJECT_PREFIX
-    VITE_TENCENT_MAP_KEY VITE_TENCENT_MAP_REFERER
   )
   local key value
   for key in "${required[@]}"; do
@@ -61,6 +60,9 @@ load_environment() {
     [[ -n "$value" ]] || die "$environment_file 中缺少 $key。"
     [[ "$value" != *CHANGE_ME* && "$value" != *change-me* ]] || die "$key 仍是示例占位值。"
   done
+
+  export VITE_TENCENT_MAP_KEY="${VITE_TENCENT_MAP_KEY:-}"
+  export VITE_TENCENT_MAP_REFERER="${VITE_TENCENT_MAP_REFERER:-changqingjing-admin}"
 
   [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ && "$DOMAIN" == *.* ]] || die "DOMAIN 格式无效。"
   [[ "$SERVER_PUBLIC_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || die "SERVER_PUBLIC_IP 必须是服务器公网 IPv4。"

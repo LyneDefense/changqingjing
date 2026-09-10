@@ -142,7 +142,7 @@ export function ScenicPage() {
       <>
         <PageIntro
           title="景区管理"
-          description="维护景区图文、开放状态、首页顺序和真实导航位置。"
+          description="维护景区图文、开放状态和首页顺序；导航位置按需配置。"
         />
         <ScenicEditor
           onChanged={() => void load()}

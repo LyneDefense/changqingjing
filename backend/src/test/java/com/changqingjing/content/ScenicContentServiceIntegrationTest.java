@@ -165,6 +165,29 @@ class ScenicContentServiceIntegrationTest {
     }
 
     @Test
+    void publishesScenicWithoutOptionalNavigationLocation() {
+        AdminPrincipal actor = bootstrapAdmin();
+        UUID coverId = insertReadyImage(actor.accountId());
+        UUID bodyId = insertReadyImage(actor.accountId());
+        var draft = scenicService.create(
+                draftRequest(
+                        "仙岛湖旅游风景区",
+                        coverId,
+                        bodyId,
+                        "",
+                        null,
+                        0),
+                actor,
+                "scenic-without-location-create");
+
+        var published = scenicService.publish(
+                draft.id(), draft.version(), actor, "scenic-without-location-publish");
+
+        assertThat(published.published().location()).isNull();
+        assertThat(scenicService.getPublished(draft.id()).revision().location()).isNull();
+    }
+
+    @Test
     void rejectsPublishingIncompleteDraftAndDeletingOnlineScenic() {
         AdminPrincipal actor = bootstrapAdmin();
         var draft = scenicService.create(

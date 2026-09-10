@@ -317,14 +317,6 @@ public class ScenicContentService {
                     "SCENIC_CONTENT_REQUIRED",
                     "请至少添加一段景区详细内容");
         }
-        if (revision.location() == null
-                || revision.location().displayName() == null
-                || revision.location().displayName().isBlank()) {
-            throw new BusinessException(
-                    HttpStatus.BAD_REQUEST,
-                    "SCENIC_LOCATION_REQUIRED",
-                    "请先选择并确认导航位置");
-        }
     }
 
     private void validateMedia(UUID coverMediaId, List<ScenicContentBlock> blocks) {

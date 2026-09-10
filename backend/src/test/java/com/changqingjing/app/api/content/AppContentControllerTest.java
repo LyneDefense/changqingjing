@@ -16,6 +16,8 @@ import com.changqingjing.content.HomeHeroContentRepository;
 import com.changqingjing.content.HomeVideoContentService;
 import com.changqingjing.content.HomeVideoContentRepository;
 import com.changqingjing.content.ScenicContentService;
+import com.changqingjing.content.ScenicContentRepository;
+import com.changqingjing.content.ScenicOpenStatus;
 import com.changqingjing.media.MediaService;
 import com.changqingjing.media.MediaStorage;
 import java.time.OffsetDateTime;
@@ -148,6 +150,44 @@ class AppContentControllerTest {
                         "https://media.example/hero.jpg?signature=short"))
                 .andExpect(jsonPath("$.data.hero.focusX").value(42))
                 .andExpect(jsonPath("$.data.hero.focusY").value(61));
+    }
+
+    @Test
+    void scenicWithoutNavigationLocationRemainsPublic() throws Exception {
+        UUID scenicId = UUID.randomUUID();
+        UUID coverId = UUID.randomUUID();
+        OffsetDateTime publishedAt = OffsetDateTime.parse("2026-09-08T08:00:00Z");
+        when(scenicContentService.getPublished(scenicId)).thenReturn(
+                new ScenicContentService.PublishedScenic(
+                        scenicId,
+                        new ScenicContentRepository.Revision(
+                                UUID.randomUUID(),
+                                1,
+                                "仙岛湖旅游风景区",
+                                "千岛星布，水天相映",
+                                coverId,
+                                List.of(new com.changqingjing.content.ScenicContentBlock(
+                                        CompanyBlockType.PARAGRAPH,
+                                        "景区介绍",
+                                        null,
+                                        null)),
+                                ScenicOpenStatus.OPEN,
+                                0,
+                                null,
+                                UUID.randomUUID(),
+                                publishedAt),
+                        publishedAt,
+                        3));
+        when(mediaService.signReadyMedia(coverId)).thenReturn(
+                new MediaStorage.SignedObjectUrl(
+                        "https://media.example/scenic.jpg?signature=short",
+                        publishedAt.plusMinutes(15)));
+
+        mockMvc.perform(get("/api/v1/app/scenics/{entryId}", scenicId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("仙岛湖旅游风景区"))
+                .andExpect(jsonPath("$.data.displayName").doesNotExist())
+                .andExpect(jsonPath("$.data.longitude").doesNotExist());
     }
 
     private CompanyContentService.PublishedCompany publishedCompany() {

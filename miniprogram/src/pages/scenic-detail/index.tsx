@@ -59,13 +59,13 @@ export default function ScenicDetailPage() {
   })
 
   async function navigate() {
-    if (!content) return
+    if (!content || content.latitude == null || content.longitude == null) return
     try {
       await Taro.openLocation({
         latitude: content.latitude,
         longitude: content.longitude,
-        name: content.displayName,
-        address: content.address,
+        name: content.displayName ?? content.title,
+        address: content.address ?? '',
         scale: 16
       })
     } catch {
@@ -74,7 +74,9 @@ export default function ScenicDetailPage() {
         content: '你可以复制详细地址，稍后在地图应用中搜索。',
         confirmText: '复制地址'
       })
-      if (result.confirm) await Taro.setClipboardData({ data: content.address })
+      if (result.confirm && content.address) {
+        await Taro.setClipboardData({ data: content.address })
+      }
     }
   }
 
@@ -116,14 +118,16 @@ export default function ScenicDetailPage() {
         })}
       </View>
 
-      <View className='scenic-location-card'>
-        <View className='scenic-location-copy'>
-          <Text className='scenic-location-label'>导航目的地</Text>
-          <Text className='scenic-location-name'>{content.displayName}</Text>
-          <Text className='scenic-location-address'>{content.address}</Text>
+      {content.latitude != null && content.longitude != null && (
+        <View className='scenic-location-card'>
+          <View className='scenic-location-copy'>
+            <Text className='scenic-location-label'>导航目的地</Text>
+            <Text className='scenic-location-name'>{content.displayName ?? content.title}</Text>
+            {content.address && <Text className='scenic-location-address'>{content.address}</Text>}
+          </View>
+          <Button className='primary-button scenic-navigation-button' onClick={() => void navigate()}>开始导航</Button>
         </View>
-        <Button className='primary-button scenic-navigation-button' onClick={() => void navigate()}>开始导航</Button>
-      </View>
+      )}
     </View>
   )
 }

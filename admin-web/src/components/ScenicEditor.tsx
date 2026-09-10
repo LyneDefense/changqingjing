@@ -332,23 +332,25 @@ export function ScenicEditor({
 
         <div className="editor-section-heading">
           <span>3</span>
-          <div><h3>导航位置</h3><p>地图位置决定实际导航目的地，展示名称可单独修改。</p></div>
+          <div><h3>导航位置（选填）</h3><p>需要让游客导航时再配置；不配置不影响景区发布。</p></div>
         </div>
         <MapLocationPicker location={location} onConfirmed={locationConfirmed} />
-        <label className="editor-field">
-          小程序展示名称
-          <input maxLength={255} placeholder="选点后默认使用地图地点名称" value={displayName} onChange={(event) => {
-            const nextName = event.target.value
-            setDisplayName(nextName)
-            if (location) setLocation({
-              ...location,
-              displayName: nextName,
-              nameCustomized: nextName.trim() !== location.providerName,
-            })
-            markDirty()
-          }} />
-          <small className="field-help">这里只改变小程序显示的名称，不会重新搜索或修改坐标。</small>
-        </label>
+        {location && (
+          <label className="editor-field">
+            小程序展示名称
+            <input maxLength={255} placeholder="默认使用地图地点名称" value={displayName} onChange={(event) => {
+              const nextName = event.target.value
+              setDisplayName(nextName)
+              setLocation({
+                ...location,
+                displayName: nextName,
+                nameCustomized: nextName.trim() !== location.providerName,
+              })
+              markDirty()
+            }} />
+            <small className="field-help">这里只改变小程序显示的名称，不会重新搜索或修改坐标。</small>
+          </label>
+        )}
 
         <div className="editor-actions">
           <button className="primary-button" disabled={busy || !dirty} type="submit">{busy ? '处理中…' : '保存草稿'}</button>

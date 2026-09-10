@@ -89,8 +89,8 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
     <section className="map-location-field">
       <div className="map-location-heading">
         <div>
-          <strong>导航位置</strong>
-          <small>位置只能通过地图重新选择；修改展示名称不会改变导航坐标。</small>
+          <strong>导航位置（选填）</strong>
+          <small>配置后，小程序会显示导航入口；不配置也可以正常保存和发布。</small>
         </div>
         <button
           className="secondary-button"
@@ -107,7 +107,8 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
 
       {!mapKey && (
         <p className="notice warning-notice">
-          地图尚未配置。开发人员配置 VITE_TENCENT_MAP_KEY 后即可使用地图搜索和选点。
+          当前未启用地图选点。如需导航功能，请让开发人员配置 VITE_TENCENT_MAP_KEY；
+          不需要导航可直接继续编辑。
         </p>
       )}
 
@@ -118,7 +119,7 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
           <small>已确认导航坐标 · GCJ-02</small>
         </div>
       ) : (
-        <p className="empty-inline">尚未选择导航位置。草稿可以保存，发布前必须完成选点。</p>
+        <p className="empty-inline">尚未选择导航位置。保存和发布不受影响，小程序不会显示导航入口。</p>
       )}
 
       {open && (

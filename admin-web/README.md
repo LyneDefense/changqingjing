@@ -18,6 +18,17 @@ Vite 会把 `/api` 转发到 `http://localhost:8080`。先按照 `backend/README
 - CSRF token 由 `/auth/csrf` 获取，只保存在当前页面内存中，所有写请求自动携带服务端指定的请求头。
 - 403 显示无权限页。人员和用户菜单只向管理员角色显示，后端仍独立执行权限校验。
 
+## 可选的腾讯地图选点
+
+管理后台使用腾讯位置服务的网页地图选点组件。需要该能力时，在腾讯位置服务创建应用和 Key，启用“地图组件”，然后把配置写入仓库根目录未提交的 `.env.local`：
+
+```dotenv
+VITE_TENCENT_MAP_KEY=你的腾讯位置服务Key
+VITE_TENCENT_MAP_REFERER=changqingjing-admin
+```
+
+`VITE_TENCENT_MAP_REFERER` 必须与申请 Key 时填写的应用名称一致。修改配置后需重新启动 `pnpm dev`。不配置地图不会阻止景区保存和发布，小程序仅不显示该景区的导航入口。
+
 ## 检查
 
 ```bash

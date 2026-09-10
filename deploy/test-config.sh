@@ -30,8 +30,6 @@ COS_REGION=ap-test
 COS_SECRET_ID=test-id
 COS_SECRET_KEY=test
 COS_OBJECT_PREFIX=prod
-VITE_TENCENT_MAP_KEY=test-map-key
-VITE_TENCENT_MAP_REFERER=test-map-referer
 ENVIRONMENT
 
 bash -n "$deploy_dir/deploy.sh" "$deploy_dir/monitor.sh" "$deploy_dir/test-stack.sh"
