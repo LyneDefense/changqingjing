@@ -64,7 +64,7 @@ async function main() {
     assert.match(await companyCover.attribute('src'), /company-cover\.jpg/)
     const videoTitle = await home.$('.home-video-section .home-section-title')
     assert(videoTitle, '已发布宣传视频应显示')
-    assert.equal(await videoTitle.text(), '自动化宣传片')
+    assert.equal(await videoTitle.text(), '视频介绍')
     const scenicTitle = await home.$('.home-scenic-card__title')
     assert(scenicTitle, '已发布景区应以单个大卡片显示')
     assert.equal(await scenicTitle.text(), '仙岛湖旅游风景区')

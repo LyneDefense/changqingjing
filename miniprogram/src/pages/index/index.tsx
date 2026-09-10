@@ -85,10 +85,7 @@ export default function HomePage() {
       {!error && content?.video && (
         <View className='home-video-section'>
           <View className='home-section-heading'>
-            <View className='home-section-heading__copy'>
-              <Text className='home-section-kicker'>本期影像</Text>
-              <Text className='home-section-title home-video-card__title'>{content.video.title}</Text>
-            </View>
+            <Text className='home-section-title home-video-card__title'>视频介绍</Text>
             <View className='home-section-heading__line' />
           </View>
           <View className='home-video-frame'>
