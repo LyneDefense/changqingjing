@@ -17,10 +17,12 @@ interface PickerMessage {
   }
 }
 
-const mapKey = (import.meta.env.VITE_TENCENT_MAP_KEY as string | undefined)?.trim() ?? ''
-const mapReferer =
-  (import.meta.env.VITE_TENCENT_MAP_REFERER as string | undefined)?.trim()
-  || 'changqingjing-admin'
+interface PendingLocation {
+  providerName: string
+  providerAddress: string
+  latitude: number
+  longitude: number
+}
 
 function errorText(error: unknown) {
   if (error instanceof AdminApiError) return error.message
@@ -28,9 +30,14 @@ function errorText(error: unknown) {
 }
 
 export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerProps) {
+  const mapKey = (import.meta.env.VITE_TENCENT_MAP_KEY as string | undefined)?.trim() ?? ''
+  const mapReferer =
+    (import.meta.env.VITE_TENCENT_MAP_REFERER as string | undefined)?.trim()
+    || 'changqingjing-admin'
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
+  const [pendingLocation, setPendingLocation] = useState<PendingLocation>()
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const pickerUrl = useMemo(() => {
@@ -42,12 +49,12 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
     })
     if (location) query.set('coord', `${location.latitude},${location.longitude}`)
     return `https://apis.map.qq.com/tools/locpicker?${query}`
-  }, [location])
+  }, [location, mapKey, mapReferer])
 
   useEffect(() => {
     if (!open || !mapKey) return
 
-    async function receiveLocation(event: MessageEvent<PickerMessage>) {
+    function receiveLocation(event: MessageEvent<PickerMessage>) {
       if (event.origin !== 'https://apis.map.qq.com') return
       if (event.source !== iframeRef.current?.contentWindow) return
       const data = event.data
@@ -63,27 +70,34 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
         || !Number.isFinite(longitude)
       ) return
 
-      setConfirming(true)
       setError('')
-      try {
-        const selection = await confirmMapSelection({
-          providerName,
-          providerAddress,
-          latitude,
-          longitude,
-        })
-        onConfirmed(selection)
-        setOpen(false)
-      } catch (requestError) {
-        setError(errorText(requestError))
-      } finally {
-        setConfirming(false)
-      }
+      setPendingLocation({ providerName, providerAddress, latitude, longitude })
     }
 
     window.addEventListener('message', receiveLocation)
     return () => window.removeEventListener('message', receiveLocation)
-  }, [onConfirmed, open])
+  }, [mapKey, open])
+
+  function closePicker() {
+    setOpen(false)
+    setPendingLocation(undefined)
+    setError('')
+  }
+
+  async function confirmPendingLocation() {
+    if (!pendingLocation) return
+    setConfirming(true)
+    setError('')
+    try {
+      const selection = await confirmMapSelection(pendingLocation)
+      onConfirmed(selection)
+      closePicker()
+    } catch (requestError) {
+      setError(errorText(requestError))
+    } finally {
+      setConfirming(false)
+    }
+  }
 
   return (
     <section className="map-location-field">
@@ -97,6 +111,7 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
           disabled={!mapKey}
           onClick={() => {
             setError('')
+            setPendingLocation(undefined)
             setOpen(true)
           }}
           type="button"
@@ -134,11 +149,11 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
                 aria-label="关闭地图"
                 className="icon-button"
                 disabled={confirming}
-                onClick={() => setOpen(false)}
+                onClick={closePicker}
                 type="button"
               >×</button>
             </div>
-            <p className="modal-description">在地图中搜索地点并点击确认，系统会保存地图原名、详细地址和导航坐标。</p>
+            <p className="modal-description">先在地图中点击一个地点，再核对下方名称和地址，确认后才会带回编辑表单。</p>
             <iframe
               allow="geolocation"
               className="map-picker-frame"
@@ -146,7 +161,28 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
               src={pickerUrl}
               title="腾讯地图位置选择"
             />
-            {confirming && <p className="empty-inline">正在确认位置…</p>}
+            <div aria-live="polite" className="map-picker-confirmation">
+              {pendingLocation ? (
+                <div className="map-picker-selected-place">
+                  <small>已选择，确认前不会修改原导航位置</small>
+                  <strong>{pendingLocation.providerName}</strong>
+                  <span>{pendingLocation.providerAddress}</span>
+                </div>
+              ) : (
+                <p className="empty-inline">请先在地图中搜索并点击一个地点。</p>
+              )}
+              <div className="map-picker-actions">
+                <button className="secondary-button" disabled={confirming} onClick={closePicker} type="button">取消</button>
+                <button
+                  className="primary-button"
+                  disabled={!pendingLocation || confirming}
+                  onClick={() => void confirmPendingLocation()}
+                  type="button"
+                >
+                  {confirming ? '正在确认…' : '确认使用此位置'}
+                </button>
+              </div>
+            </div>
             {error && <p className="notice error-notice" role="alert">{error}</p>}
           </article>
         </div>
