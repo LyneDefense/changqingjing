@@ -24,6 +24,11 @@ interface PendingLocation {
   longitude: number
 }
 
+const pickerOrigins = new Set([
+  'https://apis.map.qq.com',
+  'https://mapapi.qq.com',
+])
+
 function errorText(error: unknown) {
   if (error instanceof AdminApiError) return error.message
   return '位置确认失败，请重新选择'
@@ -55,7 +60,7 @@ export function MapLocationPicker({ location, onConfirmed }: MapLocationPickerPr
     if (!open || !mapKey) return
 
     function receiveLocation(event: MessageEvent<PickerMessage>) {
-      if (event.origin !== 'https://apis.map.qq.com') return
+      if (!pickerOrigins.has(event.origin)) return
       if (event.source !== iframeRef.current?.contentWindow) return
       const data = event.data
       const latitude = Number(data?.latlng?.lat)

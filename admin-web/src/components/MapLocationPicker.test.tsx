@@ -46,7 +46,7 @@ describe('MapLocationPicker', () => {
         poiaddress: '广东省深圳市南山区学苑大道1001号',
         latlng: { lat: 22.5949, lng: 113.9986 },
       },
-      origin: 'https://apis.map.qq.com',
+      origin: 'https://mapapi.qq.com',
       source: iframe.contentWindow,
     }))
 
