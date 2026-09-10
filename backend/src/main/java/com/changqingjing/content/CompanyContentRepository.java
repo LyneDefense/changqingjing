@@ -68,6 +68,7 @@ public class CompanyContentRepository {
             String title,
             String summary,
             UUID coverMediaId,
+            List<UUID> galleryMediaIds,
             List<CompanyContentBlock> blocks,
             UUID actorId,
             OffsetDateTime now) {
@@ -75,7 +76,7 @@ public class CompanyContentRepository {
                 INSERT INTO content_revision (
                     id, entry_id, revision_no, schema_version, title, summary,
                     cover_media_id, display_order, payload, created_by, created_at
-                ) VALUES (?, ?, ?, 1, ?, ?, ?, 0, ?::jsonb, ?, ?)
+                ) VALUES (?, ?, ?, 2, ?, ?, ?, 0, ?::jsonb, ?, ?)
                 """,
                 revisionId,
                 entryId,
@@ -83,7 +84,7 @@ public class CompanyContentRepository {
                 title,
                 summary,
                 coverMediaId,
-                toPayload(blocks),
+                toPayload(blocks, galleryMediaIds),
                 actorId,
                 now);
         return new Revision(
@@ -92,6 +93,7 @@ public class CompanyContentRepository {
                 title,
                 summary,
                 coverMediaId,
+                List.copyOf(galleryMediaIds),
                 List.copyOf(blocks),
                 actorId,
                 now);
@@ -100,9 +102,13 @@ public class CompanyContentRepository {
     public void insertMediaReferences(
             UUID revisionId,
             UUID coverMediaId,
+            List<UUID> galleryMediaIds,
             List<CompanyContentBlock> blocks) {
         if (coverMediaId != null) {
             insertMediaReference(revisionId, coverMediaId, "COVER", 0);
+        }
+        for (int index = 0; index < galleryMediaIds.size(); index++) {
+            insertMediaReference(revisionId, galleryMediaIds.get(index), "GALLERY_IMAGE", index);
         }
         for (int index = 0; index < blocks.size(); index++) {
             CompanyContentBlock block = blocks.get(index);
@@ -186,20 +192,39 @@ public class CompanyContentRepository {
     }
 
     private Revision mapRevision(ResultSet rows, int rowNumber) throws SQLException {
+        CompanyPayload payload = fromPayload(rows.getString("payload"));
+        List<CompanyContentBlock> blocks = payload.blocks() == null
+                ? List.of()
+                : payload.blocks().stream()
+                        .filter(block -> block.type() != CompanyBlockType.IMAGE)
+                        .toList();
+        List<UUID> galleryMediaIds = payload.galleryMediaIds() == null
+                ? payload.blocks() == null
+                        ? List.of()
+                        : payload.blocks().stream()
+                                .filter(block -> block.type() == CompanyBlockType.IMAGE)
+                                .map(CompanyContentBlock::mediaId)
+                                .filter(java.util.Objects::nonNull)
+                                .toList()
+                : List.copyOf(payload.galleryMediaIds());
         return new Revision(
                 rows.getObject("id", UUID.class),
                 rows.getInt("revision_no"),
                 rows.getString("title"),
                 rows.getString("summary"),
                 rows.getObject("cover_media_id", UUID.class),
-                fromPayload(rows.getString("payload")),
+                galleryMediaIds,
+                blocks,
                 rows.getObject("created_by", UUID.class),
                 rows.getObject("created_at", OffsetDateTime.class));
     }
 
-    private String toPayload(List<CompanyContentBlock> blocks) {
+    private String toPayload(
+            List<CompanyContentBlock> blocks,
+            List<UUID> galleryMediaIds) {
         try {
-            return objectMapper.writeValueAsString(new CompanyPayload(blocks));
+            return objectMapper.writeValueAsString(
+                    new CompanyPayload(blocks, galleryMediaIds));
         } catch (JsonProcessingException exception) {
             throw new IllegalArgumentException("Company content cannot be serialized", exception);
         }
@@ -217,16 +242,17 @@ public class CompanyContentRepository {
                 """, revisionId, mediaId, usage, displayOrder);
     }
 
-    private List<CompanyContentBlock> fromPayload(String payload) {
+    private CompanyPayload fromPayload(String payload) {
         try {
-            CompanyPayload result = objectMapper.readValue(payload, CompanyPayload.class);
-            return result.blocks() == null ? List.of() : List.copyOf(result.blocks());
+            return objectMapper.readValue(payload, CompanyPayload.class);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Stored company content is invalid", exception);
         }
     }
 
-    private record CompanyPayload(List<CompanyContentBlock> blocks) {
+    private record CompanyPayload(
+            List<CompanyContentBlock> blocks,
+            List<UUID> galleryMediaIds) {
     }
 
     public record Entry(
@@ -246,6 +272,7 @@ public class CompanyContentRepository {
             String title,
             String summary,
             UUID coverMediaId,
+            List<UUID> galleryMediaIds,
             List<CompanyContentBlock> blocks,
             UUID createdBy,
             OffsetDateTime createdAt) {
@@ -258,7 +285,7 @@ public class CompanyContentRepository {
                 List<CompanyContentBlock> blocks,
                 UUID createdBy,
                 OffsetDateTime createdAt) {
-            this(id, revisionNumber, title, summary, null, blocks, createdBy, createdAt);
+            this(id, revisionNumber, title, summary, null, List.of(), blocks, createdBy, createdAt);
         }
     }
 }

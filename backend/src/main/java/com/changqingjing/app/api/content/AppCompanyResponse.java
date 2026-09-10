@@ -9,6 +9,7 @@ public record AppCompanyResponse(
         String title,
         String summary,
         String coverUrl,
+        List<String> galleryUrls,
         List<AppCompanyBlockResponse> blocks,
         OffsetDateTime firstPublishedAt) {
 
@@ -22,6 +23,9 @@ public record AppCompanyResponse(
                 company.revision().title(),
                 company.revision().summary(),
                 coverUrl,
+                company.revision().galleryMediaIds().stream()
+                        .map(mediaId -> mediaService.signReadyMedia(mediaId).url())
+                        .toList(),
                 company.revision().blocks().stream()
                         .map(block -> AppCompanyBlockResponse.from(block, mediaService))
                         .toList(),

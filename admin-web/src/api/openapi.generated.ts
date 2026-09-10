@@ -1328,6 +1328,7 @@ export interface components {
             summary: string;
             /** Format: uuid */
             coverMediaId?: string;
+            galleryMediaIds: string[];
             blocks: components["schemas"]["CompanyContentBlock"][];
             /** Format: int64 */
             expectedVersion?: number;
@@ -1354,6 +1355,7 @@ export interface components {
             summary?: string;
             /** Format: uuid */
             coverMediaId?: string;
+            galleryMediaIds?: string[];
             blocks?: components["schemas"]["CompanyContentBlock"][];
             /** Format: uuid */
             createdBy?: string;
@@ -1739,6 +1741,7 @@ export interface components {
             title?: string;
             summary?: string;
             coverUrl?: string;
+            galleryUrls?: string[];
             blocks?: components["schemas"]["AppCompanyBlockResponse"][];
             /** Format: date-time */
             firstPublishedAt?: string;
@@ -1943,9 +1946,9 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            headerName?: string;
             parameterName?: string;
             token?: string;
+            headerName?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;

@@ -136,11 +136,13 @@ class CompanyContentServiceIntegrationTest {
     }
 
     @Test
-    void recordsCoverAndBodyImageReferencesForEveryImmutableRevision() {
+    void recordsCoverAndOrderedGalleryReferencesForEveryImmutableRevision() {
         AdminPrincipal actor = bootstrapAdmin();
         UUID coverId = insertReadyMedia(
                 actor.accountId(), MediaPurpose.COMPANY_COVER, MediaType.IMAGE);
-        UUID imageId = insertReadyMedia(
+        UUID firstImageId = insertReadyMedia(
+                actor.accountId(), MediaPurpose.COMPANY_IMAGE, MediaType.IMAGE);
+        UUID secondImageId = insertReadyMedia(
                 actor.accountId(), MediaPurpose.COMPANY_IMAGE, MediaType.IMAGE);
 
         var saved = contentService.saveDraft(
@@ -148,12 +150,11 @@ class CompanyContentServiceIntegrationTest {
                         "带图片的公司介绍",
                         "首页简介",
                         coverId,
+                        List.of(firstImageId, secondImageId),
                         List.of(
                                 new CompanyContentBlock(
-                                        CompanyBlockType.IMAGE,
-                                        null,
-                                        imageId,
-                                        "山水图片"),
+                                        CompanyBlockType.HEADING,
+                                        "公司简介"),
                                 new CompanyContentBlock(
                                         CompanyBlockType.PARAGRAPH,
                                         "正文")),
@@ -165,11 +166,16 @@ class CompanyContentServiceIntegrationTest {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM content_revision_media WHERE revision_id = ?",
                 Long.class,
-                saved.draft().id())).isEqualTo(2);
+                saved.draft().id())).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForList("""
+                        SELECT media_id FROM content_revision_media
+                        WHERE revision_id = ? AND usage = 'GALLERY_IMAGE'
+                        ORDER BY display_order
+                        """, UUID.class, saved.draft().id()))
+                .containsExactly(firstImageId, secondImageId);
         contentService.publish(saved.version(), actor, "company-media-publish");
-        assertThat(contentService.getPublished().orElseThrow().revision().blocks())
-                .extracting(CompanyContentBlock::mediaId)
-                .contains(imageId);
+        assertThat(contentService.getPublished().orElseThrow().revision().galleryMediaIds())
+                .containsExactly(firstImageId, secondImageId);
     }
 
     private String saveAfter(

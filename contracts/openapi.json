@@ -3036,6 +3036,7 @@
       "SaveCompanyDraftRequest": {
         "required": [
           "blocks",
+          "galleryMediaIds",
           "summary",
           "title"
         ],
@@ -3054,6 +3055,15 @@
           "coverMediaId": {
             "type": "string",
             "format": "uuid"
+          },
+          "galleryMediaIds": {
+            "maxItems": 10,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "blocks": {
             "maxItems": 100,
@@ -3120,6 +3130,13 @@
           "coverMediaId": {
             "type": "string",
             "format": "uuid"
+          },
+          "galleryMediaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "blocks": {
             "type": "array",
@@ -4233,6 +4250,12 @@
           "coverUrl": {
             "type": "string"
           },
+          "galleryUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "blocks": {
             "type": "array",
             "items": {
@@ -4782,13 +4805,13 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "headerName": {
-            "type": "string"
-          },
           "parameterName": {
             "type": "string"
           },
           "token": {
+            "type": "string"
+          },
+          "headerName": {
             "type": "string"
           }
         }

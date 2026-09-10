@@ -12,6 +12,7 @@ public record AdminCompanyRevisionResponse(
         String title,
         String summary,
         UUID coverMediaId,
+        List<UUID> galleryMediaIds,
         List<CompanyContentBlock> blocks,
         UUID createdBy,
         OffsetDateTime createdAt) {
@@ -24,6 +25,7 @@ public record AdminCompanyRevisionResponse(
                 revision.title(),
                 revision.summary(),
                 revision.coverMediaId(),
+                revision.galleryMediaIds(),
                 revision.blocks(),
                 revision.createdBy(),
                 revision.createdAt());

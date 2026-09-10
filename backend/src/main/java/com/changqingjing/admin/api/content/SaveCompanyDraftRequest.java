@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +14,7 @@ public record SaveCompanyDraftRequest(
         @NotBlank @Size(max = 255) String title,
         @NotBlank @Size(max = 2_000) String summary,
         UUID coverMediaId,
+        @NotNull @Size(max = 10) List<@NotNull UUID> galleryMediaIds,
         @NotEmpty @Size(max = 100) List<@Valid CompanyContentBlock> blocks,
         @Min(0) long expectedVersion) {
 
@@ -21,6 +23,6 @@ public record SaveCompanyDraftRequest(
             String summary,
             List<CompanyContentBlock> blocks,
             long expectedVersion) {
-        this(title, summary, null, blocks, expectedVersion);
+        this(title, summary, null, List.of(), blocks, expectedVersion);
     }
 }
