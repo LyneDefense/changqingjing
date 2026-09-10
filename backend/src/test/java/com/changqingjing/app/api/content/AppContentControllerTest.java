@@ -11,6 +11,8 @@ import com.changqingjing.content.CompanyBlockType;
 import com.changqingjing.content.CompanyContentBlock;
 import com.changqingjing.content.CompanyContentRepository;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.content.HomeHeroContentService;
+import com.changqingjing.content.HomeHeroContentRepository;
 import com.changqingjing.content.HomeVideoContentService;
 import com.changqingjing.content.HomeVideoContentRepository;
 import com.changqingjing.content.ScenicContentService;
@@ -42,6 +44,9 @@ class AppContentControllerTest {
 
     @MockBean
     private HomeVideoContentService homeVideoContentService;
+
+    @MockBean
+    private HomeHeroContentService homeHeroContentService;
 
     @MockBean
     private ScenicContentService scenicContentService;
@@ -113,6 +118,36 @@ class AppContentControllerTest {
                         "https://media.example/cover.jpg?signature=short"))
                 .andExpect(jsonPath("$.data.video.playbackUrl").value(
                         "https://media.example/video.mp4?signature=short"));
+    }
+
+    @Test
+    void homeReturnsPublishedHeroAndRequestsOnlyOneScenic() throws Exception {
+        UUID coverId = UUID.randomUUID();
+        OffsetDateTime createdAt = OffsetDateTime.parse("2026-09-08T08:00:00Z");
+        when(homeHeroContentService.getPublished()).thenReturn(Optional.of(
+                new HomeHeroContentService.PublishedHomeHero(
+                        new HomeHeroContentRepository.Revision(
+                                UUID.randomUUID(), 1, "循文化之脉", "见山水之美",
+                                coverId, 42, 61, UUID.randomUUID(), createdAt))));
+        when(scenicContentService.getPublished(
+                org.mockito.ArgumentMatchers.argThat(
+                        (com.changqingjing.common.api.PageQuery query) ->
+                                query.getPageSize() == 1)))
+                .thenReturn(new com.changqingjing.common.api.PageResponse<>(
+                        List.of(), 1, 1, 0));
+        when(mediaService.signReadyMedia(coverId)).thenReturn(
+                new MediaStorage.SignedObjectUrl(
+                        "https://media.example/hero.jpg?signature=short",
+                        createdAt.plusMinutes(15)));
+
+        mockMvc.perform(get("/api/v1/app/home"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.hero.title").value("循文化之脉"))
+                .andExpect(jsonPath("$.data.hero.subtitle").value("见山水之美"))
+                .andExpect(jsonPath("$.data.hero.coverUrl").value(
+                        "https://media.example/hero.jpg?signature=short"))
+                .andExpect(jsonPath("$.data.hero.focusX").value(42))
+                .andExpect(jsonPath("$.data.hero.focusY").value(61));
     }
 
     private CompanyContentService.PublishedCompany publishedCompany() {

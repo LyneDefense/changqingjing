@@ -1053,6 +1053,32 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.editor-grid-two {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.editor-field input[type='range'] {
+  accent-color: #34735e;
+  padding: 0;
+}
+
+.hero-focus-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.hero-focus-preview p {
+  margin: 4px 0 0;
+}
+
+.hero-focus-preview .content-image-preview {
+  aspect-ratio: 16 / 9;
+  max-height: none;
+  object-fit: cover;
+}
+
 .media-upload-field {
   background: #f7f9f8;
   border: 1px solid #e0e8e4;
@@ -1238,6 +1264,10 @@
   }
 
   .media-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-grid-two {
     grid-template-columns: 1fr;
   }
 

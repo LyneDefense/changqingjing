@@ -169,6 +169,36 @@
         }
       }
     },
+    "/api/v1/admin/contents/home-hero/draft": {
+      "put": {
+        "tags": [
+          "admin-home-hero-content-controller"
+        ],
+        "operationId": "saveDraft_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveHomeHeroDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminHomeHeroContentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/contents/cooperation/draft": {
       "put": {
         "tags": [
@@ -204,7 +234,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "saveDraft_2",
+        "operationId": "saveDraft_3",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1070,12 +1100,72 @@
         }
       }
     },
+    "/api/v1/admin/contents/home-hero/unpublish": {
+      "post": {
+        "tags": [
+          "admin-home-hero-content-controller"
+        ],
+        "operationId": "unpublish_4",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminHomeHeroContentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/contents/home-hero/publish": {
+      "post": {
+        "tags": [
+          "admin-home-hero-content-controller"
+        ],
+        "operationId": "publish_4",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminHomeHeroContentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/contents/cooperation/unpublish": {
       "post": {
         "tags": [
           "admin-cooperation-controller"
         ],
-        "operationId": "unpublish_4",
+        "operationId": "unpublish_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1105,7 +1195,7 @@
         "tags": [
           "admin-cooperation-controller"
         ],
-        "operationId": "publish_4",
+        "operationId": "publish_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1135,7 +1225,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "unpublish_5",
+        "operationId": "unpublish_6",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1165,7 +1255,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "publish_5",
+        "operationId": "publish_6",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1938,12 +2028,52 @@
         }
       }
     },
+    "/api/v1/admin/contents/home-hero": {
+      "get": {
+        "tags": [
+          "admin-home-hero-content-controller"
+        ],
+        "operationId": "get_6",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminHomeHeroContentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/contents/home-hero/preview": {
+      "get": {
+        "tags": [
+          "admin-home-hero-content-controller"
+        ],
+        "operationId": "preview_3",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminHomeHeroRevisionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/contents/cooperation": {
       "get": {
         "tags": [
           "admin-cooperation-controller"
         ],
-        "operationId": "get_6",
+        "operationId": "get_7",
         "responses": {
           "200": {
             "description": "OK",
@@ -1963,7 +2093,7 @@
         "tags": [
           "admin-cooperation-controller"
         ],
-        "operationId": "preview_3",
+        "operationId": "preview_4",
         "responses": {
           "200": {
             "description": "OK",
@@ -1983,7 +2113,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "get_7",
+        "operationId": "get_8",
         "responses": {
           "200": {
             "description": "OK",
@@ -2003,7 +2133,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "preview_4",
+        "operationId": "preview_5",
         "responses": {
           "200": {
             "description": "OK",
@@ -2605,6 +2735,122 @@
           }
         }
       },
+      "SaveHomeHeroDraftRequest": {
+        "required": [
+          "coverMediaId"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "subtitle": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "coverMediaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "focusX": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "focusY": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "expectedVersion": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AdminHomeHeroContentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "firstPublishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "draft": {
+            "$ref": "#/components/schemas/AdminHomeHeroRevisionResponse"
+          },
+          "published": {
+            "$ref": "#/components/schemas/AdminHomeHeroRevisionResponse"
+          }
+        }
+      },
+      "AdminHomeHeroRevisionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "coverMediaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "focusX": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "focusY": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiResponseAdminHomeHeroContentResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminHomeHeroContentResponse"
+          }
+        }
+      },
       "CooperationRevenueSection": {
         "required": [
           "description",
@@ -3152,6 +3398,7 @@
             "enum": [
               "COMPANY_IMAGE",
               "COMPANY_COVER",
+              "HOME_HERO",
               "HOME_VIDEO",
               "HOME_VIDEO_COVER",
               "SCENIC_IMAGE",
@@ -3793,6 +4040,9 @@
       "AppHomeResponse": {
         "type": "object",
         "properties": {
+          "hero": {
+            "$ref": "#/components/schemas/HomeHeroResponse"
+          },
           "video": {
             "$ref": "#/components/schemas/HomeVideoResponse"
           },
@@ -3818,6 +4068,28 @@
           },
           "coverUrl": {
             "type": "string"
+          }
+        }
+      },
+      "HomeHeroResponse": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "coverUrl": {
+            "type": "string"
+          },
+          "focusX": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "focusY": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -4483,6 +4755,14 @@
           }
         }
       },
+      "ApiResponseAdminHomeHeroRevisionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminHomeHeroRevisionResponse"
+          }
+        }
+      },
       "ApiResponseAdminCooperationRevisionResponse": {
         "type": "object",
         "properties": {
@@ -4502,13 +4782,13 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string"
-          },
           "headerName": {
             "type": "string"
           },
           "parameterName": {
+            "type": "string"
+          },
+          "token": {
             "type": "string"
           }
         }

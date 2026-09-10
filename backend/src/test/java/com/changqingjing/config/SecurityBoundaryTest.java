@@ -23,6 +23,7 @@ import com.changqingjing.common.web.ApiTraceFilter;
 import com.changqingjing.content.CompanyContentService;
 import com.changqingjing.content.CooperationContentService;
 import com.changqingjing.content.HomeVideoContentService;
+import com.changqingjing.content.HomeHeroContentService;
 import com.changqingjing.content.ProductCatalogService;
 import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.media.MediaService;
@@ -82,6 +83,9 @@ class SecurityBoundaryTest {
 
     @MockBean
     private HomeVideoContentService homeVideoContentService;
+
+    @MockBean
+    private HomeHeroContentService homeHeroContentService;
 
     @MockBean
     private ScenicContentService scenicContentService;

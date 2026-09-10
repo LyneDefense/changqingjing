@@ -5,6 +5,7 @@ import com.changqingjing.common.api.BusinessException;
 import com.changqingjing.common.api.PageQuery;
 import com.changqingjing.common.api.PageResponse;
 import com.changqingjing.content.CompanyContentService;
+import com.changqingjing.content.HomeHeroContentService;
 import com.changqingjing.content.HomeVideoContentService;
 import com.changqingjing.content.ScenicContentService;
 import com.changqingjing.media.MediaService;
@@ -23,16 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class AppContentController {
 
     private final CompanyContentService companyContentService;
+    private final HomeHeroContentService homeHeroContentService;
     private final HomeVideoContentService homeVideoContentService;
     private final ScenicContentService scenicContentService;
     private final MediaService mediaService;
 
     public AppContentController(
             CompanyContentService companyContentService,
+            HomeHeroContentService homeHeroContentService,
             HomeVideoContentService homeVideoContentService,
             ScenicContentService scenicContentService,
             MediaService mediaService) {
         this.companyContentService = companyContentService;
+        this.homeHeroContentService = homeHeroContentService;
         this.homeVideoContentService = homeVideoContentService;
         this.scenicContentService = scenicContentService;
         this.mediaService = mediaService;
@@ -40,6 +44,9 @@ public class AppContentController {
 
     @GetMapping("/home")
     public ApiResponse<AppHomeResponse> home() {
+        HomeHeroResponse hero = homeHeroContentService.getPublished()
+                .map(content -> HomeHeroResponse.from(content, mediaService))
+                .orElse(null);
         HomeVideoResponse video = homeVideoContentService.getPublished()
                 .map(content -> HomeVideoResponse.from(content, mediaService))
                 .orElse(null);
@@ -47,11 +54,11 @@ public class AppContentController {
                 .map(content -> HomeCompanySummaryResponse.from(content, mediaService))
                 .orElse(null);
         PageQuery scenicQuery = new PageQuery();
-        scenicQuery.setPageSize(20);
+        scenicQuery.setPageSize(1);
         var scenics = scenicContentService.getPublished(scenicQuery).items().stream()
                 .map(content -> AppScenicSummaryResponse.from(content, mediaService).toHomeSummary())
                 .toList();
-        return ApiResponse.of(new AppHomeResponse(video, company, scenics));
+        return ApiResponse.of(new AppHomeResponse(hero, video, company, scenics));
     }
 
     @GetMapping("/company")

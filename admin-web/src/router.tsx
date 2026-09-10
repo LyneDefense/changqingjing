@@ -7,6 +7,7 @@ import { CooperationPage } from './pages/CooperationPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
 import { HomeVideoPage } from './pages/HomeVideoPage'
+import { HomeHeroPage } from './pages/HomeHeroPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProductPage } from './pages/ProductPage'
 import { RouteErrorPage } from './pages/RouteErrorPage'
@@ -28,6 +29,7 @@ export const routes = [
             Component: App,
             children: [
               { index: true, Component: DashboardPage },
+              { path: 'home-hero', Component: HomeHeroPage },
               { path: 'home-videos', Component: HomeVideoPage },
               { path: 'company', Component: ContentPage },
               { path: 'scenics', Component: ScenicPage },

@@ -3,6 +3,7 @@ package com.changqingjing.media;
 public enum MediaPurpose {
     COMPANY_IMAGE(MediaType.IMAGE),
     COMPANY_COVER(MediaType.IMAGE),
+    HOME_HERO(MediaType.IMAGE),
     HOME_VIDEO(MediaType.VIDEO),
     HOME_VIDEO_COVER(MediaType.IMAGE),
     SCENIC_IMAGE(MediaType.IMAGE),

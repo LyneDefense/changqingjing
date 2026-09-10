@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { PageIntro } from '../components/PageIntro'
 
 const modules = [
+  ['/home-hero', '首页头图', '上传首页头图并设置可选标题与图片焦点'],
   ['/home-videos', '首页宣传视频', '上传、核对并发布首页宣传视频'],
   ['/company', '公司介绍', '维护公司简介和可排序的详细内容'],
   ['/scenics', '景区管理', '维护景区图文、开放状态和导航位置'],

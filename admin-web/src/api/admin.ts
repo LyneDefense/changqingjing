@@ -103,11 +103,34 @@ export interface AdminCompanyContent {
   published?: AdminCompanyRevision
 }
 
+export interface AdminHomeHeroRevision {
+  id: string
+  revisionNumber: number
+  title: string
+  subtitle: string
+  coverMediaId: string
+  focusX: number
+  focusY: number
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminHomeHeroContent {
+  id?: string
+  version: number
+  visibility: 'HIDDEN' | 'PUBLISHED'
+  firstPublishedAt?: string
+  updatedAt?: string
+  draft?: AdminHomeHeroRevision
+  published?: AdminHomeHeroRevision
+}
+
 export type MediaType = 'IMAGE' | 'VIDEO'
 export type MediaStatus = 'UPLOADING' | 'VERIFYING' | 'READY' | 'FAILED' | 'PENDING_DELETE' | 'DELETED'
 export type MediaPurpose =
   | 'COMPANY_IMAGE'
   | 'COMPANY_COVER'
+  | 'HOME_HERO'
   | 'HOME_VIDEO'
   | 'HOME_VIDEO_COVER'
   | 'SCENIC_IMAGE'
@@ -529,6 +552,38 @@ export function resetAdminStaffPassword(
 
 export function getAdminCompanyContent() {
   return request<AdminCompanyContent>('/contents/company')
+}
+
+export function getAdminHomeHeroContent() {
+  return request<AdminHomeHeroContent>('/contents/home-hero')
+}
+
+export function saveAdminHomeHeroDraft(input: {
+  title?: string
+  subtitle?: string
+  coverMediaId: string
+  focusX: number
+  focusY: number
+  expectedVersion: number
+}) {
+  return writeRequest<AdminHomeHeroContent>('/contents/home-hero/draft', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function publishAdminHomeHero(expectedVersion: number) {
+  return writeRequest<AdminHomeHeroContent>('/contents/home-hero/publish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
+}
+
+export function unpublishAdminHomeHero(expectedVersion: number) {
+  return writeRequest<AdminHomeHeroContent>('/contents/home-hero/unpublish', {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+  })
 }
 
 export function saveAdminCompanyDraft(input: {

@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/contents/home-hero/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveDraft_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/contents/cooperation/draft": {
         parameters: {
             query?: never;
@@ -92,7 +108,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["saveDraft_2"];
+        put: operations["saveDraft_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -420,7 +436,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/cooperation/unpublish": {
+    "/api/v1/admin/contents/home-hero/unpublish": {
         parameters: {
             query?: never;
             header?: never;
@@ -436,7 +452,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/cooperation/publish": {
+    "/api/v1/admin/contents/home-hero/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -452,7 +468,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/company/unpublish": {
+    "/api/v1/admin/contents/cooperation/unpublish": {
         parameters: {
             query?: never;
             header?: never;
@@ -468,7 +484,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/company/publish": {
+    "/api/v1/admin/contents/cooperation/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -478,6 +494,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["publish_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contents/company/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["unpublish_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contents/company/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -852,7 +900,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/cooperation": {
+    "/api/v1/admin/contents/home-hero": {
         parameters: {
             query?: never;
             header?: never;
@@ -868,7 +916,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/cooperation/preview": {
+    "/api/v1/admin/contents/home-hero/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -884,7 +932,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/company": {
+    "/api/v1/admin/contents/cooperation": {
         parameters: {
             query?: never;
             header?: never;
@@ -900,7 +948,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/company/preview": {
+    "/api/v1/admin/contents/cooperation/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -908,6 +956,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["preview_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contents/company": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_8"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contents/company/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1143,6 +1223,52 @@ export interface components {
         ApiResponseAdminHomeVideoContentResponse: {
             data?: components["schemas"]["AdminHomeVideoContentResponse"];
         };
+        SaveHomeHeroDraftRequest: {
+            title?: string;
+            subtitle?: string;
+            /** Format: uuid */
+            coverMediaId: string;
+            /** Format: int32 */
+            focusX?: number;
+            /** Format: int32 */
+            focusY?: number;
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
+        AdminHomeHeroContentResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int64 */
+            version?: number;
+            visibility?: string;
+            /** Format: date-time */
+            firstPublishedAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            draft?: components["schemas"]["AdminHomeHeroRevisionResponse"];
+            published?: components["schemas"]["AdminHomeHeroRevisionResponse"];
+        };
+        AdminHomeHeroRevisionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            revisionNumber?: number;
+            title?: string;
+            subtitle?: string;
+            /** Format: uuid */
+            coverMediaId?: string;
+            /** Format: int32 */
+            focusX?: number;
+            /** Format: int32 */
+            focusY?: number;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ApiResponseAdminHomeHeroContentResponse: {
+            data?: components["schemas"]["AdminHomeHeroContentResponse"];
+        };
         CooperationRevenueSection: {
             title: string;
             description: string;
@@ -1319,7 +1445,7 @@ export interface components {
             /** Format: int64 */
             sizeBytes?: number;
             /** @enum {string} */
-            purpose: "COMPANY_IMAGE" | "COMPANY_COVER" | "HOME_VIDEO" | "HOME_VIDEO_COVER" | "SCENIC_IMAGE" | "PRODUCT_IMAGE" | "COOPERATION_IMAGE";
+            purpose: "COMPANY_IMAGE" | "COMPANY_COVER" | "HOME_HERO" | "HOME_VIDEO" | "HOME_VIDEO_COVER" | "SCENIC_IMAGE" | "PRODUCT_IMAGE" | "COOPERATION_IMAGE";
         };
         AdminMediaResponse: {
             /** Format: uuid */
@@ -1546,6 +1672,7 @@ export interface components {
             data?: components["schemas"]["AppHomeResponse"];
         };
         AppHomeResponse: {
+            hero?: components["schemas"]["HomeHeroResponse"];
             video?: components["schemas"]["HomeVideoResponse"];
             company?: components["schemas"]["HomeCompanySummaryResponse"];
             scenics?: components["schemas"]["HomeScenicSummaryResponse"][];
@@ -1554,6 +1681,15 @@ export interface components {
             title?: string;
             summary?: string;
             coverUrl?: string;
+        };
+        HomeHeroResponse: {
+            title?: string;
+            subtitle?: string;
+            coverUrl?: string;
+            /** Format: int32 */
+            focusX?: number;
+            /** Format: int32 */
+            focusY?: number;
         };
         HomeScenicSummaryResponse: {
             /** Format: uuid */
@@ -1797,6 +1933,9 @@ export interface components {
         ApiResponseAdminHomeVideoRevisionResponse: {
             data?: components["schemas"]["AdminHomeVideoRevisionResponse"];
         };
+        ApiResponseAdminHomeHeroRevisionResponse: {
+            data?: components["schemas"]["AdminHomeHeroRevisionResponse"];
+        };
         ApiResponseAdminCooperationRevisionResponse: {
             data?: components["schemas"]["AdminCooperationRevisionResponse"];
         };
@@ -1804,9 +1943,9 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            token?: string;
             headerName?: string;
             parameterName?: string;
+            token?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;
@@ -1938,6 +2077,30 @@ export interface operations {
             };
         };
     };
+    saveDraft_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveHomeHeroDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminHomeHeroContentResponse"];
+                };
+            };
+        };
+    };
     save_2: {
         parameters: {
             query?: never;
@@ -1962,7 +2125,7 @@ export interface operations {
             };
         };
     };
-    saveDraft_2: {
+    saveDraft_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2611,7 +2774,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminHomeHeroContentResponse"];
                 };
             };
         };
@@ -2635,7 +2798,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminHomeHeroContentResponse"];
                 };
             };
         };
@@ -2659,12 +2822,60 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCompanyContentResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
                 };
             };
         };
     };
     publish_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
+                };
+            };
+        };
+    };
+    unpublish_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminCompanyContentResponse"];
+                };
+            };
+        };
+    };
+    publish_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -3277,7 +3488,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminHomeHeroContentResponse"];
                 };
             };
         };
@@ -3297,7 +3508,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCooperationRevisionResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminHomeHeroRevisionResponse"];
                 };
             };
         };
@@ -3317,12 +3528,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseAdminCompanyContentResponse"];
+                    "*/*": components["schemas"]["ApiResponseAdminCooperationContentResponse"];
                 };
             };
         };
     };
     preview_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminCooperationRevisionResponse"];
+                };
+            };
+        };
+    };
+    get_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminCompanyContentResponse"];
+                };
+            };
+        };
+    };
+    preview_5: {
         parameters: {
             query?: never;
             header?: never;
