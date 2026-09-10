@@ -1,84 +1,96 @@
 .company-page {
-  gap: 22px;
-}
-
-.company-page__header {
   background:
-    radial-gradient(circle at 86% 12%, rgba(229, 202, 134, 0.38), transparent 32%),
-    #173f34;
-  border-radius: 28px;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  padding: 44px 36px;
+    radial-gradient(circle at 90% 6%, rgba(183, 151, 95, 0.06), transparent 24%),
+    #f6f3ec;
+  gap: 22px;
+  padding: 22px 22px 64px;
 }
 
-.company-page__title {
-  font-size: 44px;
-  font-weight: 700;
-  line-height: 1.35;
-  margin-top: 18px;
+.company-gallery {
+  background: #183e34;
+  border: 1px solid rgba(32, 53, 45, 0.16);
+  border-radius: 26px;
+  box-shadow: 0 15px 42px rgba(51, 47, 38, 0.12);
+  overflow: hidden;
+  padding: 7px;
+  position: relative;
 }
 
-.company-page__summary {
-  font-size: 27px;
-  line-height: 1.8;
-  margin-top: 20px;
-  opacity: 0.82;
+.company-gallery__swiper {
+  border-radius: 19px;
+  height: 422px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.company-gallery__image {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.company-gallery__hint {
+  background: rgba(15, 36, 30, 0.62);
+  border-radius: 999px;
+  bottom: 27px;
+  color: rgba(255, 253, 247, 0.86);
+  font-size: 20px;
+  letter-spacing: 2px;
+  padding: 7px 14px;
+  position: absolute;
+  right: 22px;
+  z-index: 2;
 }
 
 .company-page__body {
-  background: #fff;
-  border: 1px solid #e1e8e4;
-  border-radius: 26px;
   display: flex;
   flex-direction: column;
-  padding: 38px 34px 48px;
+  gap: 18px;
 }
 
-.company-page__cover {
+.company-content-section {
+  background: rgba(255, 254, 250, 0.94);
+  border: 1px solid rgba(90, 80, 59, 0.1);
   border-radius: 24px;
-  height: 360px;
-  width: 100%;
+  box-shadow: 0 10px 32px rgba(66, 57, 42, 0.055);
+  padding: 33px 30px 36px;
+}
+
+.company-content-heading-row {
+  align-items: center;
+  display: flex;
+  gap: 15px;
+}
+
+.company-content-heading-mark {
+  background: #a5824e;
+  border-radius: 3px;
+  height: 31px;
+  width: 5px;
 }
 
 .company-content-heading {
   color: #203c32;
+  font-family: "Songti SC", STSong, serif;
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 2px;
   line-height: 1.5;
-  margin: 34px 0 12px;
 }
 
-.company-content-heading:first-child {
-  margin-top: 0;
+.company-content-heading-line {
+  background: rgba(24, 62, 52, 0.2);
+  flex: 1;
+  height: 1px;
 }
 
 .company-content-paragraph {
-  color: #52645d;
+  color: #56655f;
+  display: block;
   font-size: 28px;
   line-height: 2;
-  margin-bottom: 18px;
+  margin-top: 23px;
   white-space: pre-wrap;
-}
-
-.company-content-image-wrap {
-  display: flex;
-  flex-direction: column;
-  margin: 22px 0 30px;
-}
-
-.company-content-image {
-  border-radius: 18px;
-  width: 100%;
-}
-
-.company-content-caption {
-  color: #7a8882;
-  font-size: 23px;
-  line-height: 1.6;
-  margin-top: 12px;
-  text-align: center;
 }
 
 .company-page-state {

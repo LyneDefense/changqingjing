@@ -16,6 +16,7 @@ export interface CompanySummary {
 }
 
 export interface CompanyContent extends CompanySummary {
+  galleryUrls?: string[]
   blocks: CompanyContentBlock[]
   firstPublishedAt: string
 }

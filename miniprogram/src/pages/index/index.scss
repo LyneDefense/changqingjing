@@ -155,8 +155,8 @@
 .company-card {
   border-radius: 26px;
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(220px, 0.88fr);
-  min-height: 294px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(260px, 1.05fr);
+  min-height: 236px;
   position: relative;
 }
 
@@ -168,7 +168,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 30px 25px 28px 30px;
+  padding: 25px 22px 24px 28px;
 }
 
 .content-heading {
@@ -186,8 +186,8 @@
 }
 
 .company-card__summary {
-  margin-top: 16px;
-  -webkit-line-clamp: 3;
+  margin-top: 13px;
+  -webkit-line-clamp: 2;
 }
 
 .home-card-link {
@@ -196,7 +196,7 @@
   display: flex;
   font-size: 23px;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .home-card-link__arrow {
@@ -205,9 +205,10 @@
 }
 
 .company-card__cover {
+  display: block;
   filter: none;
   height: 100%;
-  min-height: 294px;
+  min-height: 236px;
   opacity: 1;
   width: 100%;
 }

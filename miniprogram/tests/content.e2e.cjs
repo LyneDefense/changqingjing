@@ -78,13 +78,12 @@ async function main() {
           title: '自动化公司介绍',
           summary: '首页公开摘要',
           coverUrl: 'https://media.example/company-cover.jpg?signature=short',
+          galleryUrls: [
+            'https://media.example/company-detail-1.jpg?signature=short',
+            'https://media.example/company-detail-2.jpg?signature=short',
+          ],
           blocks: [
             { type: 'HEADING', text: '我们的使命' },
-            {
-              type: 'IMAGE',
-              imageUrl: 'https://media.example/company-body.jpg?signature=short',
-              altText: '山水与文化',
-            },
             { type: 'PARAGRAPH', text: '连接文化与旅行。' },
           ],
           firstPublishedAt: '2026-09-08T08:00:00Z',
@@ -104,9 +103,10 @@ async function main() {
     assert(heading && paragraph, '结构化内容块应显示')
     assert.equal(await heading.text(), '我们的使命')
     assert.equal(await paragraph.text(), '连接文化与旅行。')
-    const bodyImage = await company.$('.company-content-image')
-    assert(bodyImage, '公司介绍正文图片应显示')
-    assert.match(await bodyImage.attribute('src'), /company-body\.jpg/)
+    assert.equal(await company.$('.company-page__header'), null)
+    const galleryImages = await company.$$('.company-gallery__image')
+    assert.equal(galleryImages.length, 2, '公司详情图片应在轮播中展示')
+    assert.match(await galleryImages[0].attribute('src'), /company-detail-1\.jpg/)
 
     await miniProgram.restoreWxMethod('request')
     await miniProgram.mockWxMethod('request', {
