@@ -5,7 +5,7 @@
     #f6f3ec;
   display: grid;
   gap: 28px;
-  padding: 22px 24px 68px;
+  padding: 22px 24px calc(152px + env(safe-area-inset-bottom));
 }
 
 .home-hero {

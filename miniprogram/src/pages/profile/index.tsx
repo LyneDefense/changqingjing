@@ -1,12 +1,17 @@
 import { Button, Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { PageSection } from '../../components/PageSection'
 import { useAuth } from '../../hooks/useAuth'
+import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
 export default function ProfilePage() {
   const auth = useAuth()
   const user = auth.user
+
+  useDidShow(() => {
+    syncCustomTabBar(3)
+  })
 
   function showComingSoon() {
     void Taro.showToast({ title: '敬请期待', icon: 'none' })

@@ -13,6 +13,12 @@ page {
   padding: 28px 28px 52px;
 }
 
+.member-page,
+.cooperation-page,
+.profile-page {
+  padding-bottom: calc(152px + env(safe-area-inset-bottom));
+}
+
 .page-heading {
   display: flex;
   flex-direction: column;

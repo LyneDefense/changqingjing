@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { getCooperationContent } from '../../services/content'
 import type { CooperationContent } from '../../services/content'
 import { ApiRequestError } from '../../services/request'
+import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
 export default function CooperationPage() {
@@ -27,6 +28,7 @@ export default function CooperationPage() {
   }, [])
 
   useDidShow(() => {
+    syncCustomTabBar(2)
     void load()
   })
 

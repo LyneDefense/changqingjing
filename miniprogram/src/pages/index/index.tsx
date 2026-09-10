@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { getHomeContent } from '../../services/content'
 import type { HomeContent } from '../../services/content'
 import { ApiRequestError } from '../../services/request'
+import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
 export default function HomePage() {
@@ -30,6 +31,7 @@ export default function HomePage() {
   }, [])
 
   useDidShow(() => {
+    syncCustomTabBar(0)
     void load()
   })
 

@@ -1,0 +1,66 @@
+.custom-tab-bar {
+  align-items: flex-start;
+  background: #f6f3ec;
+  bottom: 0;
+  box-shadow: 0 -10rpx 30rpx rgba(42, 50, 45, 0.07);
+  box-sizing: content-box;
+  display: flex;
+  height: 106rpx;
+  left: 0;
+  padding: 10rpx 0 env(safe-area-inset-bottom);
+  position: fixed;
+  right: 0;
+  z-index: 999;
+}
+
+.custom-tab-bar__border {
+  background: rgba(88, 94, 89, 0.13);
+  height: 1rpx;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.custom-tab-bar__item {
+  align-items: center;
+  color: #737873;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 106rpx;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.custom-tab-bar__marker {
+  background: transparent;
+  border-radius: 2rpx;
+  height: 3rpx;
+  margin-bottom: 7rpx;
+  width: 34rpx;
+}
+
+.custom-tab-bar__icon {
+  display: block;
+  height: 46rpx;
+  width: 46rpx;
+}
+
+.custom-tab-bar__label {
+  font-size: 24rpx;
+  line-height: 34rpx;
+  margin-top: 4rpx;
+}
+
+.custom-tab-bar__item--active {
+  color: #17463f;
+}
+
+.custom-tab-bar__item--active .custom-tab-bar__marker {
+  background: #b49a64;
+}
+
+.custom-tab-bar__item--active .custom-tab-bar__label {
+  font-weight: 600;
+}

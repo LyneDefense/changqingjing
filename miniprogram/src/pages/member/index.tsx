@@ -1,10 +1,15 @@
 import { Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useAuth } from '../../hooks/useAuth'
+import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
 export default function MemberPage() {
   const auth = useAuth()
+
+  useDidShow(() => {
+    syncCustomTabBar(1)
+  })
 
   function openBenefits() {
     if (auth.status === 'authenticated') {
