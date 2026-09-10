@@ -9,10 +9,6 @@
     bindtap="switchTab"
   >
     <cover-view class="custom-tab-bar__marker"></cover-view>
-    <cover-image
-      class="custom-tab-bar__icon"
-      src="{{selected === index ? item.selectedIconPath : item.iconPath}}"
-    ></cover-image>
     <cover-view class="custom-tab-bar__label">{{item.text}}</cover-view>
   </cover-view>
 </cover-view>

@@ -29,7 +29,7 @@
   flex: 1;
   flex-direction: column;
   height: 106rpx;
-  justify-content: flex-start;
+  justify-content: center;
   position: relative;
 }
 
@@ -37,20 +37,16 @@
   background: transparent;
   border-radius: 2rpx;
   height: 3rpx;
-  margin-bottom: 7rpx;
+  left: 50%;
+  position: absolute;
+  top: 8rpx;
+  transform: translateX(-50%);
   width: 34rpx;
 }
 
-.custom-tab-bar__icon {
-  display: block;
-  height: 46rpx;
-  width: 46rpx;
-}
-
 .custom-tab-bar__label {
-  font-size: 24rpx;
-  line-height: 34rpx;
-  margin-top: 4rpx;
+  font-size: 26rpx;
+  line-height: 40rpx;
 }
 
 .custom-tab-bar__item--active {
