@@ -1,7 +1,10 @@
 package com.changqingjing.app.wechat;
 
 import com.changqingjing.common.api.BusinessException;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
@@ -13,19 +16,25 @@ final class RealWechatGateway implements WechatGateway {
     private final String appId;
     private final String appSecret;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
     private final Clock clock = Clock.systemUTC();
     private volatile AccessToken cachedAccessToken;
 
-    RealWechatGateway(String appId, String appSecret, RestClient restClient) {
+    RealWechatGateway(
+            String appId,
+            String appSecret,
+            RestClient restClient,
+            ObjectMapper objectMapper) {
         this.appId = appId;
         this.appSecret = appSecret;
         this.restClient = restClient;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public WechatIdentityResult exchangeLoginCode(String loginCode) {
         try {
-            CodeSessionPayload payload = restClient.get()
+            String responseBody = restClient.get()
                     .uri(uri -> uri.path("/sns/jscode2session")
                             .queryParam("appid", appId)
                             .queryParam("secret", appSecret)
@@ -33,7 +42,8 @@ final class RealWechatGateway implements WechatGateway {
                             .queryParam("grant_type", "authorization_code")
                             .build())
                     .retrieve()
-                    .body(CodeSessionPayload.class);
+                    .body(String.class);
+            CodeSessionPayload payload = parseJson(responseBody, CodeSessionPayload.class);
             if (payload == null || payload.errcode() != null || isBlank(payload.openid())) {
                 throw invalidCode();
             }
@@ -48,13 +58,14 @@ final class RealWechatGateway implements WechatGateway {
     @Override
     public WechatPhoneResult exchangePhoneCode(String phoneCode) {
         try {
-            PhonePayload payload = restClient.post()
+            String responseBody = restClient.post()
                     .uri(uri -> uri.path("/wxa/business/getuserphonenumber")
                             .queryParam("access_token", accessToken())
                             .build())
                     .body(new PhoneRequest(phoneCode))
                     .retrieve()
-                    .body(PhonePayload.class);
+                    .body(String.class);
+            PhonePayload payload = parseJson(responseBody, PhonePayload.class);
             if (payload == null || payload.errcode() != 0 || payload.phoneInfo() == null
                     || isBlank(payload.phoneInfo().phoneNumber())) {
                 throw invalidCode();
@@ -85,14 +96,15 @@ final class RealWechatGateway implements WechatGateway {
             if (current != null && current.refreshAfter().isAfter(now)) {
                 return current.value();
             }
-            TokenPayload payload = restClient.get()
+            String responseBody = restClient.get()
                     .uri(uri -> uri.path("/cgi-bin/token")
                             .queryParam("grant_type", "client_credential")
                             .queryParam("appid", appId)
                             .queryParam("secret", appSecret)
                             .build())
                     .retrieve()
-                    .body(TokenPayload.class);
+                    .body(String.class);
+            TokenPayload payload = parseJson(responseBody, TokenPayload.class);
             if (payload == null || payload.errcode() != null || isBlank(payload.accessToken())) {
                 throw serviceFailure();
             }
@@ -117,6 +129,17 @@ final class RealWechatGateway implements WechatGateway {
                 "微信服务暂时不可用，请稍后重试");
     }
 
+    private <T> T parseJson(String responseBody, Class<T> responseType) {
+        if (isBlank(responseBody)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(responseBody, responseType);
+        } catch (JsonProcessingException exception) {
+            throw serviceFailure();
+        }
+    }
+
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
@@ -127,28 +150,33 @@ final class RealWechatGateway implements WechatGateway {
     private record PhoneRequest(String code) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record CodeSessionPayload(
             String openid,
             String unionid,
             @JsonProperty("errcode") Integer errcode) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record TokenPayload(
             @JsonProperty("access_token") String accessToken,
             @JsonProperty("expires_in") long expiresIn,
             @JsonProperty("errcode") Integer errcode) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record PhonePayload(
             int errcode,
             @JsonProperty("phone_info") PhoneInfo phoneInfo) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record PhoneInfo(
             @JsonProperty("phoneNumber") String phoneNumber,
             Watermark watermark) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Watermark(String appid) {
     }
 }

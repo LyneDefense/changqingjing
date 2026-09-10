@@ -1,5 +1,6 @@
 package com.changqingjing.app.wechat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Arrays;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,7 +25,7 @@ public class WechatConfiguration implements EnvironmentAware {
     }
 
     @Bean
-    WechatGateway wechatGateway(WechatProperties properties) {
+    WechatGateway wechatGateway(WechatProperties properties, ObjectMapper objectMapper) {
         validate(properties);
         if (properties.isMockEnabled()) {
             return new MockWechatGateway(properties.getMockPhone());
@@ -42,7 +43,8 @@ public class WechatConfiguration implements EnvironmentAware {
         return new RealWechatGateway(
                 properties.getAppId().strip(),
                 properties.getAppSecret().strip(),
-                restClient);
+                restClient,
+                objectMapper);
     }
 
     private void validate(WechatProperties properties) {
