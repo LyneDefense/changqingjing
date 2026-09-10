@@ -19,6 +19,13 @@ async function main() {
       statusCode: 200,
       data: {
         data: {
+          hero: {
+            title: '循文化之脉，见山水之美',
+            subtitle: '发现值得抵达的风景与故事',
+            coverUrl: 'https://media.example/hero.jpg?signature=short',
+            focusX: 42,
+            focusY: 61,
+          },
           company: {
             title: '自动化公司介绍',
             summary: '首页公开摘要',
@@ -29,7 +36,13 @@ async function main() {
             coverUrl: 'https://media.example/video-cover.jpg?signature=short',
             playbackUrl: 'https://media.example/video.mp4?signature=short',
           },
-          scenics: [],
+          scenics: [{
+            id: 'ecb15542-f99c-49ff-8708-5b3aa0188761',
+            title: '仙岛湖旅游风景区',
+            summary: '山水相依，群岛相望。',
+            coverUrl: 'https://media.example/xiandao-lake.jpg?signature=short',
+            displayOrder: 1,
+          }],
         },
       },
     })
@@ -38,15 +51,24 @@ async function main() {
     const home = await miniProgram.currentPage()
     assert(home, '首页应成功打开')
     await home.waitFor(500)
+    const heroImage = await home.$('.home-hero__image')
+    const heroTitle = await home.$('.home-hero__title')
+    assert(heroImage && heroTitle, '已发布首页头图应显示')
+    assert.match(await heroImage.attribute('src'), /hero\.jpg/)
+    assert.equal(await heroTitle.text(), '循文化之脉，见山水之美')
     const cardTitle = await home.$('.company-card__title')
     assert(cardTitle, '已发布公司卡片应显示')
     assert.equal(await cardTitle.text(), '自动化公司介绍')
     const companyCover = await home.$('.company-card__cover')
     assert(companyCover, '首页公司封面应显示')
     assert.match(await companyCover.attribute('src'), /company-cover\.jpg/)
-    const videoTitle = await home.$('.home-video-card__title')
+    const videoTitle = await home.$('.home-video-section .home-section-title')
     assert(videoTitle, '已发布宣传视频应显示')
     assert.equal(await videoTitle.text(), '自动化宣传片')
+    const scenicTitle = await home.$('.home-scenic-card__title')
+    assert(scenicTitle, '已发布景区应以单个大卡片显示')
+    assert.equal(await scenicTitle.text(), '仙岛湖旅游风景区')
+    assert.equal((await home.$$('.home-scenic-card')).length, 1)
 
     await miniProgram.restoreWxMethod('request')
     await miniProgram.mockWxMethod('request', {

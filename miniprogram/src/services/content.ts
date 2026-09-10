@@ -26,6 +26,14 @@ export interface HomeVideo {
   playbackUrl: string
 }
 
+export interface HomeHero {
+  title: string
+  subtitle: string
+  coverUrl: string
+  focusX: number
+  focusY: number
+}
+
 export interface HomeScenicSummary {
   id: string
   title: string
@@ -110,6 +118,7 @@ export interface CooperationContent {
 }
 
 export interface HomeContent {
+  hero?: HomeHero
   video?: HomeVideo
   company?: CompanySummary
   scenics: HomeScenicSummary[]
