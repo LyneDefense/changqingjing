@@ -152,6 +152,19 @@ async function main() {
     assert(revenueTitle && valueTitle, '收益分类和合作价值应显示')
     assert.equal(await revenueTitle.text(), '招商收益')
     assert.equal(await valueTitle.text(), '资源整合')
+
+    const cooperationTabs = await cooperation.$$('.cooperation-tab')
+    assert.equal(cooperationTabs.length, 3, '合作权益页应显示三个内容入口')
+    await cooperationTabs[1].tap()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    const comingSoon = await cooperation.$('.cooperation-coming-soon__title')
+    const hiddenRevenueTitle = await cooperation.$('.revenue-card__title')
+    const retainedValueTitle = await cooperation.$('.cooperation-value-card__title')
+    assert(comingSoon, '分公司方案应在原收益区域显示敬请期待')
+    assert.equal(await comingSoon.text(), '敬请期待')
+    assert.equal(hiddenRevenueTitle, null, '分公司方案不应继续展示核心收益条目')
+    assert(retainedValueTitle, '分公司方案仍应展示合作价值总结')
+    assert.equal(await retainedValueTitle.text(), '资源整合')
   } finally {
     await miniProgram.close()
   }

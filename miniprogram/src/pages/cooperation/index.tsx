@@ -1,4 +1,4 @@
-import { Button, Image, Text, View } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import { getCooperationContent } from '../../services/content'
@@ -7,8 +7,70 @@ import { ApiRequestError } from '../../services/request'
 import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
+type CooperationTab = 'revenue' | 'branch' | 'membership'
+
+const cooperationTabs: Array<{ id: CooperationTab, label: string }> = [
+  { id: 'revenue', label: '收益板块' },
+  { id: 'branch', label: '分公司方案' },
+  { id: 'membership', label: '会员体系' },
+]
+
+function CooperationTabIcon({ tab }: { tab: CooperationTab }) {
+  if (tab === 'revenue') {
+    return (
+      <View className='cooperation-tab-icon cooperation-tab-icon--revenue'>
+        <View className='cooperation-tab-icon__layer' />
+        <View className='cooperation-tab-icon__layer' />
+        <View className='cooperation-tab-icon__layer' />
+      </View>
+    )
+  }
+
+  if (tab === 'branch') {
+    return (
+      <View className='cooperation-tab-icon cooperation-tab-icon--branch'>
+        <View className='cooperation-tab-icon__document-line' />
+        <View className='cooperation-tab-icon__document-line' />
+        <View className='cooperation-tab-icon__document-line' />
+      </View>
+    )
+  }
+
+  return (
+    <View className='cooperation-tab-icon cooperation-tab-icon--membership'>
+      <View className='cooperation-tab-icon__head' />
+      <View className='cooperation-tab-icon__shoulders' />
+    </View>
+  )
+}
+
+function CooperationValueIcon({ index }: { index: number }) {
+  const kind = index % 3
+  if (kind === 0) {
+    return (
+      <View className='cooperation-value-icon cooperation-value-icon--growth'>
+        <View className='cooperation-value-icon__bar cooperation-value-icon__bar--short' />
+        <View className='cooperation-value-icon__bar cooperation-value-icon__bar--medium' />
+        <View className='cooperation-value-icon__bar cooperation-value-icon__bar--tall' />
+      </View>
+    )
+  }
+
+  if (kind === 1) {
+    return (
+      <View className='cooperation-value-icon cooperation-value-icon--link'>
+        <View className='cooperation-value-icon__link cooperation-value-icon__link--first' />
+        <View className='cooperation-value-icon__link cooperation-value-icon__link--second' />
+      </View>
+    )
+  }
+
+  return <View className='cooperation-value-icon cooperation-value-icon--diamond' />
+}
+
 export default function CooperationPage() {
   const [content, setContent] = useState<CooperationContent>()
+  const [activeTab, setActiveTab] = useState<CooperationTab>('revenue')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -36,22 +98,30 @@ export default function CooperationPage() {
     void load()
   })
 
-  function showComingSoon() {
-    void Taro.showToast({ title: '敬请期待', icon: 'none' })
-  }
-
   return (
-    <View className='page cooperation-page'>
+    <View className='cooperation-page'>
       <View className='cooperation-hero'>
-        <Text className='cooperation-hero__eyebrow'>COOPERATION</Text>
-        <Text className='cooperation-hero__title'>{content?.title || '合作权益'}</Text>
-        <Text className='cooperation-hero__summary'>{content?.summary || '了解核心收益来源与长期合作价值'}</Text>
+        <View className='cooperation-hero__copy'>
+          <View className='cooperation-hero__brand-row'>
+            <Text className='cooperation-hero__title'>常清静文旅投</Text>
+            <Text className='cooperation-hero__seal'>净</Text>
+          </View>
+          <Text className='cooperation-hero__summary'>业务架构与合作权利</Text>
+        </View>
       </View>
 
       <View className='cooperation-tabs'>
-        <View className='cooperation-tab cooperation-tab--active'><Text>收益板块</Text></View>
-        <View className='cooperation-tab' onClick={showComingSoon}><Text>分公司方案</Text></View>
-        <View className='cooperation-tab' onClick={showComingSoon}><Text>会员体系</Text></View>
+        {cooperationTabs.map((tab) => (
+          <View
+            className={`cooperation-tab${activeTab === tab.id ? ' cooperation-tab--active' : ''}`}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <CooperationTabIcon tab={tab.id} />
+            <Text className='cooperation-tab__label'>{tab.label}</Text>
+            <View className='cooperation-tab__marker' />
+          </View>
+        ))}
       </View>
 
       {loading && !content && <View className='cooperation-state'><Text>正在加载合作权益…</Text></View>}
@@ -64,36 +134,49 @@ export default function CooperationPage() {
 
       {content && (
         <>
-          <View className='cooperation-section-heading'>
-            <Text className='cooperation-section-heading__mark'>✦</Text>
-            <Text className='cooperation-section-heading__title'>核心收益来源</Text>
-          </View>
-          <View className='revenue-grid'>
-            {content.revenueSections.map((item, index) => (
-              <View className='revenue-card' key={index}>
-                <Text className='revenue-card__icon'>{item.icon}</Text>
-                <View className='revenue-card__copy'>
-                  <Text className='revenue-card__title'>{item.title}</Text>
-                  <Text className='revenue-card__description'>{item.description}</Text>
-                </View>
+          {activeTab === 'revenue' ? (
+            <View className='cooperation-revenue-section'>
+              <View className='cooperation-section-heading'>
+                <Text className='cooperation-section-heading__title'>核心收益来源</Text>
+                <Text className='cooperation-section-heading__caption'>七大板块</Text>
               </View>
-            ))}
-          </View>
+              <View className='revenue-grid'>
+                {content.revenueSections.map((item, index) => (
+                  <View className='revenue-card' key={index}>
+                    <View className='revenue-card__icon-wrap'>
+                      <Text className='revenue-card__icon'>{item.icon}</Text>
+                    </View>
+                    <View className='revenue-card__copy'>
+                      <Text className='revenue-card__title'>{item.title}</Text>
+                      <Text className='revenue-card__description'>{item.description}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View className='cooperation-coming-soon'>
+              <View className='cooperation-coming-soon__landscape' />
+              <View className='cooperation-coming-soon__copy'>
+                <Text className='cooperation-coming-soon__title'>敬请期待</Text>
+                <Text className='cooperation-coming-soon__seal'>净</Text>
+              </View>
+            </View>
+          )}
 
-          <View className='cooperation-section-heading cooperation-section-heading--value'>
-            <Text className='cooperation-section-heading__mark'>✧</Text>
-            <Text className='cooperation-section-heading__title'>合作价值</Text>
-          </View>
-          <View className='cooperation-value-list'>
-            {content.valueSections.map((item, index) => (
-              <View className='cooperation-value-card' key={index}>
-                {item.imageUrl && <Image className='cooperation-value-card__image' mode='aspectFill' src={item.imageUrl} />}
-                <View className='cooperation-value-card__copy'>
+          <View className='cooperation-value-section'>
+            <Text className='cooperation-value-section__heading'>合作价值总结</Text>
+            <View className='cooperation-value-list'>
+              {content.valueSections.map((item, index) => (
+                <View className='cooperation-value-card' key={index}>
+                  <View className='cooperation-value-card__icon-wrap'>
+                    <CooperationValueIcon index={index} />
+                  </View>
                   <Text className='cooperation-value-card__title'>{item.title}</Text>
                   <Text className='cooperation-value-card__description'>{item.description}</Text>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         </>
       )}
