@@ -4044,6 +4044,12 @@
           "coverUrl": {
             "type": "string"
           },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "categoryId": {
             "type": "string",
             "format": "uuid"
@@ -4852,10 +4858,10 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "headerName": {
+          "parameterName": {
             "type": "string"
           },
-          "parameterName": {
+          "headerName": {
             "type": "string"
           },
           "token": {

@@ -94,6 +94,7 @@ export interface ProductContentBlock {
 }
 
 export interface ProductContent extends ProductSummary {
+  imageUrls?: string[]
   blocks: ProductContentBlock[]
   specification?: string
 }

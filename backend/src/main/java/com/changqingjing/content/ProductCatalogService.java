@@ -22,6 +22,7 @@ import com.changqingjing.media.MediaService;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -413,6 +414,14 @@ public class ProductCatalogService {
     private AppProductResponse toPublicProduct(
             ProductCatalogRepository.PublicProductRow row) {
         ProductCatalogRepository.ProductRevision revision = row.revision();
+        List<UUID> imageMediaIds = new ArrayList<>();
+        imageMediaIds.add(revision.coverMediaId());
+        revision.listImageMediaIds().stream()
+                .filter(mediaId -> !mediaId.equals(revision.coverMediaId()))
+                .forEach(imageMediaIds::add);
+        List<String> imageUrls = imageMediaIds.stream()
+                .map(mediaId -> mediaService.signReadyMedia(mediaId).url())
+                .toList();
         List<AppProductBlockResponse> blocks = revision.blocks().stream()
                 .map(block -> new AppProductBlockResponse(
                         block.type().name(),
@@ -426,7 +435,8 @@ public class ProductCatalogService {
                 row.entryId(),
                 revision.name(),
                 revision.summary(),
-                mediaService.signReadyMedia(revision.coverMediaId()).url(),
+                imageUrls.get(0),
+                imageUrls,
                 revision.categoryId(),
                 row.categoryName(),
                 blocks,

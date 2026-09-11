@@ -1671,6 +1671,7 @@ export interface components {
             name?: string;
             summary?: string;
             coverUrl?: string;
+            imageUrls?: string[];
             /** Format: uuid */
             categoryId?: string;
             categoryName?: string;
@@ -1964,8 +1965,8 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            headerName?: string;
             parameterName?: string;
+            headerName?: string;
             token?: string;
         };
         AdminCsrfResponse: {

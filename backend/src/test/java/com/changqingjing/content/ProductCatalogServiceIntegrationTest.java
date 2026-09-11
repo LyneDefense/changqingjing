@@ -118,6 +118,9 @@ class ProductCatalogServiceIntegrationTest {
         assertThat(products.items().get(0).coverUrl()).contains(coverId.toString());
 
         var product = catalogService.publishedProduct(draft.id());
+        assertThat(product.imageUrls()).hasSize(2);
+        assertThat(product.imageUrls().get(0)).contains(coverId.toString());
+        assertThat(product.imageUrls().get(1)).contains(alternateCoverId.toString());
         assertThat(product.blocks()).hasSize(4);
         assertThat(product.blocks().get(1).imageUrl()).contains(firstImageId.toString());
         assertThat(product.blocks().get(3).imageUrl()).contains(secondImageId.toString());

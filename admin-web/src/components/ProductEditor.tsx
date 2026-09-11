@@ -33,6 +33,10 @@ function errorText(error: unknown) {
   return '福利产品操作失败，请稍后重试'
 }
 
+function hasBlockContent(block: ProductContentBlock) {
+  return block.type === 'IMAGE' ? Boolean(block.mediaId) : Boolean(block.text?.trim())
+}
+
 export function ProductEditor({
   productId,
   categories,
@@ -103,11 +107,8 @@ export function ProductEditor({
     if (!name.trim()) problems.push('填写产品名称')
     if (!summary.trim()) problems.push('填写简短介绍')
     if (!coverMediaId) problems.push('上传产品图片并选择列表封面')
-    if (blocks.some((block) => block.type === 'IMAGE' ? !block.mediaId : !block.text?.trim())) {
-      problems.push('补全详情中的空文字或空图片')
-    }
     return problems
-  }, [blocks, coverMediaId, name, summary])
+  }, [coverMediaId, name, summary])
 
   function updateBlock(index: number, patch: Partial<ProductContentBlock>) {
     setBlocks((current) => current.map(
@@ -138,7 +139,7 @@ export function ProductEditor({
       categoryId: categoryId || undefined,
       coverMediaId: coverMediaId || undefined,
       listImageMediaIds,
-      blocks,
+      blocks: blocks.filter(hasBlockContent),
       specification: specification || undefined,
       displayOrder,
       expectedVersion: content?.version ?? 0,
@@ -271,7 +272,7 @@ export function ProductEditor({
           <div className="block-heading">
             <div>
               <h3 id="product-images-title">已上传图片</h3>
-              <p>列表只展示选中的封面；其余图片会保留，方便以后更换封面。</p>
+              <p>列表只展示选中的封面；进入产品详情后，可以左右滑动查看这里的全部图片。</p>
             </div>
             <span className="gallery-count">已添加 {listImageMediaIds.length} / 10 张</span>
           </div>
@@ -367,7 +368,7 @@ export function ProductEditor({
                   <input maxLength={255} placeholder="图片说明（选填）" value={block.altText ?? ''} onChange={(event) => updateBlock(index, { altText: event.target.value })} />
                 </>
               ) : (
-                <textarea required maxLength={10000} rows={block.type === 'HEADING' ? 2 : 6} value={block.text ?? ''} onChange={(event) => updateBlock(index, { text: event.target.value })} />
+                <textarea maxLength={10000} rows={block.type === 'HEADING' ? 2 : 6} value={block.text ?? ''} onChange={(event) => updateBlock(index, { text: event.target.value })} />
               )}
             </div>
           ))}

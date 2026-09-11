@@ -8,6 +8,7 @@ public record AppProductResponse(
         String name,
         String summary,
         String coverUrl,
+        List<String> imageUrls,
         UUID categoryId,
         String categoryName,
         List<AppProductBlockResponse> blocks,

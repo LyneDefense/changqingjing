@@ -1,4 +1,4 @@
-import { Button, Image, Text, View } from '@tarojs/components'
+import { Button, Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
@@ -76,16 +76,35 @@ export default function ProductDetailPage() {
   const detailImageUrls = content.blocks.flatMap((block) =>
     block.type === 'IMAGE' && block.imageUrl ? [block.imageUrl] : []
   )
+  const productImageUrls = content.imageUrls?.length
+    ? content.imageUrls
+    : [content.coverUrl]
+  const hasProductDetail = content.blocks.length > 0 || Boolean(content.specification)
 
   return (
     <View className='page product-detail-page'>
       <View className='product-detail-hero'>
-        <Image
-          className='product-detail-cover'
-          mode='widthFix'
-          onClick={() => void Taro.previewImage({ current: content.coverUrl, urls: [content.coverUrl] })}
-          src={content.coverUrl}
-        />
+        <Swiper
+          className='product-detail-gallery'
+          circular={productImageUrls.length > 1}
+          indicatorActiveColor='#f5f2e9'
+          indicatorColor='rgba(245, 242, 233, 0.46)'
+          indicatorDots={productImageUrls.length > 1}
+        >
+          {productImageUrls.map((imageUrl, index) => (
+            <SwiperItem key={`${imageUrl}-${index}`}>
+              <Image
+                className='product-detail-cover'
+                mode='aspectFit'
+                onClick={() => void Taro.previewImage({ current: imageUrl, urls: productImageUrls })}
+                src={imageUrl}
+              />
+            </SwiperItem>
+          ))}
+        </Swiper>
+        {productImageUrls.length > 1 && (
+          <Text className='product-detail-gallery__hint'>左右滑动查看</Text>
+        )}
       </View>
 
       <View className='product-detail-intro'>
@@ -143,7 +162,9 @@ export default function ProductDetailPage() {
           </View>
         </View>
       )}
-      <Text className='product-detail-footnote'>本页面仅作福利产品展示，不提供购买、领取或咨询入口。</Text>
+      {hasProductDetail && (
+        <Text className='product-detail-footnote'>本页面仅作福利产品展示，不提供购买、领取或咨询入口。</Text>
+      )}
     </View>
   )
 }
