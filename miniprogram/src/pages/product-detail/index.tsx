@@ -95,7 +95,7 @@ export default function ProductDetailPage() {
             <SwiperItem key={`${imageUrl}-${index}`}>
               <Image
                 className='product-detail-cover'
-                mode='aspectFit'
+                mode='aspectFill'
                 onClick={() => void Taro.previewImage({ current: imageUrl, urls: productImageUrls })}
                 src={imageUrl}
               />
