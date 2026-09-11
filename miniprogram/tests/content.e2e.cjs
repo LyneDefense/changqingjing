@@ -166,6 +166,15 @@ async function main() {
     assert.equal(hiddenRevenueTitle, null, '分公司方案不应继续展示核心收益条目')
     assert(retainedValueTitle, '分公司方案仍应展示合作价值总结')
     assert.equal(await retainedValueTitle.text(), '资源整合')
+
+    await miniProgram.callWxMethod('switchTab', { url: '/pages/profile/index' })
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    const profile = await miniProgram.currentPage()
+    assert(profile, '个人中心应成功打开')
+    assert.equal(profile.path, 'pages/profile/index')
+    assert.equal((await profile.$$('.profile-service-row')).length, 5, '个人中心应保留五个服务入口')
+    assert.equal(await (await profile.$('.profile-account__heading')).text(), '账户信息')
+    assert.doesNotMatch(await (await profile.$('.profile-services')).text(), /敬请期待/)
   } finally {
     await miniProgram.close()
   }
