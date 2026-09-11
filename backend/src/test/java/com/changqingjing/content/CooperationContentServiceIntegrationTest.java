@@ -90,8 +90,8 @@ class CooperationContentServiceIntegrationTest {
                 "Cooperation",
                 "Cooperation overview",
                 List.of(
-                        new CooperationRevenueSection("Recruiting", "Partner fees", "R", 2),
-                        new CooperationRevenueSection("Supply", "Product revenue", "S", 1)),
+                        new CooperationRevenueSection("Recruiting", "Partner fees", "people", 2),
+                        new CooperationRevenueSection("Supply", "Product revenue", "product", 1)),
                 List.of(new CooperationValueSection(
                         valueTitle, "Long-term value", null, null, 1)),
                 version);

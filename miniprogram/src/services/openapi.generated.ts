@@ -1946,8 +1946,8 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            parameterName?: string;
             token?: string;
+            parameterName?: string;
             headerName?: string;
         };
         AdminCsrfResponse: {

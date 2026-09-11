@@ -2872,6 +2872,7 @@
           "icon": {
             "maxLength": 20,
             "minLength": 0,
+            "pattern": "cooperate|people|lodging|product|nature|service|blessing|scenic|tea|general",
             "type": "string"
           },
           "displayOrder": {
@@ -4805,10 +4806,10 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "parameterName": {
+          "token": {
             "type": "string"
           },
-          "token": {
+          "parameterName": {
             "type": "string"
           },
           "headerName": {

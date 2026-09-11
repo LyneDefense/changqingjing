@@ -8,12 +8,50 @@ import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
 type CooperationTab = 'revenue' | 'branch' | 'membership'
+type CooperationIconKey = 'cooperate' | 'people' | 'lodging' | 'product' | 'nature'
+  | 'service' | 'blessing' | 'scenic' | 'tea' | 'general'
 
 const cooperationTabs: Array<{ id: CooperationTab, label: string }> = [
   { id: 'revenue', label: '收益板块' },
   { id: 'branch', label: '分公司方案' },
   { id: 'membership', label: '会员体系' },
 ]
+
+const cooperationIconKeys = new Set<string>([
+  'cooperate', 'people', 'lodging', 'product', 'nature',
+  'service', 'blessing', 'scenic', 'tea', 'general',
+])
+
+const cooperationTitleIconRules: Array<[string, CooperationIconKey]> = [
+  ['招商', 'cooperate'],
+  ['合作', 'cooperate'],
+  ['招募', 'people'],
+  ['会员', 'people'],
+  ['民宿', 'lodging'],
+  ['住宿', 'lodging'],
+  ['基础业务', 'lodging'],
+  ['供应链', 'product'],
+  ['产品', 'product'],
+  ['衍生', 'nature'],
+  ['文旅', 'nature'],
+  ['特色服务', 'service'],
+  ['服务', 'service'],
+  ['祈福', 'blessing'],
+  ['增项', 'blessing'],
+  ['景区', 'scenic'],
+  ['山水', 'scenic'],
+  ['茶', 'tea'],
+]
+
+function resolveCooperationIcon(icon: string | undefined, title: string): CooperationIconKey {
+  if (icon && cooperationIconKeys.has(icon)) return icon as CooperationIconKey
+  return cooperationTitleIconRules.find(([keyword]) => title.includes(keyword))?.[1] ?? 'general'
+}
+
+function RevenueIcon({ icon, title }: { icon?: string, title: string }) {
+  const resolved = resolveCooperationIcon(icon, title)
+  return <View className={'revenue-card__icon revenue-card__icon--' + resolved} />
+}
 
 function CooperationTabIcon({ tab }: { tab: CooperationTab }) {
   if (tab === 'revenue') {
@@ -144,7 +182,7 @@ export default function CooperationPage() {
                 {content.revenueSections.map((item, index) => (
                   <View className='revenue-card' key={index}>
                     <View className='revenue-card__icon-wrap'>
-                      <Text className='revenue-card__icon'>{item.icon}</Text>
+                      <RevenueIcon icon={item.icon} title={item.title} />
                     </View>
                     <View className='revenue-card__copy'>
                       <Text className='revenue-card__title'>{item.title}</Text>

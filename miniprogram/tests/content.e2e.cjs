@@ -133,8 +133,8 @@ async function main() {
           title: '自动化合作权益',
           summary: '共同连接文化与旅行资源',
           revenueSections: [
-            { title: '招商收益', description: '分公司合作', icon: '商' },
-            { title: '供应链', description: '产品流转收益', icon: '链' },
+            { title: '招商收益', description: '分公司合作', icon: 'cooperate' },
+            { title: '供应链', description: '产品流转收益', icon: 'product' },
           ],
           valueSections: [
             { title: '资源整合', description: '连接长期合作资源' },
@@ -152,6 +152,7 @@ async function main() {
     assert(revenueTitle && valueTitle, '收益分类和合作价值应显示')
     assert.equal(await revenueTitle.text(), '招商收益')
     assert.equal(await valueTitle.text(), '资源整合')
+    assert(await cooperation.$('.revenue-card__icon--cooperate'), '收益分类应展示系统图标')
 
     const cooperationTabs = await cooperation.$$('.cooperation-tab')
     assert.equal(cooperationTabs.length, 3, '合作权益页应显示三个内容入口')

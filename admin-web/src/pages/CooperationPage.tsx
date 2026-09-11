@@ -15,18 +15,23 @@ import type {
   CooperationRevenueSection,
   CooperationValueSection,
 } from '../api/admin'
+import { CooperationIcon } from '../components/CooperationIcon'
+import { cooperationIconOptions, resolveCooperationIcon } from '../components/cooperationIconConfig'
 import { MediaPreview } from '../components/MediaPreview'
 import { MediaUploadField } from '../components/MediaUploadField'
 import { PageIntro } from '../components/PageIntro'
 
+const fixedPageTitle = '常清静文旅投'
+const fixedPageSummary = '业务架构与合作权利'
+
 const initialRevenueSections: CooperationRevenueSection[] = [
-  ['招商收益', '💼'],
-  ['招募收益', '👥'],
-  ['基础业务', '🏯'],
-  ['供应链', '📦'],
-  ['衍生业务', '🎁'],
-  ['特色服务', '🔮'],
-  ['增项板块', '🙏'],
+  ['招商收益', 'cooperate'],
+  ['招募收益', 'people'],
+  ['基础业务', 'lodging'],
+  ['供应链', 'product'],
+  ['衍生业务', 'nature'],
+  ['特色服务', 'service'],
+  ['增项板块', 'blessing'],
 ].map(([title, icon], index) => ({ title, icon, description: '', displayOrder: index }))
 
 function errorText(error: unknown) {
@@ -38,8 +43,6 @@ function errorText(error: unknown) {
 
 export function CooperationPage() {
   const [content, setContent] = useState<AdminCooperationContent>()
-  const [title, setTitle] = useState('合作权益')
-  const [summary, setSummary] = useState('')
   const [revenueSections, setRevenueSections] = useState(initialRevenueSections)
   const [valueSections, setValueSections] = useState<CooperationValueSection[]>([])
   const [preview, setPreview] = useState<AdminCooperationRevision>()
@@ -55,10 +58,11 @@ export function CooperationPage() {
   const hydrate = useCallback((next: AdminCooperationContent) => {
     const editable = next.draft ?? next.published
     setContent(next)
-    setTitle(editable?.title ?? '合作权益')
-    setSummary(editable?.summary ?? '')
     setRevenueSections(editable?.revenueSections.length
-      ? editable.revenueSections
+      ? editable.revenueSections.map((item) => ({
+          ...item,
+          icon: resolveCooperationIcon(item.icon, item.title),
+        }))
       : initialRevenueSections)
     setValueSections(editable?.valueSections ?? [])
     setDirty(false)
@@ -94,8 +98,6 @@ export function CooperationPage() {
 
   const publicationProblems = useMemo(() => {
     const problems: string[] = []
-    if (!title.trim()) problems.push('填写页面标题')
-    if (!summary.trim()) problems.push('填写页面简介')
     if (revenueSections.length === 0) problems.push('添加核心收益分类')
     if (revenueSections.some((item) => !item.title.trim() || !item.description.trim() || !item.icon.trim())) {
       problems.push('补全收益分类的名称、说明和图标')
@@ -105,7 +107,7 @@ export function CooperationPage() {
       problems.push('补全合作价值的分类名称和详情')
     }
     return problems
-  }, [revenueSections, summary, title, valueSections])
+  }, [revenueSections, valueSections])
 
   function updateRevenue(index: number, patch: Partial<CooperationRevenueSection>) {
     setRevenueSections((current) => current.map(
@@ -138,8 +140,8 @@ export function CooperationPage() {
     setNotice('')
     try {
       const saved = await saveAdminCooperationDraft({
-        title,
-        summary,
+        title: fixedPageTitle,
+        summary: fixedPageSummary,
         revenueSections: revenueSections.map((item, index) => ({ ...item, displayOrder: index })),
         valueSections: valueSections.map((item, index) => ({ ...item, displayOrder: index })),
         expectedVersion: content?.version ?? 0,
@@ -214,26 +216,7 @@ export function CooperationPage() {
       <form className="content-editor" onSubmit={(event) => void save(event)}>
         <div className="editor-section-heading">
           <span>1</span>
-          <div><h3>页面信息</h3><p>小程序合作权益页顶部显示的标题和简介。</p></div>
-        </div>
-        <label className="editor-field">
-          页面标题
-          <input maxLength={100} required value={title} onChange={(event) => {
-            setTitle(event.target.value)
-            markDirty()
-          }} />
-        </label>
-        <label className="editor-field">
-          页面简介
-          <textarea maxLength={500} required rows={3} value={summary} onChange={(event) => {
-            setSummary(event.target.value)
-            markDirty()
-          }} />
-        </label>
-
-        <div className="editor-section-heading">
-          <span>2</span>
-          <div><h3>核心收益来源</h3><p>每张卡片可编辑图标、分类名称和说明，并可调整顺序。</p></div>
+          <div><h3>核心收益来源</h3><p>为每个分类选择统一图标，填写名称和说明，并可调整顺序。</p></div>
         </div>
         <div className="cooperation-editor-list">
           {revenueSections.map((item, index) => (
@@ -247,22 +230,36 @@ export function CooperationPage() {
                   markDirty()
                 }} type="button">删除</button>
               </div>
-              <div className="cooperation-revenue-fields">
-                <label className="editor-field">图标<input maxLength={20} placeholder="例如：💼" required value={item.icon} onChange={(event) => updateRevenue(index, { icon: event.target.value })} /></label>
-                <label className="editor-field">分类名称<input maxLength={80} required value={item.title} onChange={(event) => updateRevenue(index, { title: event.target.value })} /></label>
+              <div className="cooperation-icon-field">
+                <span className="cooperation-icon-field__label">选择图标</span>
+                <div aria-label={'收益分类 ' + (index + 1) + ' 图标'} className="cooperation-icon-picker" role="group">
+                  {cooperationIconOptions.map((option) => (
+                    <button
+                      aria-pressed={item.icon === option.key}
+                      className={'cooperation-icon-option' + (item.icon === option.key ? ' selected' : '')}
+                      key={option.key}
+                      onClick={() => updateRevenue(index, { icon: option.key })}
+                      type="button"
+                    >
+                      <CooperationIcon icon={option.key} />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+              <label className="editor-field">分类名称<input maxLength={80} required value={item.title} onChange={(event) => updateRevenue(index, { title: event.target.value })} /></label>
               <label className="editor-field">分类说明<textarea maxLength={1000} required rows={3} value={item.description} onChange={(event) => updateRevenue(index, { description: event.target.value })} /></label>
             </div>
           ))}
         </div>
         <button className="secondary-button add-full-button" onClick={() => {
-          setRevenueSections((current) => [...current, { title: '', description: '', icon: '✦', displayOrder: current.length }])
+          setRevenueSections((current) => [...current, { title: '', description: '', icon: 'general', displayOrder: current.length }])
           markDirty()
         }} type="button">添加收益分类</button>
 
         <div className="editor-section-heading">
-          <span>3</span>
-          <div><h3>合作价值</h3><p>为每个合作价值分类填写详情，可选配一张图片。</p></div>
+          <span>2</span>
+          <div><h3>合作价值总结</h3><p>为每个合作价值分类填写详情，可选配一张图片。</p></div>
         </div>
         <div className="cooperation-editor-list">
           {valueSections.length === 0 && <p className="empty-inline">暂未添加合作价值，发布前至少需要一项。</p>}
@@ -332,15 +329,21 @@ function CooperationPreview({ content, onClose }: {
     <div className="modal-backdrop" role="presentation">
       <article aria-modal="true" className="modal-card content-preview" role="dialog">
         <div className="modal-header">
-          <div><p className="eyebrow">合作权益草稿预览</p><h2>{content.title}</h2></div>
+          <div><p className="eyebrow">合作权益草稿预览</p><h2>{fixedPageTitle}</h2></div>
           <button aria-label="关闭预览" className="icon-button" onClick={onClose} type="button">×</button>
         </div>
-        <p className="preview-summary">{content.summary}</p>
+        <p className="preview-summary">{fixedPageSummary}</p>
         <h3>核心收益来源</h3>
         <div className="cooperation-preview-grid">
-          {content.revenueSections.map((item, index) => <div key={index}><span>{item.icon}</span><strong>{item.title}</strong><p>{item.description}</p></div>)}
+          {content.revenueSections.map((item, index) => (
+            <div key={index}>
+              <CooperationIcon icon={item.icon} title={item.title} />
+              <strong>{item.title}</strong>
+              <p>{item.description}</p>
+            </div>
+          ))}
         </div>
-        <h3>合作价值</h3>
+        <h3>合作价值总结</h3>
         {content.valueSections.map((item, index) => (
           <div className="cooperation-preview-value" key={index}>
             {item.imageMediaId && <MediaPreview alt={item.imageAltText} mediaId={item.imageMediaId} />}
