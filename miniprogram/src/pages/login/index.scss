@@ -1,64 +1,128 @@
 .login-flow {
   align-items: stretch;
+  background: #f6f3ec;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 108px 56px 64px;
+  overflow: hidden;
+  padding: 190px 66px calc(36px + env(safe-area-inset-bottom));
 }
 
-.login-flow__mark {
+.login-flow__brand {
   align-items: center;
-  align-self: center;
-  background: #174d3e;
-  border-radius: 28px;
-  color: #ddc47e;
   display: flex;
-  font-size: 48px;
-  font-weight: 700;
-  height: 104px;
+  flex-direction: column;
+}
+
+.login-flow__brand-line {
+  align-items: flex-start;
+  display: flex;
   justify-content: center;
-  width: 104px;
+}
+
+.login-flow__brand-name {
+  color: #153d35;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  line-height: 1.25;
+}
+
+.login-flow__seal {
+  align-items: center;
+  background: #ad493a;
+  border-radius: 6px;
+  color: #f8eee0;
+  display: flex;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 21px;
+  height: 34px;
+  justify-content: center;
+  line-height: 1;
+  margin: 2px 0 0 10px;
+  width: 29px;
+}
+
+.login-flow__ornament {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  margin-top: 25px;
+}
+
+.login-flow__ornament-line {
+  background: rgba(83, 104, 96, 0.26);
+  height: 1px;
+  width: 74px;
+}
+
+.login-flow__ornament-accent {
+  background: #b49a64;
+  border-radius: 2px;
+  height: 4px;
+  width: 42px;
+}
+
+.login-flow__landscape {
+  background: url('../../assets/login-landscape.jpg') center / cover no-repeat;
+  flex: 0 0 260px;
+  margin: 56px -66px 0;
+  opacity: 0.7;
+}
+
+.login-flow__heading {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-top: 62px;
 }
 
 .login-flow__title {
-  font-size: 42px;
-  font-weight: 700;
-  margin-top: 52px;
+  color: #153d35;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 56px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  line-height: 1.3;
   text-align: center;
 }
 
 .login-flow__description {
-  color: #68756f;
-  font-size: 28px;
-  line-height: 1.75;
-  margin: 26px 0 52px;
+  color: #607972;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 27px;
+  letter-spacing: 6px;
+  line-height: 1.6;
+  margin-top: 24px;
   text-align: center;
 }
 
 .login-flow__error {
-  background: #fff2ef;
-  border: 1px solid #e7b8ad;
-  border-radius: 18px;
-  color: #9b3e31;
+  background: rgba(255, 244, 239, 0.86);
+  border: 1px solid rgba(176, 92, 73, 0.32);
+  border-radius: 16px;
+  color: #91473c;
   display: flex;
   flex-direction: column;
-  font-size: 25px;
-  gap: 8px;
-  margin-bottom: 28px;
-  padding: 22px 24px;
+  font-size: 23px;
+  gap: 6px;
+  margin-top: 30px;
+  padding: 18px 22px;
+  text-align: center;
+}
+
+.login-flow__actions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 86px;
 }
 
 .login-flow__primary,
 .login-flow__cancel {
-  border-radius: 20px;
-  font-size: 30px;
+  border: 0;
   margin: 0;
-}
-
-.login-flow__primary {
-  background: #1d6a50;
-  color: #fff;
 }
 
 .login-flow__primary::after,
@@ -66,17 +130,63 @@
   border: 0;
 }
 
+.login-flow__primary {
+  background: linear-gradient(100deg, #124b3f 0%, #17604e 100%);
+  border-radius: 24px;
+  box-shadow: 0 12px 30px rgba(23, 76, 63, 0.12);
+  color: #fff;
+  font-size: 29px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  line-height: 94px;
+  min-height: 94px;
+  padding: 0 20px;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.login-flow__primary--pressed {
+  opacity: 0.88;
+  transform: scale(0.992);
+}
+
+.login-flow__primary[disabled] {
+  background: #829a91;
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+}
+
 .login-flow__cancel {
   background: transparent;
-  color: #53645d;
-  margin-top: 20px;
+  color: #60716b;
+  font-size: 27px;
+  line-height: 42px;
+  margin-top: 42px;
+}
+
+.login-flow__cancel--pressed {
+  opacity: 0.58;
 }
 
 .login-flow__agreement {
-  color: #697a73;
-  font-size: 24px;
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
   margin-top: auto;
-  padding-top: 56px;
+  padding-top: 80px;
+}
+
+.login-flow__agreement-line {
+  background: #b49a64;
+  flex: 0 0 48px;
+  height: 1px;
+}
+
+.login-flow__agreement-text {
+  color: #5e746e;
+  font-size: 20px;
+  line-height: 1.5;
   text-align: center;
   text-decoration: underline;
+  white-space: nowrap;
 }

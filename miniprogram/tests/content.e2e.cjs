@@ -70,6 +70,23 @@ async function main() {
     assert.equal(await scenicTitle.text(), '仙岛湖旅游风景区')
     assert.equal((await home.$$('.home-scenic-card')).length, 1)
 
+    await miniProgram.navigateTo('/pages/login/index?target=profile')
+    const login = await miniProgram.currentPage()
+    assert(login, '通用登录页应成功打开')
+    assert.equal(login.path, 'pages/login/index')
+    assert.equal(await (await login.$('.login-flow__brand-name')).text(), '常清净文旅投')
+    assert.equal(await (await login.$('.login-flow__title')).text(), '登录常清净')
+    assert.equal(await (await login.$('.login-flow__description')).text(), '山水有意，生活亦可清净')
+    assert.equal(await (await login.$('.login-flow__primary')).text(), '微信手机号一键登录')
+    assert.equal(await (await login.$('.login-flow__cancel')).text(), '暂不登录')
+    assert.equal(
+      await (await login.$('.login-flow__agreement-text')).text(),
+      '登录即表示已阅读并同意《用户协议》和《隐私政策》'
+    )
+    const loginText = await (await login.$('.login-flow')).text()
+    assert.doesNotMatch(loginText, /首次登录|登录后查看会员福利/)
+    await miniProgram.navigateBack()
+
     await miniProgram.restoreWxMethod('request')
     await miniProgram.mockWxMethod('request', {
       statusCode: 200,

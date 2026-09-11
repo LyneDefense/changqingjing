@@ -25,14 +25,18 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   useUnload(() => {
-    if (!completed.current) {
-      void Taro.switchTab({ url: '/pages/index/index' })
+    if (!completed.current && target !== 'profile') {
+      void Taro.switchTab({ url: '/pages/member/index' })
     }
   })
 
   function cancel() {
     completed.current = true
-    void Taro.switchTab({ url: '/pages/index/index' })
+    if (target === 'profile' && Taro.getCurrentPages().length > 1) {
+      void Taro.navigateBack({ delta: 1 })
+      return
+    }
+    void Taro.switchTab({ url: target === 'profile' ? '/pages/profile/index' : '/pages/member/index' })
   }
 
   async function handlePhoneNumber(event: BaseEventOrig<PhoneEventDetail>) {
@@ -84,13 +88,24 @@ export default function LoginPage() {
 
   return (
     <View className='login-flow'>
-      <View className='login-flow__mark'>常</View>
-      <Text className='login-flow__title'>
-        登录后查看{target === 'profile' ? '个人中心' : target === 'product' ? '产品详情' : '会员福利'}
-      </Text>
-      <Text className='login-flow__description'>
-        首次登录需要你主动授权微信绑定的手机号，以后会优先恢复已有账号，不会反复要求授权。
-      </Text>
+      <View className='login-flow__brand'>
+        <View className='login-flow__brand-line'>
+          <Text className='login-flow__brand-name'>常清净文旅投</Text>
+          <Text className='login-flow__seal'>净</Text>
+        </View>
+        <View className='login-flow__ornament'>
+          <View className='login-flow__ornament-line' />
+          <View className='login-flow__ornament-accent' />
+          <View className='login-flow__ornament-line' />
+        </View>
+      </View>
+
+      <View className='login-flow__landscape' />
+
+      <View className='login-flow__heading'>
+        <Text className='login-flow__title'>登录常清净</Text>
+        <Text className='login-flow__description'>山水有意，生活亦可清净</Text>
+      </View>
 
       {error && (
         <View className='login-flow__error'>
@@ -99,20 +114,33 @@ export default function LoginPage() {
         </View>
       )}
 
-      <Button
-        className='login-flow__primary'
-        disabled={submitting}
-        onGetPhoneNumber={(event) => void handlePhoneNumber(event)}
-        openType='getPhoneNumber'
-      >
-        {submitting ? '正在登录…' : '微信手机号一键登录'}
-      </Button>
-      <Button className='login-flow__cancel' disabled={submitting} onClick={cancel}>
-        取消并返回首页
-      </Button>
-      <Text className='login-flow__agreement' onClick={showPrivacy}>
-        登录前请阅读《用户协议与隐私说明》
-      </Text>
+      <View className='login-flow__actions'>
+        <Button
+          className='login-flow__primary'
+          disabled={submitting}
+          hoverClass='login-flow__primary--pressed'
+          onGetPhoneNumber={(event) => void handlePhoneNumber(event)}
+          openType='getPhoneNumber'
+        >
+          {submitting ? '正在登录…' : '微信手机号一键登录'}
+        </Button>
+        <Button
+          className='login-flow__cancel'
+          disabled={submitting}
+          hoverClass='login-flow__cancel--pressed'
+          onClick={cancel}
+        >
+          暂不登录
+        </Button>
+      </View>
+
+      <View className='login-flow__agreement' onClick={showPrivacy}>
+        <View className='login-flow__agreement-line' />
+        <Text className='login-flow__agreement-text'>
+          登录即表示已阅读并同意《用户协议》和《隐私政策》
+        </Text>
+        <View className='login-flow__agreement-line' />
+      </View>
     </View>
   )
 }
