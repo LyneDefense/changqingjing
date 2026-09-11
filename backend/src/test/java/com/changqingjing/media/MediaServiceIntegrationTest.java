@@ -9,6 +9,8 @@ import com.changqingjing.admin.auth.AdminAccountRepository;
 import com.changqingjing.admin.auth.AdminBootstrapService;
 import com.changqingjing.admin.auth.AdminPrincipal;
 import com.changqingjing.common.api.BusinessException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -26,6 +28,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.mock.web.MockMultipartFile;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -71,7 +74,7 @@ class MediaServiceIntegrationTest {
     @BeforeEach
     void resetDatabase() {
         storage.clear();
-        jdbcTemplate.execute("TRUNCATE TABLE admin_account CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE admin_account, app_user CASCADE");
     }
 
     @Test
@@ -228,6 +231,30 @@ class MediaServiceIntegrationTest {
                 .isEqualTo("UPLOADING");
     }
 
+    @Test
+    void storesAndVerifiesAnAvatarOwnedByAnAppUser() {
+        UUID userId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO app_user (
+                    id, display_name, status, registered_at, last_login_at, updated_at
+                ) VALUES (?, 'avatar user', 'ACTIVE', now(), now(), now())
+                """, userId);
+        byte[] png = new byte[] {
+            (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+        };
+
+        var asset = mediaService.storeAppAvatar(
+                new MockMultipartFile(
+                        "avatar", "avatar.png", "application/octet-stream", png),
+                userId);
+
+        assertThat(asset.status()).isEqualTo(MediaStatus.READY);
+        assertThat(asset.purpose()).isEqualTo(MediaPurpose.APP_USER_AVATAR);
+        assertThat(asset.contentType()).isEqualTo("image/png");
+        assertThat(asset.uploadedBy()).isNull();
+        assertThat(asset.uploadedByAppUser()).isEqualTo(userId);
+    }
+
     private AdminPrincipal bootstrapAdmin() {
         UUID id = bootstrapService.createFirstAdmin(
                 "media.admin", "媒体管理员", "MediaAdmin2026", "bootstrap");
@@ -283,6 +310,29 @@ class MediaServiceIntegrationTest {
                 throw new MediaStorageException("OBJECT_NOT_FOUND", "object is absent");
             }
             return object;
+        }
+
+        @Override
+        public void store(
+                String objectKey,
+                String contentType,
+                long sizeBytes,
+                InputStream inputStream) {
+            try {
+                byte[] bytes = inputStream.readAllBytes();
+                objects.put(objectKey, new StoredObject(
+                        sizeBytes,
+                        contentType,
+                        "uploaded-etag",
+                        bytes.length > 32
+                                ? java.util.Arrays.copyOf(bytes, 32)
+                                : bytes));
+            } catch (IOException exception) {
+                throw new MediaStorageException(
+                        "OBJECT_UPLOAD_FAILED",
+                        "object upload failed",
+                        exception);
+            }
         }
 
         @Override

@@ -3,13 +3,11 @@ package com.changqingjing.app.api.auth;
 import com.changqingjing.app.auth.AppPrincipal;
 import com.changqingjing.app.auth.AppSessionService;
 import com.changqingjing.app.user.AppLoginService;
-import com.changqingjing.app.user.AppUserRepository;
+import com.changqingjing.app.user.AppProfileService;
 import com.changqingjing.common.api.ApiResponse;
-import com.changqingjing.common.api.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,15 +22,15 @@ public class AppAuthController {
 
     private final AppLoginService loginService;
     private final AppSessionService sessionService;
-    private final AppUserRepository userRepository;
+    private final AppProfileService profileService;
 
     public AppAuthController(
             AppLoginService loginService,
             AppSessionService sessionService,
-            AppUserRepository userRepository) {
+            AppProfileService profileService) {
         this.loginService = loginService;
         this.sessionService = sessionService;
-        this.userRepository = userRepository;
+        this.profileService = profileService;
     }
 
     @PostMapping("/auth/wechat/session")
@@ -58,11 +56,6 @@ public class AppAuthController {
 
     @GetMapping("/me")
     public ApiResponse<AppUserResponse> me(@AuthenticationPrincipal AppPrincipal principal) {
-        return ApiResponse.of(userRepository.findById(principal.userId())
-                .map(AppUserResponse::from)
-                .orElseThrow(() -> new BusinessException(
-                        HttpStatus.UNAUTHORIZED,
-                        "UNAUTHENTICATED",
-                        "请重新登录")));
+        return ApiResponse.of(profileService.get(principal.userId()));
     }
 }

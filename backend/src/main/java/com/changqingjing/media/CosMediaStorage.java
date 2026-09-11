@@ -8,6 +8,7 @@ import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.ObjectMetadata;
+import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
 import com.tencent.cloud.CosStsClient;
 import jakarta.annotation.PreDestroy;
@@ -99,6 +100,25 @@ final class CosMediaStorage implements MediaStorage {
             throw new MediaStorageException(
                     "COS_OBJECT_INSPECTION_FAILED",
                     "暂时无法核验已上传文件",
+                    exception);
+        }
+    }
+
+    @Override
+    public void store(
+            String objectKey,
+            String contentType,
+            long sizeBytes,
+            InputStream inputStream) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(contentType);
+        metadata.setContentLength(sizeBytes);
+        try {
+            client.putObject(new PutObjectRequest(bucket, objectKey, inputStream, metadata));
+        } catch (CosClientException exception) {
+            throw new MediaStorageException(
+                    "COS_OBJECT_UPLOAD_FAILED",
+                    "暂时无法上传头像",
                     exception);
         }
     }

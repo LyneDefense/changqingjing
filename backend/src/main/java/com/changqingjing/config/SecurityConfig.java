@@ -103,6 +103,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/app/auth/**").permitAll()
                 .requestMatchers(
                     "/api/v1/app/me",
+                    "/api/v1/app/me/**",
                     "/api/v1/app/product-categories/**",
                     "/api/v1/app/products/**").hasRole("APP_USER")
                 .anyRequest().denyAll())

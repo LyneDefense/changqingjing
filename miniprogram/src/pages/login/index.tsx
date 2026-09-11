@@ -53,8 +53,14 @@ export default function LoginPage() {
     setSubmitting(true)
     setError('')
     try {
-      await registerWithPhoneCode(phoneCode)
+      const user = await registerWithPhoneCode(phoneCode)
       completed.current = true
+      if (user.profileSetupRequired) {
+        await Taro.redirectTo({
+          url: `/pages/profile-setup/index?target=${target}&productId=${encodeURIComponent(productId)}`
+        })
+        return
+      }
       try {
         await Taro.navigateBack({ delta: 1 })
       } catch {
@@ -80,7 +86,7 @@ export default function LoginPage() {
   function showPrivacy() {
     void Taro.showModal({
       title: '用户协议与隐私说明',
-      content: '登录时仅使用微信提供的身份凭证和手机号授权凭证建立账号；手机号由服务端加密保存，界面仅显示脱敏号码。',
+      content: '登录时仅使用微信提供的身份凭证和手机号授权凭证建立账号；手机号由服务端加密保存，界面仅显示脱敏号码。头像和昵称仅在你主动选择并保存后用于个人资料展示，也可以跳过不提供。',
       showCancel: false,
       confirmText: '我知道了'
     })

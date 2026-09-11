@@ -1,0 +1,207 @@
+.profile-setup-page {
+  background:
+    radial-gradient(circle at 50% 14%, rgba(183, 151, 95, 0.08), transparent 24%),
+    #f6f3ec;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 76px 46px calc(40px + env(safe-area-inset-bottom));
+}
+
+.profile-setup-heading {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-setup-heading__eyebrow {
+  color: #a5824e;
+  font-size: 20px;
+  letter-spacing: 5px;
+  line-height: 1.4;
+}
+
+.profile-setup-heading__title {
+  color: #173e37;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 50px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  line-height: 1.35;
+  margin-top: 18px;
+}
+
+.profile-setup-heading__description {
+  color: #6a7772;
+  font-size: 24px;
+  line-height: 1.55;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.profile-setup-form {
+  background: linear-gradient(145deg, rgba(255, 252, 244, 0.98), rgba(249, 242, 229, 0.96));
+  border: 1px solid rgba(142, 116, 76, 0.14);
+  border-radius: 30px;
+  box-shadow: 0 16px 40px rgba(84, 68, 43, 0.075);
+  margin-top: 50px;
+  padding: 44px 34px 36px;
+}
+
+.profile-setup-avatar-area {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-setup-avatar {
+  align-items: center;
+  background: #f5eedf;
+  border: 2px solid rgba(180, 154, 100, 0.42);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.58),
+    0 9px 24px rgba(70, 76, 68, 0.08);
+  display: flex;
+  height: 148px;
+  justify-content: center;
+  margin: 0;
+  overflow: visible;
+  padding: 0;
+  position: relative;
+  width: 148px;
+}
+
+.profile-setup-avatar::after,
+.profile-setup-save::after,
+.profile-setup-skip::after {
+  border: 0;
+}
+
+.profile-setup-avatar--pressed {
+  opacity: 0.8;
+  transform: scale(0.985);
+}
+
+.profile-setup-avatar__image {
+  border-radius: 50%;
+  height: 100%;
+  width: 100%;
+}
+
+.profile-setup-avatar__fallback {
+  color: #17463f;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 58px;
+  font-weight: 600;
+}
+
+.profile-setup-avatar__badge {
+  align-items: center;
+  background: #a5824e;
+  border: 4px solid #faf5e9;
+  border-radius: 50%;
+  bottom: -2px;
+  color: #fffdf8;
+  display: flex;
+  font-family: Arial, sans-serif;
+  font-size: 29px;
+  font-weight: 300;
+  height: 40px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: -1px;
+  width: 40px;
+}
+
+.profile-setup-avatar-area__hint {
+  color: #75817c;
+  font-size: 22px;
+  margin-top: 20px;
+}
+
+.profile-setup-field {
+  margin-top: 41px;
+}
+
+.profile-setup-field__label {
+  color: #29463e;
+  display: block;
+  font-size: 25px;
+  font-weight: 600;
+  margin-bottom: 13px;
+}
+
+.profile-setup-field__input {
+  background: rgba(255, 253, 248, 0.74);
+  border: 1px solid rgba(142, 116, 76, 0.22);
+  border-radius: 18px;
+  box-sizing: border-box;
+  color: #263b34;
+  font-size: 27px;
+  height: 82px;
+  padding: 0 24px;
+}
+
+.profile-setup-field__placeholder {
+  color: #979b96;
+}
+
+.profile-setup-error {
+  color: #a34f40;
+  display: block;
+  font-size: 22px;
+  line-height: 1.5;
+  margin-top: 18px;
+  text-align: center;
+}
+
+.profile-setup-save {
+  background: linear-gradient(100deg, #124b3f 0%, #17604e 100%);
+  border: 0;
+  border-radius: 22px;
+  box-shadow: 0 11px 28px rgba(23, 76, 63, 0.12);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 86px;
+  margin: 40px 0 0;
+  min-height: 86px;
+}
+
+.profile-setup-save--pressed {
+  opacity: 0.87;
+  transform: scale(0.993);
+}
+
+.profile-setup-save[disabled] {
+  background: #829a91;
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+}
+
+.profile-setup-skip {
+  background: transparent;
+  border: 0;
+  color: #677771;
+  font-size: 25px;
+  line-height: 44px;
+  margin: 27px auto 0;
+  padding: 0 22px;
+}
+
+.profile-setup-skip--pressed {
+  opacity: 0.55;
+}
+
+.profile-setup-landscape {
+  background: url('../../assets/login-landscape.jpg') center / cover no-repeat;
+  height: 230px;
+  margin: auto -46px -40px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 34%, #000);
+  mask-image: linear-gradient(to bottom, transparent, #000 34%, #000);
+  opacity: 0.34;
+}

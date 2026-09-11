@@ -300,6 +300,64 @@
         }
       }
     },
+    "/api/v1/app/me/profile/skip": {
+      "post": {
+        "tags": [
+          "app-profile-controller"
+        ],
+        "operationId": "skipAppProfileSetup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAppUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app/me/avatar": {
+      "post": {
+        "tags": [
+          "app-profile-controller"
+        ],
+        "operationId": "uploadAppAvatar",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "avatar"
+                ],
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAppUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/app/auth/wechat/session": {
       "post": {
         "tags": [
@@ -1353,6 +1411,36 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseAdminMeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app/me/profile": {
+      "patch": {
+        "tags": [
+          "app-profile-controller"
+        ],
+        "operationId": "updateAppProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAppUserResponse"
                 }
               }
             }
@@ -3238,6 +3326,49 @@
           }
         }
       },
+      "ApiResponseAppUserResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AppUserResponse"
+          }
+        }
+      },
+      "AppUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "profileSetupRequired": {
+            "type": "boolean"
+          },
+          "maskedPhone": {
+            "type": "string"
+          },
+          "phoneBound": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "WechatSessionRequest": {
         "required": [
           "loginCode"
@@ -3271,35 +3402,6 @@
           },
           "user": {
             "$ref": "#/components/schemas/AppUserResponse"
-          }
-        }
-      },
-      "AppUserResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "maskedPhone": {
-            "type": "string"
-          },
-          "phoneBound": {
-            "type": "boolean"
-          },
-          "status": {
-            "type": "string"
-          },
-          "registeredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastLoginAt": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
@@ -3475,7 +3577,8 @@
               "HOME_VIDEO_COVER",
               "SCENIC_IMAGE",
               "PRODUCT_IMAGE",
-              "COOPERATION_IMAGE"
+              "COOPERATION_IMAGE",
+              "APP_USER_AVATAR"
             ]
           }
         }
@@ -3719,6 +3822,16 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/AdminMeResponse"
+          }
+        }
+      },
+      "UpdateAppProfileRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 30,
+            "minLength": 0,
+            "type": "string"
           }
         }
       },
@@ -4088,14 +4201,6 @@
           },
           "name": {
             "type": "string"
-          }
-        }
-      },
-      "ApiResponseAppUserResponse": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/AppUserResponse"
           }
         }
       },
@@ -4858,13 +4963,13 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "parameterName": {
+          "token": {
             "type": "string"
           },
           "headerName": {
             "type": "string"
           },
-          "token": {
+          "parameterName": {
             "type": "string"
           }
         }

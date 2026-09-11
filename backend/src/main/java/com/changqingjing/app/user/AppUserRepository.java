@@ -15,7 +15,8 @@ import org.springframework.stereotype.Repository;
 public class AppUserRepository {
 
     private static final String USER_COLUMNS = """
-            u.id, u.display_name, u.status, u.registered_at, u.last_login_at,
+            u.id, u.display_name, u.avatar_media_id, u.profile_onboarding_completed_at,
+            u.status, u.registered_at, u.last_login_at,
             p.masked_phone, (p.user_id IS NOT NULL) AS phone_bound,
             EXISTS (SELECT 1 FROM wechat_identity wi2 WHERE wi2.user_id = u.id) AS wechat_bound
             """;
@@ -130,6 +131,38 @@ public class AppUserRepository {
                 userId);
     }
 
+    public void updateProfile(
+            UUID userId,
+            String displayName,
+            OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE app_user
+                SET display_name = COALESCE(?, display_name),
+                    profile_onboarding_completed_at = COALESCE(profile_onboarding_completed_at, ?),
+                    updated_at = ?,
+                    lock_version = lock_version + 1
+                WHERE id = ?
+                """, displayName, now, now, userId);
+    }
+
+    public void updateAvatar(UUID userId, UUID avatarMediaId, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE app_user
+                SET avatar_media_id = ?, updated_at = ?, lock_version = lock_version + 1
+                WHERE id = ?
+                """, avatarMediaId, now, userId);
+    }
+
+    public void completeProfileOnboarding(UUID userId, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE app_user
+                SET profile_onboarding_completed_at = COALESCE(profile_onboarding_completed_at, ?),
+                    updated_at = ?,
+                    lock_version = lock_version + 1
+                WHERE id = ?
+                """, now, now, userId);
+    }
+
     public List<AppUserView> search(
             String keyword,
             AppUserStatus status,
@@ -200,6 +233,8 @@ public class AppUserRepository {
         return new AppUserView(
                 resultSet.getObject("id", UUID.class),
                 resultSet.getString("display_name"),
+                resultSet.getObject("avatar_media_id", UUID.class),
+                resultSet.getObject("profile_onboarding_completed_at", OffsetDateTime.class),
                 AppUserStatus.valueOf(resultSet.getString("status")),
                 resultSet.getObject("registered_at", OffsetDateTime.class),
                 resultSet.getObject("last_login_at", OffsetDateTime.class),

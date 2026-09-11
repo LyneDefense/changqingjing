@@ -8,7 +8,8 @@ public enum MediaPurpose {
     HOME_VIDEO_COVER(MediaType.IMAGE),
     SCENIC_IMAGE(MediaType.IMAGE),
     PRODUCT_IMAGE(MediaType.IMAGE),
-    COOPERATION_IMAGE(MediaType.IMAGE);
+    COOPERATION_IMAGE(MediaType.IMAGE),
+    APP_USER_AVATAR(MediaType.IMAGE);
 
     private final MediaType mediaType;
 

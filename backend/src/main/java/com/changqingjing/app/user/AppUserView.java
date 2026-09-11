@@ -6,6 +6,8 @@ import java.util.UUID;
 public record AppUserView(
         UUID id,
         String displayName,
+        UUID avatarMediaId,
+        OffsetDateTime profileOnboardingCompletedAt,
         AppUserStatus status,
         OffsetDateTime registeredAt,
         OffsetDateTime lastLoginAt,

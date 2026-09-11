@@ -1,5 +1,6 @@
 package com.changqingjing.media;
 
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
@@ -11,6 +12,12 @@ public interface MediaStorage {
             Duration validity);
 
     StoredObject inspect(String objectKey);
+
+    void store(
+            String objectKey,
+            String contentType,
+            long sizeBytes,
+            InputStream inputStream);
 
     SignedObjectUrl signRead(String objectKey, Duration validity);
 

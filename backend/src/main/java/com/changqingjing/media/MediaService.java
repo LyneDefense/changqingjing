@@ -7,6 +7,8 @@ import com.changqingjing.admin.api.media.MediaUploadAuthorizationResponse;
 import com.changqingjing.admin.audit.AdminAuditService;
 import com.changqingjing.admin.auth.AdminPrincipal;
 import com.changqingjing.common.api.BusinessException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -18,6 +20,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class MediaService {
@@ -156,6 +159,104 @@ public class MediaService {
                     "所选媒体尚未完成校验");
         }
         return asset;
+    }
+
+    @Transactional(noRollbackFor = BusinessException.class)
+    public MediaAssetRepository.Asset storeAppAvatar(
+            MultipartFile file,
+            UUID appUserId) {
+        if (file == null || file.isEmpty()) {
+            throw invalid("请选择头像图片");
+        }
+        String filename = normalizedFilename(
+                file.getOriginalFilename() == null ? "avatar" : file.getOriginalFilename());
+        String contentType = avatarContentType(file);
+        CreateMediaUploadRequest request = new CreateMediaUploadRequest(
+                filename,
+                MediaType.IMAGE,
+                contentType,
+                file.getSize(),
+                MediaPurpose.APP_USER_AVATAR);
+        validateUpload(request, contentType);
+
+        UUID id = UUID.randomUUID();
+        String objectKey = objectKey(id, contentType);
+        OffsetDateTime now = now();
+        repository.insertAppUserUpload(
+                id,
+                objectKey,
+                filename,
+                MediaType.IMAGE,
+                contentType,
+                file.getSize(),
+                MediaPurpose.APP_USER_AVATAR,
+                appUserId,
+                now,
+                now.plus(properties.getUploadCredentialTtl()));
+
+        try (InputStream inputStream = file.getInputStream()) {
+            storage.store(objectKey, contentType, file.getSize(), inputStream);
+        } catch (IOException exception) {
+            repository.markFailed(id, "MEDIA_UPLOAD_READ_FAILED", now());
+            throw new BusinessException(
+                    HttpStatus.BAD_REQUEST,
+                    "MEDIA_UPLOAD_READ_FAILED",
+                    "无法读取所选头像，请重新选择");
+        } catch (MediaStorageException exception) {
+            repository.markFailed(id, exception.getCode(), now());
+            throw storageUnavailable(exception);
+        }
+
+        if (!repository.markVerifying(id, now())) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "MEDIA_STATE_CONFLICT",
+                    "当前头像状态不能执行校验");
+        }
+        MediaStorage.StoredObject storedObject;
+        try {
+            storedObject = storage.inspect(objectKey);
+        } catch (MediaStorageException exception) {
+            repository.markFailed(id, exception.getCode(), now());
+            throw storageUnavailable(exception);
+        }
+        String failureCode = verificationFailure(requiredAsset(id), storedObject);
+        if (failureCode != null) {
+            repository.markFailed(id, failureCode, now());
+            throw new BusinessException(
+                    HttpStatus.BAD_REQUEST,
+                    failureCode,
+                    "头像图片格式不正确，请重新选择");
+        }
+        repository.markReady(id, storedObject.etag(), now());
+        return requiredAsset(id);
+    }
+
+    private String avatarContentType(MultipartFile file) {
+        String declared = file.getContentType() == null
+                ? ""
+                : file.getContentType().strip().toLowerCase(Locale.ROOT);
+        if (IMAGE_CONTENT_TYPES.contains(declared)) {
+            return declared;
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            byte[] header = inputStream.readNBytes(12);
+            if (startsWith(header, "ffd8ff")) {
+                return "image/jpeg";
+            }
+            if (startsWith(header, "89504e470d0a1a0a")) {
+                return "image/png";
+            }
+            if (startsWith(header, "52494646") && at(header, 8, "57454250")) {
+                return "image/webp";
+            }
+            return declared;
+        } catch (IOException exception) {
+            throw new BusinessException(
+                    HttpStatus.BAD_REQUEST,
+                    "MEDIA_UPLOAD_READ_FAILED",
+                    "无法读取所选头像，请重新选择");
+        }
     }
 
     public MediaStorage.SignedObjectUrl signReadyMedia(UUID id) {

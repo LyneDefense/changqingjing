@@ -4,9 +4,12 @@ import {
   fetchCurrentUser,
   registerWechatUser,
   revokeAppSession,
-  restoreWechatSession
+  restoreWechatSession,
+  skipAppProfileSetup,
+  updateAppProfile,
+  uploadAppAvatar
 } from './auth-api'
-import type { AppLoginResult, AuthSnapshot } from './auth-types'
+import type { AppLoginResult, AppUser, AuthSnapshot } from './auth-types'
 import {
   clearAccessToken,
   clearStoredUser,
@@ -35,6 +38,12 @@ function acceptLogin(result: AppLoginResult) {
   setStoredUser(result.user)
   publish({ status: 'authenticated', user: result.user })
   return result.user
+}
+
+function acceptUser(user: AppUser) {
+  setStoredUser(user)
+  publish({ status: 'authenticated', user })
+  return user
 }
 
 function becomeGuest(clearToken = true) {
@@ -123,6 +132,24 @@ export async function logoutCurrentUser(): Promise<void> {
   } finally {
     becomeGuest()
   }
+}
+
+export async function saveCurrentProfile(displayName?: string): Promise<AppUser> {
+  const token = getAccessToken()
+  if (!token) throw new AuthApiError(401, 'UNAUTHENTICATED', '请重新登录')
+  return acceptUser(await updateAppProfile(token, displayName))
+}
+
+export async function skipCurrentProfileSetup(): Promise<AppUser> {
+  const token = getAccessToken()
+  if (!token) throw new AuthApiError(401, 'UNAUTHENTICATED', '请重新登录')
+  return acceptUser(await skipAppProfileSetup(token))
+}
+
+export async function uploadCurrentAvatar(filePath: string): Promise<AppUser> {
+  const token = getAccessToken()
+  if (!token) throw new AuthApiError(401, 'UNAUTHENTICATED', '请重新登录')
+  return acceptUser(await uploadAppAvatar(token, filePath))
 }
 
 export { getAccessToken } from './session'

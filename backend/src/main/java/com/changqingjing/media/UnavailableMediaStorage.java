@@ -1,5 +1,6 @@
 package com.changqingjing.media;
 
+import java.io.InputStream;
 import java.time.Duration;
 
 final class UnavailableMediaStorage implements MediaStorage {
@@ -20,6 +21,15 @@ final class UnavailableMediaStorage implements MediaStorage {
 
     @Override
     public StoredObject inspect(String objectKey) {
+        throw unavailable();
+    }
+
+    @Override
+    public void store(
+            String objectKey,
+            String contentType,
+            long sizeBytes,
+            InputStream inputStream) {
         throw unavailable();
     }
 

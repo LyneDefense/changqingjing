@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useAuth } from '../../hooks/useAuth'
 import { logoutCurrentUser } from '../../services/auth'
@@ -35,6 +35,11 @@ export default function ProfilePage() {
     })
   }
 
+  function editProfile() {
+    if (auth.status !== 'authenticated') return
+    void Taro.navigateTo({ url: '/pages/profile-setup/index?target=profile' })
+  }
+
   async function logout() {
     const result = await Taro.showModal({
       title: '退出登录',
@@ -62,8 +67,12 @@ export default function ProfilePage() {
   return (
     <View className='page profile-page'>
       <View className={`profile-card profile-card--${auth.status}`}>
-        <View className='profile-card__identity'>
-          <View className='profile-avatar'>常</View>
+        <View className='profile-card__identity' onClick={editProfile}>
+          <View className='profile-avatar'>
+            {auth.status === 'authenticated' && user?.avatarUrl
+              ? <Image className='profile-avatar__image' mode='aspectFill' src={user.avatarUrl} />
+              : '常'}
+          </View>
           <View className='profile-card__copy'>
             <Text className='profile-card__name'>
               {auth.status === 'authenticated' ? user?.displayName : '未登录用户'}
@@ -73,6 +82,9 @@ export default function ProfilePage() {
                 ? user?.maskedPhone || '手机号未绑定'
                 : '登录后完善个人资料'}
             </Text>
+            {auth.status === 'authenticated' && (
+              <Text className='profile-card__edit'>点击头像或昵称可修改资料</Text>
+            )}
           </View>
         </View>
         {auth.status === 'initializing' && (

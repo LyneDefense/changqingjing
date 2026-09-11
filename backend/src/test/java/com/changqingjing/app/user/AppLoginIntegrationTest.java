@@ -3,6 +3,7 @@ package com.changqingjing.app.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,6 +74,7 @@ class AppLoginIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.user.phoneBound").value(true))
                 .andExpect(jsonPath("$.data.user.maskedPhone").value("138****8000"))
+                .andExpect(jsonPath("$.data.user.profileSetupRequired").value(true))
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);
@@ -83,6 +85,14 @@ class AppLoginIntegrationTest {
                         .header("Authorization", "Bearer " + rawToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.maskedPhone").value("138****8000"));
+
+        mockMvc.perform(patch("/api/v1/app/me/profile")
+                        .header("Authorization", "Bearer " + rawToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"山水旅人\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.displayName").value("山水旅人"))
+                .andExpect(jsonPath("$.data.profileSetupRequired").value(false));
 
         var repeated = loginService.registerLogin("another-login-code", "another-phone-code");
         var restored = loginService.restore("restore-code");

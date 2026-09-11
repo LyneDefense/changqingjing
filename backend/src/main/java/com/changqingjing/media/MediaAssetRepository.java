@@ -50,12 +50,45 @@ public class MediaAssetRepository {
         return findById(id).orElseThrow();
     }
 
+    public Asset insertAppUserUpload(
+            UUID id,
+            String objectKey,
+            String originalFilename,
+            MediaType mediaType,
+            String contentType,
+            long sizeBytes,
+            MediaPurpose purpose,
+            UUID uploadedByAppUser,
+            OffsetDateTime now,
+            OffsetDateTime uploadExpiresAt) {
+        jdbcTemplate.update("""
+                INSERT INTO media_asset (
+                    id, object_key, original_filename, media_type, content_type,
+                    size_bytes, status, purpose, uploaded_by_app_user, created_at,
+                    updated_at, upload_expires_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'UPLOADING', ?, ?, ?, ?, ?)
+                """,
+                id,
+                objectKey,
+                originalFilename,
+                mediaType.name(),
+                contentType,
+                sizeBytes,
+                purpose.name(),
+                uploadedByAppUser,
+                now,
+                now,
+                uploadExpiresAt);
+        return findById(id).orElseThrow();
+    }
+
     public Optional<Asset> findById(UUID id) {
         return jdbcTemplate.query("""
                 SELECT id, object_key, original_filename, media_type, content_type,
-                       size_bytes, etag, status, purpose, uploaded_by, created_at,
-                       updated_at, verified_at, upload_expires_at, failure_code,
-                       verification_attempts, deletion_requested_at, deleted_at
+                       size_bytes, etag, status, purpose, uploaded_by,
+                       uploaded_by_app_user, created_at, updated_at, verified_at,
+                       upload_expires_at, failure_code, verification_attempts,
+                       deletion_requested_at, deleted_at
                 FROM media_asset
                 WHERE id = ?
                 """, this::mapAsset, id).stream().findFirst();
@@ -152,7 +185,8 @@ public class MediaAssetRepository {
                 rows.getString("failure_code"),
                 rows.getInt("verification_attempts"),
                 rows.getObject("deletion_requested_at", OffsetDateTime.class),
-                rows.getObject("deleted_at", OffsetDateTime.class));
+                rows.getObject("deleted_at", OffsetDateTime.class),
+                rows.getObject("uploaded_by_app_user", UUID.class));
     }
 
     public record Asset(
@@ -173,6 +207,7 @@ public class MediaAssetRepository {
             String failureCode,
             int verificationAttempts,
             OffsetDateTime deletionRequestedAt,
-            OffsetDateTime deletedAt) {
+            OffsetDateTime deletedAt,
+            UUID uploadedByAppUser) {
     }
 }

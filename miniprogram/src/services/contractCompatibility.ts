@@ -72,4 +72,7 @@ export type MiniProgramApiContractAssertions = [
   HasRoute<'/api/v1/app/auth/wechat/register-login'>,
   HasRoute<'/api/v1/app/auth/logout'>,
   HasRoute<'/api/v1/app/me'>,
+  HasRoute<'/api/v1/app/me/profile'>,
+  HasRoute<'/api/v1/app/me/profile/skip'>,
+  HasRoute<'/api/v1/app/me/avatar'>,
 ]

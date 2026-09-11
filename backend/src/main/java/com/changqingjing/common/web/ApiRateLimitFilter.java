@@ -121,7 +121,8 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
                 || path.equals("/api/v1/app/auth/wechat/register-login")) {
             return appAuthentication;
         }
-        if (path.equals("/api/v1/admin/media/uploads")) {
+        if (path.equals("/api/v1/admin/media/uploads")
+                || path.equals("/api/v1/app/me/avatar")) {
             return mediaUpload;
         }
         if (path.matches("/api/v1/app/scenics/[^/]+/views")) {

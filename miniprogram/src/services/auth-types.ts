@@ -1,6 +1,8 @@
 export interface AppUser {
   id: string
   displayName: string
+  avatarUrl?: string
+  profileSetupRequired: boolean
   maskedPhone?: string
   phoneBound: boolean
   status: 'ACTIVE' | 'DISABLED'

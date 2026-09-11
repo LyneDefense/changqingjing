@@ -76,6 +76,12 @@
   font-weight: 600;
   height: 104px;
   justify-content: center;
+  overflow: hidden;
+}
+
+.profile-avatar__image {
+  height: 100%;
+  width: 100%;
 }
 
 .profile-card__copy {
@@ -99,6 +105,13 @@
   font-size: 25px;
   line-height: 1.55;
   margin-top: 9px;
+}
+
+.profile-card__edit {
+  color: #9a7c4b;
+  font-size: 20px;
+  line-height: 1.4;
+  margin-top: 5px;
 }
 
 .profile-restoring {

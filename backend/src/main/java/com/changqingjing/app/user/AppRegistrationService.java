@@ -22,15 +22,18 @@ public class AppRegistrationService {
     private final AppUserRepository userRepository;
     private final PhoneProtector phoneProtector;
     private final AppSessionService sessionService;
+    private final AppProfileService profileService;
     private final Clock clock = Clock.systemUTC();
 
     public AppRegistrationService(
             AppUserRepository userRepository,
             PhoneProtector phoneProtector,
-            AppSessionService sessionService) {
+            AppSessionService sessionService,
+            AppProfileService profileService) {
         this.userRepository = userRepository;
         this.phoneProtector = phoneProtector;
         this.sessionService = sessionService;
+        this.profileService = profileService;
     }
 
     @Transactional
@@ -107,7 +110,7 @@ public class AppRegistrationService {
         return new AppLoginResponse(
                 session.rawToken(),
                 session.expiresAt(),
-                AppUserResponse.from(current));
+                profileService.get(current.id()));
     }
 
     private void requireActive(AppUserView user) {

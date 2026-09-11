@@ -132,6 +132,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/me/profile/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["skipAppProfileSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadAppAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app/auth/wechat/session": {
         parameters: {
             query?: never;
@@ -578,6 +610,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/app/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateAppProfile"];
         trace?: never;
     };
     "/api/v1/admin/staff/{accountId}": {
@@ -1394,6 +1442,23 @@ export interface components {
             /** Format: int64 */
             viewCount?: number;
         };
+        ApiResponseAppUserResponse: {
+            data?: components["schemas"]["AppUserResponse"];
+        };
+        AppUserResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            avatarUrl?: string;
+            profileSetupRequired?: boolean;
+            maskedPhone?: string;
+            phoneBound?: boolean;
+            status?: string;
+            /** Format: date-time */
+            registeredAt?: string;
+            /** Format: date-time */
+            lastLoginAt?: string;
+        };
         WechatSessionRequest: {
             loginCode: string;
         };
@@ -1405,18 +1470,6 @@ export interface components {
             /** Format: date-time */
             expiresAt?: string;
             user?: components["schemas"]["AppUserResponse"];
-        };
-        AppUserResponse: {
-            /** Format: uuid */
-            id?: string;
-            displayName?: string;
-            maskedPhone?: string;
-            phoneBound?: boolean;
-            status?: string;
-            /** Format: date-time */
-            registeredAt?: string;
-            /** Format: date-time */
-            lastLoginAt?: string;
         };
         WechatRegisterLoginRequest: {
             loginCode: string;
@@ -1468,7 +1521,7 @@ export interface components {
             /** Format: int64 */
             sizeBytes?: number;
             /** @enum {string} */
-            purpose: "COMPANY_IMAGE" | "COMPANY_COVER" | "HOME_HERO" | "HOME_VIDEO" | "HOME_VIDEO_COVER" | "SCENIC_IMAGE" | "PRODUCT_IMAGE" | "COOPERATION_IMAGE";
+            purpose: "COMPANY_IMAGE" | "COMPANY_COVER" | "HOME_HERO" | "HOME_VIDEO" | "HOME_VIDEO_COVER" | "SCENIC_IMAGE" | "PRODUCT_IMAGE" | "COOPERATION_IMAGE" | "APP_USER_AVATAR";
         };
         AdminMediaResponse: {
             /** Format: uuid */
@@ -1552,6 +1605,9 @@ export interface components {
         };
         ApiResponseAdminMeResponse: {
             data?: components["schemas"]["AdminMeResponse"];
+        };
+        UpdateAppProfileRequest: {
+            displayName?: string;
         };
         UpdateAdminStaffRequest: {
             displayName?: string;
@@ -1685,9 +1741,6 @@ export interface components {
             /** Format: uuid */
             id?: string;
             name?: string;
-        };
-        ApiResponseAppUserResponse: {
-            data?: components["schemas"]["AppUserResponse"];
         };
         ApiResponseAppHomeResponse: {
             data?: components["schemas"]["AppHomeResponse"];
@@ -1965,9 +2018,9 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            parameterName?: string;
-            headerName?: string;
             token?: string;
+            headerName?: string;
+            parameterName?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;
@@ -2193,6 +2246,53 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseScenicViewResponse"];
+                };
+            };
+        };
+    };
+    skipAppProfileSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAppUserResponse"];
+                };
+            };
+        };
+    };
+    uploadAppAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    avatar: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAppUserResponse"];
                 };
             };
         };
@@ -2983,6 +3083,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAdminMeResponse"];
+                };
+            };
+        };
+    };
+    updateAppProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAppProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAppUserResponse"];
                 };
             };
         };
