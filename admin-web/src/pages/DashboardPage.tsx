@@ -1,29 +1,101 @@
 import { Link } from 'react-router-dom'
-import { PageIntro } from '../components/PageIntro'
+import { useAuth } from '../auth/authContextValue'
+import { AdminIcon } from '../components/AdminIcon'
+import type { AdminIconName } from '../components/AdminIcon'
 
-const modules = [
-  ['/home-hero', '首页头图', '上传首页头图并设置可选标题与图片焦点'],
-  ['/home-videos', '首页宣传视频', '上传、核对并发布首页宣传视频'],
-  ['/company', '公司介绍', '维护公司简介和可排序的详细内容'],
-  ['/scenics', '景区管理', '维护景区图文、开放状态和可选导航位置'],
-  ['/products', '会员福利管理', '维护分类、产品图文和上架状态'],
-  ['/cooperation', '合作权益', '维护核心收益来源和合作价值'],
-  ['/users', '注册用户', '查看微信登录后自动创建的用户'],
+interface DashboardModule {
+  to: string
+  title: string
+  description: string
+  icon: AdminIconName
+  permission: string
+}
+
+const contentModules: DashboardModule[] = [
+  { to: '/home-hero', title: '首页头图', description: '首页首屏画面与文案', icon: 'hero', permission: 'content:read' },
+  { to: '/home-videos', title: '宣传视频', description: '视频封面与播放内容', icon: 'video', permission: 'content:read' },
+  { to: '/company', title: '公司介绍', description: '品牌简介与展示图片', icon: 'company', permission: 'content:read' },
+  { to: '/scenics', title: '景区管理', description: '景区内容、顺序与导航', icon: 'scenic', permission: 'content:read' },
+  { to: '/products', title: '会员福利', description: '福利分类与产品内容', icon: 'gift', permission: 'content:read' },
+  { to: '/cooperation', title: '合作权益', description: '收益来源与合作价值', icon: 'cooperation', permission: 'content:read' },
 ]
 
 export function DashboardPage() {
+  const auth = useAuth()
+  const visibleModules = contentModules.filter((module) => auth.hasPermission(module.permission))
+  const today = new Intl.DateTimeFormat('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  }).format(new Date())
+
   return (
-    <>
-      <PageIntro title="工作台" description="从这里进入用户与内容管理功能。" />
-      <div className="module-grid">
-        {modules.map(([to, title, description]) => (
-          <Link className="module-card" key={title} to={to}>
-            <h3>{title}</h3>
-            <p>{description}</p>
-            <span>进入管理 →</span>
-          </Link>
-        ))}
+    <div className="dashboard-page">
+      <section className="workspace-hero">
+        <div className="workspace-hero__copy">
+          <p className="workspace-hero__eyebrow">欢迎回来，{auth.user?.displayName || '管理员'}</p>
+          <h2>工作台</h2>
+          <p>在这里维护小程序内容，并检查每个板块的发布状态。</p>
+          <div className="workspace-hero__actions">
+            {visibleModules[0] && <Link className="primary-button button-link" to={visibleModules[0].to}>开始管理内容</Link>}
+            {auth.hasPermission('user:read') && <Link className="quiet-link" to="/users">查看注册用户</Link>}
+          </div>
+        </div>
+        <div className="workspace-hero__landscape" aria-hidden="true">
+          <span className="workspace-hero__sun" />
+          <span className="workspace-hero__mountain workspace-hero__mountain--back" />
+          <span className="workspace-hero__mountain workspace-hero__mountain--front" />
+          <span className="workspace-hero__date">{today}</span>
+        </div>
+      </section>
+
+      <div className="dashboard-layout">
+        <section className="dashboard-panel dashboard-panel--modules">
+          <div className="dashboard-panel__heading">
+            <div>
+              <span>内容中心</span>
+              <h3>常用管理</h3>
+            </div>
+            <p>按业务模块进入对应的编辑与发布页面</p>
+          </div>
+          <div className="dashboard-module-list">
+            {visibleModules.map((module) => (
+              <Link className="dashboard-module" key={module.to} to={module.to}>
+                <span className="dashboard-module__icon"><AdminIcon name={module.icon} /></span>
+                <span className="dashboard-module__copy">
+                  <strong>{module.title}</strong>
+                  <small>{module.description}</small>
+                </span>
+                <span className="dashboard-module__arrow" aria-hidden="true">›</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <aside className="dashboard-side">
+          <section className="dashboard-panel workflow-panel">
+            <div className="dashboard-panel__heading">
+              <div>
+                <span>操作指引</span>
+                <h3>内容发布流程</h3>
+              </div>
+            </div>
+            <ol className="workflow-list">
+              <li><i>01</i><div><strong>编辑内容</strong><span>进入对应模块完成资料维护</span></div></li>
+              <li><i>02</i><div><strong>保存草稿</strong><span>检查图片与文字是否完整</span></div></li>
+              <li><i>03</i><div><strong>确认发布</strong><span>发布后小程序端立即更新</span></div></li>
+            </ol>
+          </section>
+
+          <section className="dashboard-note">
+            <span className="dashboard-note__seal">净</span>
+            <div>
+              <strong>发布前请仔细核对</strong>
+              <p>草稿不会影响线上内容，确认无误后再执行发布。</p>
+            </div>
+          </section>
+        </aside>
       </div>
-    </>
+    </div>
   )
 }
