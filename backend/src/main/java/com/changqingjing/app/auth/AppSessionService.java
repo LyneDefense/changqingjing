@@ -50,6 +50,16 @@ public class AppSessionService implements AppTokenAuthenticator {
         });
     }
 
+    @Transactional
+    public void revoke(String rawToken) {
+        if (rawToken == null || rawToken.length() < 32 || rawToken.length() > 256) {
+            return;
+        }
+        repository.revoke(
+                digest(rawToken),
+                OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC));
+    }
+
     private byte[] digest(String rawToken) {
         try {
             return MessageDigest.getInstance("SHA-256")

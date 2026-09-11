@@ -3,6 +3,7 @@ import {
   AuthApiError,
   fetchCurrentUser,
   registerWechatUser,
+  revokeAppSession,
   restoreWechatSession
 } from './auth-api'
 import type { AppLoginResult, AuthSnapshot } from './auth-types'
@@ -113,6 +114,15 @@ export function recoverRegisteredSession(): Promise<boolean> {
 
 export function clearLogin(): void {
   becomeGuest()
+}
+
+export async function logoutCurrentUser(): Promise<void> {
+  const token = getAccessToken()
+  try {
+    if (token) await revokeAppSession(token)
+  } finally {
+    becomeGuest()
+  }
 }
 
 export { getAccessToken } from './session'

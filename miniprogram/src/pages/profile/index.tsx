@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useAuth } from '../../hooks/useAuth'
+import { logoutCurrentUser } from '../../services/auth'
 import { syncCustomTabBar } from '../../utils/customTabBar'
 import './index.scss'
 
@@ -17,6 +19,7 @@ const services: Array<{ icon: ServiceIcon, label: string }> = [
 export default function ProfilePage() {
   const auth = useAuth()
   const user = auth.user
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useDidShow(() => {
     syncCustomTabBar(3)
@@ -30,6 +33,26 @@ export default function ProfilePage() {
       confirmText: '知道了',
       confirmColor: '#17463f',
     })
+  }
+
+  async function logout() {
+    const result = await Taro.showModal({
+      title: '退出登录',
+      content: '退出后将返回未登录状态，确认退出吗？',
+      confirmText: '退出',
+      confirmColor: '#a24d40',
+    })
+    if (!result.confirm) return
+
+    setLoggingOut(true)
+    try {
+      await logoutCurrentUser()
+      void Taro.showToast({ title: '已退出登录', icon: 'success' })
+    } catch {
+      void Taro.showToast({ title: '已退出当前设备', icon: 'none' })
+    } finally {
+      setLoggingOut(false)
+    }
   }
 
   const accountDescription = auth.status === 'authenticated'
@@ -72,8 +95,20 @@ export default function ProfilePage() {
       </View>
 
       <View className='profile-account'>
-        <Text className='profile-account__heading'>账户信息</Text>
-        <Text className='profile-account__description'>{accountDescription}</Text>
+        <View className='profile-account__header'>
+          <View className='profile-account__copy'>
+            <Text className='profile-account__heading'>账户信息</Text>
+            <Text className='profile-account__description'>{accountDescription}</Text>
+          </View>
+          {auth.status === 'authenticated' && (
+            <Button
+              className='profile-logout-button'
+              disabled={loggingOut}
+              hoverClass='profile-logout-button--pressed'
+              onClick={() => void logout()}
+            >{loggingOut ? '退出中…' : '退出登录'}</Button>
+          )}
+        </View>
         <View className='profile-metrics'>
           {['会员等级', '余额', '功德', '会员号'].map((label) => (
             <View className='profile-metric' key={label}>

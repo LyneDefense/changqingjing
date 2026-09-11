@@ -98,6 +98,14 @@ class AppLoginIntegrationTest {
                 byte[].class);
         assertThat(new String(storedPhone, StandardCharsets.UTF_8)).doesNotContain("13800138000");
         assertThat(Base64.getEncoder().encodeToString(storedToken)).isNotEqualTo(rawToken);
+
+        mockMvc.perform(post("/api/v1/app/auth/logout")
+                        .header("Authorization", "Bearer " + rawToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value("logged-out"));
+        mockMvc.perform(get("/api/v1/app/me")
+                        .header("Authorization", "Bearer " + rawToken))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -128,6 +136,8 @@ class AppLoginIntegrationTest {
         mockMvc.perform(get("/api/v1/app/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
+        mockMvc.perform(post("/api/v1/app/auth/logout"))
+                .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/app/auth/wechat/register-login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"loginCode\":\"\",\"phoneCode\":\"\"}"))

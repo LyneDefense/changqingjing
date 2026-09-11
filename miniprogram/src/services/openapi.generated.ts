@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["logoutAppSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/staff": {
         parameters: {
             query?: never;
@@ -1404,6 +1420,9 @@ export interface components {
             loginCode: string;
             phoneCode: string;
         };
+        ApiResponseString: {
+            data?: string;
+        };
         CreateAdminStaffRequest: {
             loginName: string;
             displayName: string;
@@ -1516,9 +1535,6 @@ export interface components {
             coordinateSystem?: string;
             /** Format: date-time */
             expiresAt?: string;
-        };
-        ApiResponseString: {
-            data?: string;
         };
         AdminLoginRequest: {
             loginName: string;
@@ -1947,8 +1963,8 @@ export interface components {
         };
         CsrfToken: {
             token?: string;
-            parameterName?: string;
             headerName?: string;
+            parameterName?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;
@@ -2222,6 +2238,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAppLoginResponse"];
+                };
+            };
+        };
+    };
+    logoutAppSession: {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseString"];
                 };
             };
         };

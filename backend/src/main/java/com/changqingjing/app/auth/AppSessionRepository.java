@@ -55,4 +55,12 @@ class AppSessionRepository {
                 now,
                 tokenDigest);
     }
+
+    void revoke(byte[] tokenDigest, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE app_session
+                SET revoked_at = ?
+                WHERE token_digest = ? AND revoked_at IS NULL
+                """, now, tokenDigest);
+    }
 }

@@ -360,6 +360,36 @@
         }
       }
     },
+    "/api/v1/app/auth/logout": {
+      "post": {
+        "tags": [
+          "app-auth-controller"
+        ],
+        "operationId": "logoutAppSession",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/staff": {
       "get": {
         "tags": [
@@ -3276,6 +3306,14 @@
           }
         }
       },
+      "ApiResponseString": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          }
+        }
+      },
       "CreateAdminStaffRequest": {
         "required": [
           "displayName",
@@ -3614,14 +3652,6 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "ApiResponseString": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "string"
           }
         }
       },
@@ -4809,10 +4839,10 @@
           "token": {
             "type": "string"
           },
-          "parameterName": {
+          "headerName": {
             "type": "string"
           },
-          "headerName": {
+          "parameterName": {
             "type": "string"
           }
         }

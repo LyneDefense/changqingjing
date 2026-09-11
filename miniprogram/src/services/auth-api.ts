@@ -66,3 +66,7 @@ export function registerWechatUser(
     phoneCode
   })
 }
+
+export function revokeAppSession(token: string): Promise<string> {
+  return authRequest<string>('/auth/logout', {}, token)
+}

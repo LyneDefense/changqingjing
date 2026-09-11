@@ -99,6 +99,7 @@ public class SecurityConfig {
                     "/api/v1/app/cooperation",
                     "/api/v1/app/scenics/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/app/scenics/*/views").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/app/auth/logout").hasRole("APP_USER")
                 .requestMatchers("/api/v1/app/auth/**").permitAll()
                 .requestMatchers(
                     "/api/v1/app/me",
