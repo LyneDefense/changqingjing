@@ -561,8 +561,6 @@ export function getAdminHomeHeroContent() {
 }
 
 export function saveAdminHomeHeroDraft(input: {
-  title?: string
-  subtitle?: string
   coverMediaId: string
   focusX: number
   focusY: number

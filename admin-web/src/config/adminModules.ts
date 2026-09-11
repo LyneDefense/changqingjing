@@ -14,7 +14,7 @@ export interface AdminModuleDefinition {
 
 export const adminModules: AdminModuleDefinition[] = [
   { to: '/', label: '工作台', group: '概览', icon: 'dashboard', end: true },
-  { to: '/home-hero', label: '首页头图', group: '内容运营', icon: 'hero', description: '首页首屏画面与文案', permission: 'content:read', workspace: true },
+  { to: '/home-hero', label: '首页头图', group: '内容运营', icon: 'hero', description: '首页首屏完整图片', permission: 'content:read', workspace: true },
   { to: '/home-videos', label: '首页宣传视频', workspaceLabel: '宣传视频', group: '内容运营', icon: 'video', description: '视频封面与播放内容', permission: 'content:read', workspace: true },
   { to: '/company', label: '公司介绍', group: '内容运营', icon: 'company', description: '品牌简介与展示图片', permission: 'content:read', workspace: true },
   { to: '/scenics', label: '景区管理', group: '内容运营', icon: 'scenic', description: '景区内容、顺序与导航', permission: 'content:read', workspace: true },

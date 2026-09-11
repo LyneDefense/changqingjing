@@ -44,8 +44,6 @@ export default function HomePage() {
   }
 
   const scenic = content?.scenics[0]
-  const heroHasCopy = Boolean(content?.hero?.title || content?.hero?.subtitle)
-
   return (
     <View className='page home-page'>
       {content?.hero && (
@@ -56,16 +54,6 @@ export default function HomePage() {
             src={content.hero.coverUrl}
             style={{ objectPosition: `${content.hero.focusX}% ${content.hero.focusY}%` }}
           />
-          {heroHasCopy && (
-            <View className='home-hero__copy'>
-              {content.hero.title && (
-                <Text className='home-hero__title'>{content.hero.title}</Text>
-              )}
-              {content.hero.subtitle && (
-                <Text className='home-hero__subtitle'>{content.hero.subtitle}</Text>
-              )}
-            </View>
-          )}
         </View>
       )}
 
