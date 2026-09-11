@@ -107,11 +107,7 @@ export interface AdminCompanyContent {
 export interface AdminHomeHeroRevision {
   id: string
   revisionNumber: number
-  title: string
-  subtitle: string
   coverMediaId: string
-  focusX: number
-  focusY: number
   createdBy: string
   createdAt: string
 }
@@ -562,8 +558,6 @@ export function getAdminHomeHeroContent() {
 
 export function saveAdminHomeHeroDraft(input: {
   coverMediaId: string
-  focusX: number
-  focusY: number
   expectedVersion: number
 }) {
   return writeRequest<AdminHomeHeroContent>('/contents/home-hero/draft', {

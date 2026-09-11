@@ -9,7 +9,6 @@ interface MediaUploadFieldProps {
   mediaId?: string
   mediaType: MediaType
   purpose: MediaPurpose
-  previewObjectPosition?: string
   onReady: (media: AdminMedia) => void
 }
 
@@ -25,7 +24,6 @@ export function MediaUploadField({
   mediaId,
   mediaType,
   purpose,
-  previewObjectPosition,
   onReady,
 }: MediaUploadFieldProps) {
   const [media, setMedia] = useState<AdminMedia>()
@@ -77,7 +75,7 @@ export function MediaUploadField({
         </small>
       </div>
       {displayedMedia?.previewUrl && displayedMedia.mediaType === 'IMAGE' && (
-        <img alt={displayedMedia.originalFilename} className="media-image-preview" src={displayedMedia.previewUrl} style={{ objectPosition: previewObjectPosition }} />
+        <img alt={displayedMedia.originalFilename} className="media-image-preview" src={displayedMedia.previewUrl} />
       )}
       {displayedMedia?.previewUrl && displayedMedia.mediaType === 'VIDEO' && (
         <video className="media-video-preview" controls poster="" preload="metadata" src={displayedMedia.previewUrl} />

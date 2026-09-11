@@ -55,19 +55,16 @@ class HomeHeroContentServiceIntegrationTest {
     }
 
     @Test
-    void keepsDraftSeparateFromPublishedHeroAndStoresItsFocalPoint() {
+    void keepsDraftSeparateFromPublishedHero() {
         AdminPrincipal actor = bootstrapAdmin();
         UUID imageId = insertReadyHero(actor.accountId());
 
         var draft = contentService.saveDraft(
-                new SaveHomeHeroDraftRequest(
-                        "循文化之脉", "见山水之美", imageId, 38, 64, 0),
+                new SaveHomeHeroDraftRequest(imageId, 0),
                 actor,
                 "hero-draft");
         assertThat(draft.version()).isEqualTo(1);
         assertThat(contentService.getPublished()).isEmpty();
-        assertThat(draft.draft().focusX()).isEqualTo(38);
-        assertThat(draft.draft().focusY()).isEqualTo(64);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM content_revision_media WHERE revision_id = ?",
                 Long.class,
@@ -78,7 +75,6 @@ class HomeHeroContentServiceIntegrationTest {
         var publicHero = contentService.getPublished().orElseThrow().revision();
         assertThat(published.visibility()).isEqualTo("PUBLISHED");
         assertThat(publicHero.coverMediaId()).isEqualTo(imageId);
-        assertThat(publicHero.title()).isEqualTo("循文化之脉");
 
         var unpublished = contentService.unpublish(
                 published.version(), actor, "hero-unpublish");

@@ -20,11 +20,7 @@ async function main() {
       data: {
         data: {
           hero: {
-            title: '循文化之脉，见山水之美',
-            subtitle: '发现值得抵达的风景与故事',
             coverUrl: 'https://media.example/hero.jpg?signature=short',
-            focusX: 42,
-            focusY: 61,
           },
           company: {
             title: '自动化公司介绍',
@@ -52,10 +48,8 @@ async function main() {
     assert(home, '首页应成功打开')
     await home.waitFor(500)
     const heroImage = await home.$('.home-hero__image')
-    const heroTitle = await home.$('.home-hero__title')
-    assert(heroImage && heroTitle, '已发布首页头图应显示')
+    assert(heroImage, '已发布首页头图应显示')
     assert.match(await heroImage.attribute('src'), /hero\.jpg/)
-    assert.equal(await heroTitle.text(), '循文化之脉，见山水之美')
     const cardTitle = await home.$('.company-card__title')
     assert(cardTitle, '已发布公司卡片应显示')
     assert.equal(await cardTitle.text(), '自动化公司介绍')

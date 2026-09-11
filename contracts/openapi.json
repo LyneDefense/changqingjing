@@ -2875,31 +2875,9 @@
         ],
         "type": "object",
         "properties": {
-          "title": {
-            "maxLength": 100,
-            "minLength": 0,
-            "type": "string"
-          },
-          "subtitle": {
-            "maxLength": 200,
-            "minLength": 0,
-            "type": "string"
-          },
           "coverMediaId": {
             "type": "string",
             "format": "uuid"
-          },
-          "focusX": {
-            "maximum": 100,
-            "minimum": 0,
-            "type": "integer",
-            "format": "int32"
-          },
-          "focusY": {
-            "maximum": 100,
-            "minimum": 0,
-            "type": "integer",
-            "format": "int32"
           },
           "expectedVersion": {
             "minimum": 0,
@@ -2949,23 +2927,9 @@
             "type": "integer",
             "format": "int32"
           },
-          "title": {
-            "type": "string"
-          },
-          "subtitle": {
-            "type": "string"
-          },
           "coverMediaId": {
             "type": "string",
             "format": "uuid"
-          },
-          "focusX": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "focusY": {
-            "type": "integer",
-            "format": "int32"
           },
           "createdBy": {
             "type": "string",
@@ -4249,22 +4213,8 @@
       "HomeHeroResponse": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string"
-          },
-          "subtitle": {
-            "type": "string"
-          },
           "coverUrl": {
             "type": "string"
-          },
-          "focusX": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "focusY": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },

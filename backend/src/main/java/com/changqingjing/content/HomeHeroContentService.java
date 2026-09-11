@@ -63,9 +63,8 @@ public class HomeHeroContentService {
         verifyVersion(entry, request.expectedVersion());
         int revisionNumber = repository.nextRevisionNumber(entry.id());
         HomeHeroContentRepository.Revision revision = repository.insertRevision(
-                UUID.randomUUID(), entry.id(), revisionNumber,
-                normalize(request.title()), normalize(request.subtitle()), request.coverMediaId(),
-                request.focusX(), request.focusY(), actor.accountId(), now);
+                UUID.randomUUID(), entry.id(), revisionNumber, request.coverMediaId(),
+                actor.accountId(), now);
         if (!repository.pointDraft(
                 entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
             throw versionConflict();
@@ -150,10 +149,6 @@ public class HomeHeroContentService {
 
     private BusinessException business(HttpStatus status, String code, String message) {
         return new BusinessException(status, code, message);
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.strip();
     }
 
     private OffsetDateTime now() {

@@ -24,8 +24,6 @@ function errorText(error: unknown) {
 export function HomeHeroPage() {
   const [content, setContent] = useState<AdminHomeHeroContent>()
   const [coverMediaId, setCoverMediaId] = useState('')
-  const [focusX, setFocusX] = useState(50)
-  const [focusY, setFocusY] = useState(50)
   const [dirty, setDirty] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -37,8 +35,6 @@ export function HomeHeroPage() {
     const editable = next.draft ?? next.published
     setContent(next)
     setCoverMediaId(editable?.coverMediaId ?? '')
-    setFocusX(editable?.focusX ?? 50)
-    setFocusY(editable?.focusY ?? 50)
     setDirty(false)
   }, [])
 
@@ -74,8 +70,6 @@ export function HomeHeroPage() {
     try {
       hydrate(await saveAdminHomeHeroDraft({
         coverMediaId,
-        focusX,
-        focusY,
         expectedVersion: content?.version ?? 0,
       }))
       setNotice('草稿已保存，不会立即影响小程序。')
@@ -119,7 +113,7 @@ export function HomeHeroPage() {
     <div className="hero-admin-page">
       <div className="page-heading-row hero-page-heading">
         <div className="hero-page-heading__title">
-          <PageIntro title="首页头图管理" description="上传首页第一屏完整图片，并调整在小程序中的裁切位置。" />
+          <PageIntro title="首页头图管理" description="上传首页第一屏完整图片，小程序将按原始比例等比展示。" />
           <span className={`status-pill ${content?.visibility === 'PUBLISHED' ? 'active' : 'disabled'}`}>
             {content?.visibility === 'PUBLISHED' ? '线上展示中' : '未发布'}
           </span>
@@ -147,19 +141,8 @@ export function HomeHeroPage() {
             mediaId={coverMediaId || undefined}
             mediaType="IMAGE"
             onReady={(media) => { setCoverMediaId(media.id); setDirty(true) }}
-            previewObjectPosition={`${focusX}% ${focusY}%`}
             purpose="HOME_HERO"
           />
-          <div className="hero-focus-controls">
-            <label className="editor-field">
-              <span>左右焦点 <b>{focusX}%</b></span>
-              <input type="range" min="0" max="100" value={focusX} onChange={(event) => { setFocusX(Number(event.target.value)); setDirty(true) }} />
-            </label>
-            <label className="editor-field">
-              <span>上下焦点 <b>{focusY}%</b></span>
-              <input type="range" min="0" max="100" value={focusY} onChange={(event) => { setFocusY(Number(event.target.value)); setDirty(true) }} />
-            </label>
-          </div>
           <div className="hero-draft-note">
             <span aria-hidden="true">i</span>
             草稿不会立即影响小程序，发布后才会更新线上头图。
@@ -175,9 +158,9 @@ export function HomeHeroPage() {
             <div className="hero-phone-preview__status"><strong>9:41</strong><span>● ◒ ▰</span></div>
             <div className="hero-phone-preview__nav"><strong>常清净文旅投</strong><span>•••　◉</span></div>
             <div className="hero-phone-preview__content">
-              <div className="hero-phone-preview__banner">
+              <div className={`hero-phone-preview__banner${coverMediaId ? ' has-image' : ''}`}>
                 {coverMediaId
-                  ? <MediaPreview alt="首页头图预览" mediaId={coverMediaId} objectPosition={`${focusX}% ${focusY}%`} />
+                  ? <MediaPreview alt="首页头图预览" mediaId={coverMediaId} />
                   : <span>上传图片后在此预览</span>}
               </div>
               <div className="hero-phone-preview__section-title"><strong>视频介绍</strong><i /></div>

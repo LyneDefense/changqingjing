@@ -1,7 +1,5 @@
 package com.changqingjing.content;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -18,11 +16,9 @@ public class HomeHeroContentRepository {
     private static final long CREATION_LOCK = 495_122_061_143L;
 
     private final JdbcTemplate jdbcTemplate;
-    private final ObjectMapper objectMapper;
 
-    public HomeHeroContentRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public HomeHeroContentRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.objectMapper = objectMapper;
     }
 
     public void lockSingletonCreation() {
@@ -61,26 +57,20 @@ public class HomeHeroContentRepository {
             UUID id,
             UUID entryId,
             int revisionNumber,
-            String title,
-            String subtitle,
             UUID coverMediaId,
-            int focusX,
-            int focusY,
             UUID actorId,
             OffsetDateTime now) {
         jdbcTemplate.update("""
                 INSERT INTO content_revision (
-                    id, entry_id, revision_no, schema_version, title, summary,
-                    cover_media_id, display_order, payload, created_by, created_at
-                ) VALUES (?, ?, ?, 1, ?, ?, ?, 0, ?::jsonb, ?, ?)
-                """, id, entryId, revisionNumber, title, subtitle, coverMediaId,
-                payload(focusX, focusY), actorId, now);
+                    id, entry_id, revision_no, schema_version, title,
+                    cover_media_id, display_order, created_by, created_at
+                ) VALUES (?, ?, ?, 2, '', ?, 0, ?, ?)
+                """, id, entryId, revisionNumber, coverMediaId, actorId, now);
         jdbcTemplate.update("""
                 INSERT INTO content_revision_media (revision_id, media_id, usage, display_order)
                 VALUES (?, ?, 'HERO_IMAGE', 0)
                 """, id, coverMediaId);
-        return new Revision(id, revisionNumber, title, subtitle, coverMediaId,
-                focusX, focusY, actorId, now);
+        return new Revision(id, revisionNumber, coverMediaId, actorId, now);
     }
 
     public boolean pointDraft(
@@ -116,8 +106,7 @@ public class HomeHeroContentRepository {
     public Optional<Revision> findRevision(UUID revisionId) {
         if (revisionId == null) return Optional.empty();
         return jdbcTemplate.query("""
-                SELECT id, revision_no, title, summary, cover_media_id, payload,
-                       created_by, created_at
+                SELECT id, revision_no, cover_media_id, created_by, created_at
                 FROM content_revision WHERE id = ?
                 """, this::mapRevision, revisionId).stream().findFirst();
     }
@@ -133,28 +122,11 @@ public class HomeHeroContentRepository {
     }
 
     private Revision mapRevision(ResultSet rows, int row) throws SQLException {
-        try {
-            Focus focus = objectMapper.readValue(rows.getString("payload"), Focus.class);
-            return new Revision(
-                    rows.getObject("id", UUID.class), rows.getInt("revision_no"),
-                    rows.getString("title"), rows.getString("summary"),
-                    rows.getObject("cover_media_id", UUID.class), focus.focusX(), focus.focusY(),
-                    rows.getObject("created_by", UUID.class),
-                    rows.getObject("created_at", OffsetDateTime.class));
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Stored home hero content is invalid", exception);
-        }
-    }
-
-    private String payload(int focusX, int focusY) {
-        try {
-            return objectMapper.writeValueAsString(new Focus(focusX, focusY));
-        } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("Home hero content cannot be serialized", exception);
-        }
-    }
-
-    private record Focus(int focusX, int focusY) {
+        return new Revision(
+                rows.getObject("id", UUID.class), rows.getInt("revision_no"),
+                rows.getObject("cover_media_id", UUID.class),
+                rows.getObject("created_by", UUID.class),
+                rows.getObject("created_at", OffsetDateTime.class));
     }
 
     public record Entry(
@@ -163,7 +135,7 @@ public class HomeHeroContentRepository {
     }
 
     public record Revision(
-            UUID id, int revisionNumber, String title, String subtitle, UUID coverMediaId,
-            int focusX, int focusY, UUID createdBy, OffsetDateTime createdAt) {
+            UUID id, int revisionNumber, UUID coverMediaId,
+            UUID createdBy, OffsetDateTime createdAt) {
     }
 }

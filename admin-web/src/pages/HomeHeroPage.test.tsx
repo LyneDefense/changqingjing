@@ -33,11 +33,7 @@ describe('HomeHeroPage', () => {
       draft: {
         id: '0d16a98c-89a7-40f1-955d-b069c2a0c721',
         revisionNumber: 3,
-        title: '历史标题',
-        subtitle: '历史副标题',
         coverMediaId: 'edb1f83e-0204-4b91-835b-19fd355584e9',
-        focusX: 50,
-        focusY: 50,
         createdBy: 'admin',
         createdAt: '2026-09-12T10:00:00Z',
       },
@@ -51,6 +47,6 @@ describe('HomeHeroPage', () => {
     expect(screen.getByText('小程序预览')).toBeInTheDocument()
     expect(screen.queryByLabelText('主标题（选填）')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('副标题（选填）')).not.toBeInTheDocument()
-    expect(screen.queryByText('历史标题')).not.toBeInTheDocument()
+    expect(screen.queryByText('左右焦点')).not.toBeInTheDocument()
   })
 })

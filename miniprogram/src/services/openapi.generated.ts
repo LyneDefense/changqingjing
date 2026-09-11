@@ -1290,14 +1290,8 @@ export interface components {
             data?: components["schemas"]["AdminHomeVideoContentResponse"];
         };
         SaveHomeHeroDraftRequest: {
-            title?: string;
-            subtitle?: string;
             /** Format: uuid */
             coverMediaId: string;
-            /** Format: int32 */
-            focusX?: number;
-            /** Format: int32 */
-            focusY?: number;
             /** Format: int64 */
             expectedVersion?: number;
         };
@@ -1319,14 +1313,8 @@ export interface components {
             id?: string;
             /** Format: int32 */
             revisionNumber?: number;
-            title?: string;
-            subtitle?: string;
             /** Format: uuid */
             coverMediaId?: string;
-            /** Format: int32 */
-            focusX?: number;
-            /** Format: int32 */
-            focusY?: number;
             /** Format: uuid */
             createdBy?: string;
             /** Format: date-time */
@@ -1757,13 +1745,7 @@ export interface components {
             coverUrl?: string;
         };
         HomeHeroResponse: {
-            title?: string;
-            subtitle?: string;
             coverUrl?: string;
-            /** Format: int32 */
-            focusX?: number;
-            /** Format: int32 */
-            focusY?: number;
         };
         HomeScenicSummaryResponse: {
             /** Format: uuid */

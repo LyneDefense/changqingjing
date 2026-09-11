@@ -50,9 +50,8 @@ export default function HomePage() {
         <View className='home-hero'>
           <Image
             className='home-hero__image'
-            mode='aspectFill'
+            mode='widthFix'
             src={content.hero.coverUrl}
-            style={{ objectPosition: `${content.hero.focusX}% ${content.hero.focusY}%` }}
           />
         </View>
       )}

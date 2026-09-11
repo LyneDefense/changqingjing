@@ -28,11 +28,7 @@ export interface HomeVideo {
 }
 
 export interface HomeHero {
-  title: string
-  subtitle: string
   coverUrl: string
-  focusX: number
-  focusY: number
 }
 
 export interface HomeScenicSummary {
