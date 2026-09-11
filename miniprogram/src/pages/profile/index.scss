@@ -1,9 +1,9 @@
 .profile-page {
   align-content: start;
   background:
-    radial-gradient(circle at 8% 15%, rgba(139, 176, 169, 0.08), transparent 28%),
-    radial-gradient(circle at 94% 66%, rgba(180, 154, 100, 0.055), transparent 22%),
-    #f5f7f4;
+    radial-gradient(circle at 8% 13%, rgba(183, 151, 95, 0.075), transparent 27%),
+    radial-gradient(circle at 94% 66%, rgba(180, 154, 100, 0.06), transparent 23%),
+    #f6f3ec;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -212,10 +212,10 @@
 
 .profile-account,
 .profile-services {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(82, 101, 94, 0.11);
+  background: linear-gradient(145deg, rgba(255, 252, 244, 0.98), rgba(248, 241, 226, 0.96));
+  border: 1px solid rgba(142, 116, 76, 0.14);
   border-radius: 25px;
-  box-shadow: 0 12px 30px rgba(55, 70, 64, 0.055);
+  box-shadow: 0 12px 30px rgba(84, 68, 43, 0.065);
 }
 
 .profile-account {
@@ -286,8 +286,10 @@
 }
 
 .profile-metrics {
-  background: linear-gradient(100deg, rgba(244, 247, 245, 0.88), rgba(248, 248, 244, 0.9));
+  background: linear-gradient(105deg, rgba(241, 233, 216, 0.78), rgba(250, 246, 236, 0.94));
+  border: 1px solid rgba(165, 130, 78, 0.08);
   border-radius: 18px;
+  box-sizing: border-box;
   display: flex;
   margin-top: 24px;
   min-height: 112px;
@@ -335,7 +337,7 @@
 }
 
 .profile-services__heading {
-  border-bottom: 1px solid rgba(82, 101, 94, 0.11);
+  border-bottom: 1px solid rgba(142, 116, 76, 0.13);
   padding: 28px 0 21px;
 }
 
@@ -348,11 +350,11 @@
 }
 
 .profile-service-row:not(:last-child) {
-  border-bottom: 1px solid rgba(82, 101, 94, 0.1);
+  border-bottom: 1px solid rgba(142, 116, 76, 0.11);
 }
 
 .profile-service-row--pressed {
-  background: rgba(244, 247, 244, 0.7);
+  background: rgba(235, 225, 204, 0.44);
   opacity: 0.72;
 }
 
