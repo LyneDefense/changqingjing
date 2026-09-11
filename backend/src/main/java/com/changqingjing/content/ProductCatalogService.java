@@ -22,6 +22,7 @@ import com.changqingjing.media.MediaService;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -240,7 +241,8 @@ public class ProductCatalogService {
         List<CompanyContentBlock> blocks = request.blocks().stream()
                 .map(CompanyContentBlock::normalized)
                 .toList();
-        validateMedia(request.coverMediaId(), blocks);
+        List<UUID> listImageMediaIds = List.copyOf(request.listImageMediaIds());
+        validateMedia(request.coverMediaId(), listImageMediaIds, blocks);
         int revisionNumber = repository.nextRevisionNumber(entry.id());
         ProductCatalogRepository.ProductRevision revision = repository.insertProductRevision(
                 UUID.randomUUID(),
@@ -250,6 +252,7 @@ public class ProductCatalogService {
                 request.summary().strip(),
                 request.categoryId(),
                 request.coverMediaId(),
+                listImageMediaIds,
                 blocks,
                 request.specification() == null ? null : request.specification().strip(),
                 request.displayOrder(),
@@ -331,6 +334,7 @@ public class ProductCatalogService {
                 revision.summary(),
                 revision.categoryId(),
                 revision.coverMediaId(),
+                revision.listImageMediaIds(),
                 revision.blocks(),
                 revision.specification(),
                 revision.displayOrder(),
@@ -338,8 +342,23 @@ public class ProductCatalogService {
                 revision.createdAt());
     }
 
-    private void validateMedia(UUID coverMediaId, List<CompanyContentBlock> blocks) {
-        if (coverMediaId != null) requireProductImage(coverMediaId);
+    private void validateMedia(
+            UUID coverMediaId,
+            List<UUID> listImageMediaIds,
+            List<CompanyContentBlock> blocks) {
+        if (new HashSet<>(listImageMediaIds).size() != listImageMediaIds.size()) {
+            throw business(
+                    HttpStatus.BAD_REQUEST,
+                    "PRODUCT_IMAGE_DUPLICATED",
+                    "产品图片不能重复");
+        }
+        if (coverMediaId != null && !listImageMediaIds.contains(coverMediaId)) {
+            throw business(
+                    HttpStatus.BAD_REQUEST,
+                    "PRODUCT_COVER_INVALID",
+                    "产品封面必须从已上传的产品图片中选择");
+        }
+        for (UUID mediaId : listImageMediaIds) requireProductImage(mediaId);
         for (CompanyContentBlock block : blocks) {
             if (block.type() == CompanyBlockType.IMAGE) {
                 if (block.mediaId() == null || (block.text() != null && !block.text().isBlank())) {
@@ -376,12 +395,6 @@ public class ProductCatalogService {
                     HttpStatus.BAD_REQUEST,
                     "PRODUCT_COVER_REQUIRED",
                     "请先上传产品列表封面");
-        }
-        if (revision.blocks().isEmpty()) {
-            throw business(
-                    HttpStatus.BAD_REQUEST,
-                    "PRODUCT_DETAIL_REQUIRED",
-                    "请至少添加一段产品详细内容或一张详情图片");
         }
     }
 

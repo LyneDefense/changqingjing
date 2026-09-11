@@ -81,6 +81,7 @@ class ProductCatalogServiceIntegrationTest {
                 category.id(), category.version(), actor, "category-publish");
 
         UUID coverId = insertReadyImage(actor.accountId());
+        UUID alternateCoverId = insertReadyImage(actor.accountId());
         UUID firstImageId = insertReadyImage(actor.accountId());
         UUID secondImageId = insertReadyImage(actor.accountId());
         var draft = catalogService.createProduct(
@@ -89,6 +90,7 @@ class ProductCatalogServiceIntegrationTest {
                         "来自九宫山的手作草本香囊",
                         category.id(),
                         coverId,
+                        List.of(coverId, alternateCoverId),
                         List.of(
                                 new CompanyContentBlock(
                                         CompanyBlockType.HEADING, "产品故事", null, null),
@@ -103,6 +105,8 @@ class ProductCatalogServiceIntegrationTest {
                         0),
                 actor,
                 "product-create");
+        assertThat(draft.draft().listImageMediaIds())
+                .containsExactly(coverId, alternateCoverId);
         catalogService.publishProduct(
                 draft.id(), draft.version(), actor, "product-publish");
 
@@ -158,7 +162,7 @@ class ProductCatalogServiceIntegrationTest {
         AdminPrincipal actor = bootstrapAdmin();
         var incomplete = catalogService.createProduct(
                 new SaveProductDraftRequest(
-                        "待完善产品", "还没有图片", null, null, List.of(), null, 0, 0),
+                        "待完善产品", "还没有图片", null, null, List.of(), List.of(), null, 0, 0),
                 actor,
                 "incomplete-create");
         assertThatThrownBy(() -> catalogService.publishProduct(
@@ -183,11 +187,38 @@ class ProductCatalogServiceIntegrationTest {
                 "本地山茶纯展示介绍",
                 categoryId,
                 coverId,
+                List.of(coverId),
                 List.of(new CompanyContentBlock(
                         CompanyBlockType.PARAGRAPH, "生长于通山山林", null, null)),
                 null,
                 1,
                 version);
+    }
+
+    @Test
+    void publishesProductWithoutOptionalDetailContent() {
+        AdminPrincipal actor = bootstrapAdmin();
+        UUID coverId = insertReadyImage(actor.accountId());
+        var draft = catalogService.createProduct(
+                new SaveProductDraftRequest(
+                        "无详情产品",
+                        "仅展示基础信息",
+                        null,
+                        coverId,
+                        List.of(coverId),
+                        List.of(),
+                        null,
+                        0,
+                        0),
+                actor,
+                "product-without-detail");
+
+        catalogService.publishProduct(
+                draft.id(), draft.version(), actor, "product-without-detail-publish");
+
+        var product = catalogService.publishedProduct(draft.id());
+        assertThat(product.blocks()).isEmpty();
+        assertThat(product.specification()).isNull();
     }
 
     private UUID insertReadyImage(UUID actorId) {

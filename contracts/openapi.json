@@ -2490,6 +2490,15 @@
             "type": "string",
             "format": "uuid"
           },
+          "listImageMediaIds": {
+            "maxItems": 10,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           "blocks": {
             "maxItems": 100,
             "minItems": 0,
@@ -2570,6 +2579,13 @@
           "coverMediaId": {
             "type": "string",
             "format": "uuid"
+          },
+          "listImageMediaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "blocks": {
             "type": "array",
@@ -4836,13 +4852,13 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string"
-          },
           "headerName": {
             "type": "string"
           },
           "parameterName": {
+            "type": "string"
+          },
+          "token": {
             "type": "string"
           }
         }

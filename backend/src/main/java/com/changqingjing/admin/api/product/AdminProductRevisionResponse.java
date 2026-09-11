@@ -12,6 +12,7 @@ public record AdminProductRevisionResponse(
         String summary,
         UUID categoryId,
         UUID coverMediaId,
+        List<UUID> listImageMediaIds,
         List<CompanyContentBlock> blocks,
         String specification,
         int displayOrder,

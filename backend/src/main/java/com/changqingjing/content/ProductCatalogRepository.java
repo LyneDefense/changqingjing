@@ -80,6 +80,7 @@ public class ProductCatalogRepository {
             String summary,
             UUID categoryId,
             UUID coverMediaId,
+            List<UUID> listImageMediaIds,
             List<CompanyContentBlock> blocks,
             String specification,
             int displayOrder,
@@ -90,7 +91,7 @@ public class ProductCatalogRepository {
                     id, entry_id, revision_no, schema_version, title, summary,
                     cover_media_id, category_entry_id, display_order, payload,
                     created_by, created_at
-                ) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
+                ) VALUES (?, ?, ?, 2, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
                 """,
                 revisionId,
                 entryId,
@@ -100,10 +101,13 @@ public class ProductCatalogRepository {
                 coverMediaId,
                 categoryId,
                 displayOrder,
-                toPayload(blocks, specification),
+                toPayload(listImageMediaIds, blocks, specification),
                 actorId,
                 now);
         if (coverMediaId != null) insertMedia(revisionId, coverMediaId, "COVER", 0);
+        for (int index = 0; index < listImageMediaIds.size(); index++) {
+            insertMedia(revisionId, listImageMediaIds.get(index), "LIST_IMAGE", index);
+        }
         for (int index = 0; index < blocks.size(); index++) {
             CompanyContentBlock block = blocks.get(index);
             if (block.type() == CompanyBlockType.IMAGE && block.mediaId() != null) {
@@ -117,6 +121,7 @@ public class ProductCatalogRepository {
                 summary,
                 categoryId,
                 coverMediaId,
+                List.copyOf(listImageMediaIds),
                 List.copyOf(blocks),
                 specification,
                 displayOrder,
@@ -353,9 +358,13 @@ public class ProductCatalogRepository {
                 """, revisionId, mediaId, usage, order);
     }
 
-    private String toPayload(List<CompanyContentBlock> blocks, String specification) {
+    private String toPayload(
+            List<UUID> listImageMediaIds,
+            List<CompanyContentBlock> blocks,
+            String specification) {
         try {
-            return objectMapper.writeValueAsString(new ProductPayload(blocks, specification));
+            return objectMapper.writeValueAsString(
+                    new ProductPayload(listImageMediaIds, blocks, specification));
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Unable to serialize product content", exception);
         }
@@ -365,6 +374,7 @@ public class ProductCatalogRepository {
         try {
             ProductPayload result = objectMapper.readValue(payload, ProductPayload.class);
             return new ProductPayload(
+                    result.listImageMediaIds() == null ? List.of() : result.listImageMediaIds(),
                     result.blocks() == null ? List.of() : result.blocks(),
                     result.specification());
         } catch (JsonProcessingException exception) {
@@ -396,13 +406,19 @@ public class ProductCatalogRepository {
 
     private ProductRevision mapProductRevision(ResultSet rows, int row) throws SQLException {
         ProductPayload payload = readPayload(rows.getString("payload"));
+        UUID coverMediaId = rows.getObject("cover_media_id", UUID.class);
+        List<UUID> listImageMediaIds = payload.listImageMediaIds().isEmpty()
+                && coverMediaId != null
+                ? List.of(coverMediaId)
+                : List.copyOf(payload.listImageMediaIds());
         return new ProductRevision(
                 rows.getObject("id", UUID.class),
                 rows.getInt("revision_no"),
                 rows.getString("title"),
                 rows.getString("summary"),
                 rows.getObject("category_entry_id", UUID.class),
-                rows.getObject("cover_media_id", UUID.class),
+                coverMediaId,
+                listImageMediaIds,
                 List.copyOf(payload.blocks()),
                 payload.specification(),
                 rows.getInt("display_order"),
@@ -423,13 +439,19 @@ public class ProductCatalogRepository {
 
     private PublicProductRow mapPublicProductRow(ResultSet rows, int row) throws SQLException {
         ProductPayload payload = readPayload(rows.getString("payload"));
+        UUID coverMediaId = rows.getObject("cover_media_id", UUID.class);
+        List<UUID> listImageMediaIds = payload.listImageMediaIds().isEmpty()
+                && coverMediaId != null
+                ? List.of(coverMediaId)
+                : List.copyOf(payload.listImageMediaIds());
         ProductRevision revision = new ProductRevision(
                 rows.getObject("revision_id", UUID.class),
                 rows.getInt("revision_no"),
                 rows.getString("title"),
                 rows.getString("summary"),
                 rows.getObject("category_entry_id", UUID.class),
-                rows.getObject("cover_media_id", UUID.class),
+                coverMediaId,
+                listImageMediaIds,
                 List.copyOf(payload.blocks()),
                 payload.specification(),
                 rows.getInt("display_order"),
@@ -466,6 +488,7 @@ public class ProductCatalogRepository {
             String summary,
             UUID categoryId,
             UUID coverMediaId,
+            List<UUID> listImageMediaIds,
             List<CompanyContentBlock> blocks,
             String specification,
             int displayOrder,
@@ -491,6 +514,9 @@ public class ProductCatalogRepository {
     public record PublishedCategoryRow(UUID entryId, CategoryRevision revision) {
     }
 
-    private record ProductPayload(List<CompanyContentBlock> blocks, String specification) {
+    private record ProductPayload(
+            List<UUID> listImageMediaIds,
+            List<CompanyContentBlock> blocks,
+            String specification) {
     }
 }

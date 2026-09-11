@@ -263,6 +263,7 @@ export interface AdminProductRevision {
   summary: string
   categoryId?: string
   coverMediaId?: string
+  listImageMediaIds: string[]
   blocks: ProductContentBlock[]
   specification?: string
   displayOrder: number
@@ -851,6 +852,7 @@ export interface SaveProductInput {
   summary: string
   categoryId?: string
   coverMediaId?: string
+  listImageMediaIds: string[]
   blocks: ProductContentBlock[]
   specification?: string
   displayOrder: number

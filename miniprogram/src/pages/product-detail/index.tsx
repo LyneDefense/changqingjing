@@ -73,34 +73,74 @@ export default function ProductDetailPage() {
     )
   }
 
+  const detailImageUrls = content.blocks.flatMap((block) =>
+    block.type === 'IMAGE' && block.imageUrl ? [block.imageUrl] : []
+  )
+
   return (
     <View className='page product-detail-page'>
-      <Image className='product-detail-cover' mode='aspectFill' src={content.coverUrl} />
-      <View className='product-detail-heading'>
-        {content.categoryName && <Text className='product-detail-category'>{content.categoryName}</Text>}
+      <View className='product-detail-hero'>
+        <Image
+          className='product-detail-cover'
+          mode='widthFix'
+          onClick={() => void Taro.previewImage({ current: content.coverUrl, urls: [content.coverUrl] })}
+          src={content.coverUrl}
+        />
+      </View>
+
+      <View className='product-detail-intro'>
+        {content.categoryName && (
+          <View className='product-detail-category-row'>
+            <Text className='product-detail-category'>{content.categoryName}</Text>
+            <View className='product-detail-category-line' />
+          </View>
+        )}
         <Text className='product-detail-title'>{content.name}</Text>
         <Text className='product-detail-summary'>{content.summary}</Text>
       </View>
 
-      <View className='product-detail-body'>
-        {content.blocks.map((block, index) => {
-          if (block.type === 'HEADING') return <Text className='product-content-heading' key={index}>{block.text}</Text>
-          if (block.type === 'IMAGE' && block.imageUrl) {
-            return (
-              <View className='product-content-image-wrap' key={index}>
-                <Image className='product-content-image' mode='widthFix' src={block.imageUrl} />
-                {block.altText && <Text className='product-content-caption'>{block.altText}</Text>}
-              </View>
-            )
-          }
-          return <Text className='product-content-paragraph' key={index}>{block.text}</Text>
-        })}
-      </View>
+      {content.blocks.length > 0 && (
+        <View className='product-detail-section'>
+          <View className='product-detail-section__heading'>
+            <View className='product-detail-section__mark' />
+            <Text>产品详情</Text>
+            <View className='product-detail-section__line' />
+          </View>
+          <View className='product-detail-body'>
+            {content.blocks.map((block, index) => {
+              if (block.type === 'HEADING') return <Text className='product-content-heading' key={index}>{block.text}</Text>
+              if (block.type === 'IMAGE' && block.imageUrl) {
+                return (
+                  <View className='product-content-image-wrap' key={index}>
+                    <Image
+                      className='product-content-image'
+                      mode='widthFix'
+                      onClick={() => void Taro.previewImage({
+                        current: block.imageUrl,
+                        urls: detailImageUrls,
+                      })}
+                      src={block.imageUrl}
+                    />
+                    {block.altText && <Text className='product-content-caption'>{block.altText}</Text>}
+                  </View>
+                )
+              }
+              return <Text className='product-content-paragraph' key={index}>{block.text}</Text>
+            })}
+          </View>
+        </View>
+      )}
 
       {content.specification && (
-        <View className='product-specification'>
-          <Text className='product-specification__title'>规格说明</Text>
-          <Text className='product-specification__content'>{content.specification}</Text>
+        <View className='product-detail-section product-detail-section--specification'>
+          <View className='product-detail-section__heading'>
+            <View className='product-detail-section__mark' />
+            <Text>规格说明</Text>
+            <View className='product-detail-section__line' />
+          </View>
+          <View className='product-specification'>
+            <Text className='product-specification__content'>{content.specification}</Text>
+          </View>
         </View>
       )}
       <Text className='product-detail-footnote'>本页面仅作福利产品展示，不提供购买、领取或咨询入口。</Text>

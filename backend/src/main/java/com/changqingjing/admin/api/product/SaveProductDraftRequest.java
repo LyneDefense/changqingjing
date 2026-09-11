@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,8 @@ public record SaveProductDraftRequest(
         String summary,
         UUID categoryId,
         UUID coverMediaId,
+        @Size(max = 10, message = "产品图片不能超过 10 张")
+        List<@NotNull UUID> listImageMediaIds,
         @Size(max = 100, message = "详情内容不能超过 100 段")
         List<@Valid CompanyContentBlock> blocks,
         @Size(max = 2_000, message = "规格说明不能超过 2000 个字符")
@@ -26,6 +29,9 @@ public record SaveProductDraftRequest(
         @Min(0) long expectedVersion) {
 
     public SaveProductDraftRequest {
+        listImageMediaIds = listImageMediaIds == null
+                ? (coverMediaId == null ? List.of() : List.of(coverMediaId))
+                : List.copyOf(listImageMediaIds);
         blocks = blocks == null ? List.of() : List.copyOf(blocks);
     }
 }

@@ -1132,6 +1132,7 @@ export interface components {
             categoryId?: string;
             /** Format: uuid */
             coverMediaId?: string;
+            listImageMediaIds?: string[];
             blocks?: components["schemas"]["CompanyContentBlock"][];
             specification?: string;
             /** Format: int32 */
@@ -1163,6 +1164,7 @@ export interface components {
             categoryId?: string;
             /** Format: uuid */
             coverMediaId?: string;
+            listImageMediaIds?: string[];
             blocks?: components["schemas"]["CompanyContentBlock"][];
             specification?: string;
             /** Format: int32 */
@@ -1962,9 +1964,9 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            token?: string;
             headerName?: string;
             parameterName?: string;
+            token?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;

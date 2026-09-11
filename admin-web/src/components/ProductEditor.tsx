@@ -26,8 +26,6 @@ interface ProductEditorProps {
   onDirtyChange: (dirty: boolean) => void
 }
 
-const blankBlock: ProductContentBlock = { type: 'PARAGRAPH', text: '' }
-
 function errorText(error: unknown) {
   if (error instanceof AdminApiError) {
     return error.message + (error.traceId ? `（追踪号：${error.traceId}）` : '')
@@ -47,7 +45,9 @@ export function ProductEditor({
   const [summary, setSummary] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [coverMediaId, setCoverMediaId] = useState('')
-  const [blocks, setBlocks] = useState<ProductContentBlock[]>([{ ...blankBlock }])
+  const [listImageMediaIds, setListImageMediaIds] = useState<string[]>([])
+  const [listImageUploadKey, setListImageUploadKey] = useState(0)
+  const [blocks, setBlocks] = useState<ProductContentBlock[]>([])
   const [specification, setSpecification] = useState('')
   const [displayOrder, setDisplayOrder] = useState(0)
   const [preview, setPreview] = useState<AdminProductRevision>()
@@ -69,7 +69,10 @@ export function ProductEditor({
     setSummary(editable?.summary ?? '')
     setCategoryId(editable?.categoryId ?? '')
     setCoverMediaId(editable?.coverMediaId ?? '')
-    setBlocks(editable?.blocks.length ? editable.blocks : [{ ...blankBlock }])
+    setListImageMediaIds(editable?.listImageMediaIds?.length
+      ? editable.listImageMediaIds
+      : editable?.coverMediaId ? [editable.coverMediaId] : [])
+    setBlocks(editable?.blocks ?? [])
     setSpecification(editable?.specification ?? '')
     setDisplayOrder(editable?.displayOrder ?? 0)
     setDirty(false)
@@ -99,8 +102,7 @@ export function ProductEditor({
     const problems: string[] = []
     if (!name.trim()) problems.push('填写产品名称')
     if (!summary.trim()) problems.push('填写简短介绍')
-    if (!coverMediaId) problems.push('上传列表封面')
-    if (blocks.length === 0) problems.push('添加至少一段详细内容')
+    if (!coverMediaId) problems.push('上传产品图片并选择列表封面')
     if (blocks.some((block) => block.type === 'IMAGE' ? !block.mediaId : !block.text?.trim())) {
       problems.push('补全详情中的空文字或空图片')
     }
@@ -135,6 +137,7 @@ export function ProductEditor({
       summary,
       categoryId: categoryId || undefined,
       coverMediaId: coverMediaId || undefined,
+      listImageMediaIds,
       blocks,
       specification: specification || undefined,
       displayOrder,
@@ -262,23 +265,72 @@ export function ProductEditor({
 
         <div className="editor-section-heading">
           <span>2</span>
-          <div><h3>列表封面</h3><p>上传一张清晰的横图，产品上架时必须有封面。</p></div>
+          <div><h3>产品图片与列表封面</h3><p>最多上传 10 张图片，再从中选择一张作为产品列表封面。</p></div>
         </div>
-        <MediaUploadField
-          accept="image/jpeg,image/png,image/webp"
-          label="产品列表封面"
-          mediaId={coverMediaId || undefined}
-          mediaType="IMAGE"
-          onReady={(media) => {
-            setCoverMediaId(media.id)
-            markDirty()
-          }}
-          purpose="PRODUCT_IMAGE"
-        />
+        <section className="product-image-editor" aria-labelledby="product-images-title">
+          <div className="block-heading">
+            <div>
+              <h3 id="product-images-title">已上传图片</h3>
+              <p>列表只展示选中的封面；其余图片会保留，方便以后更换封面。</p>
+            </div>
+            <span className="gallery-count">已添加 {listImageMediaIds.length} / 10 张</span>
+          </div>
+          {listImageMediaIds.length > 0 && (
+            <div className="product-image-list">
+              {listImageMediaIds.map((mediaId, imageIndex) => (
+                <article className={`product-image-item${coverMediaId === mediaId ? ' product-image-item--cover' : ''}`} key={mediaId}>
+                  <MediaPreview alt={`产品图片 ${imageIndex + 1}`} mediaId={mediaId} />
+                  <div className="product-image-item__footer">
+                    <label className="product-cover-choice">
+                      <input
+                        checked={coverMediaId === mediaId}
+                        name="product-cover"
+                        onChange={() => {
+                          setCoverMediaId(mediaId)
+                          markDirty()
+                        }}
+                        type="radio"
+                      />
+                      {coverMediaId === mediaId ? '当前列表封面' : '设为列表封面'}
+                    </label>
+                    <button
+                      aria-label={`删除第 ${imageIndex + 1} 张产品图片`}
+                      className="icon-text-button danger"
+                      onClick={() => {
+                        const next = listImageMediaIds.filter((_, index) => index !== imageIndex)
+                        setListImageMediaIds(next)
+                        if (coverMediaId === mediaId) setCoverMediaId(next[0] ?? '')
+                        markDirty()
+                      }}
+                      type="button"
+                    >删除</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          {listImageMediaIds.length < 10 && (
+            <div className="product-image-uploader">
+              <MediaUploadField
+                key={listImageUploadKey}
+                accept="image/jpeg,image/png,image/webp"
+                label={listImageMediaIds.length === 0 ? '上传第一张产品图片' : '继续添加产品图片'}
+                mediaType="IMAGE"
+                onReady={(media) => {
+                  setListImageMediaIds((current) => [...current, media.id])
+                  if (!coverMediaId) setCoverMediaId(media.id)
+                  setListImageUploadKey((current) => current + 1)
+                  markDirty()
+                }}
+                purpose="PRODUCT_IMAGE"
+              />
+            </div>
+          )}
+        </section>
 
         <div className="editor-section-heading">
           <span>3</span>
-          <div><h3>产品详情</h3><p>按小程序中的实际展示顺序添加标题、正文和多张图片。</p></div>
+          <div><h3>产品详情（选填）</h3><p>可以不填写；也可以按展示顺序添加文字和多张详情图片。</p></div>
         </div>
         <div className="content-blocks">
           {blocks.map((block, index) => (
@@ -322,7 +374,7 @@ export function ProductEditor({
         </div>
         <div className="section-add-actions">
           <button className="secondary-button" onClick={() => {
-            setBlocks((current) => [...current, { ...blankBlock }])
+            setBlocks((current) => [...current, { type: 'PARAGRAPH', text: '' }])
             markDirty()
           }} type="button">添加文字</button>
           <button className="secondary-button" onClick={() => {
@@ -369,13 +421,15 @@ export function ProductEditor({
             </div>
             <MediaPreview alt={preview.name} mediaId={preview.coverMediaId} />
             <p className="preview-summary">{preview.summary}</p>
-            <div className="preview-body">
-              {preview.blocks.map((block, index) => {
-                if (block.type === 'HEADING') return <h3 key={index}>{block.text}</h3>
-                if (block.type === 'IMAGE') return <MediaPreview alt={block.altText} key={index} mediaId={block.mediaId} />
-                return <p key={index}>{block.text}</p>
-              })}
-            </div>
+            {preview.blocks.length > 0 && (
+              <div className="preview-body">
+                {preview.blocks.map((block, index) => {
+                  if (block.type === 'HEADING') return <h3 key={index}>{block.text}</h3>
+                  if (block.type === 'IMAGE') return <MediaPreview alt={block.altText} key={index} mediaId={block.mediaId} />
+                  return <p key={index}>{block.text}</p>
+                })}
+              </div>
+            )}
             {preview.specification && <p className="preview-summary"><strong>规格说明：</strong>{preview.specification}</p>}
           </article>
         </div>
