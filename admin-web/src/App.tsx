@@ -2,13 +2,14 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import { useAuth } from './auth/authContextValue'
 import { Sidebar } from './components/Sidebar'
+import { findAdminModule } from './config/adminModules'
 
 export function App() {
   const auth = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
-  const page = pageMeta(location.pathname)
+  const page = findAdminModule(location.pathname) ?? { group: '管理中心', label: '页面' }
 
   async function handleLogout() {
     await auth.logout()
@@ -26,7 +27,7 @@ export function App() {
             </svg>
             <span>{page.group}</span>
             <i>/</i>
-            <strong>{page.title}</strong>
+            <strong>{page.label}</strong>
           </div>
           <div className="header-actions">
             <span className="header-divider" />
@@ -50,22 +51,4 @@ export function App() {
       </main>
     </div>
   )
-}
-
-const routeMeta: Record<string, { group: string, title: string }> = {
-  '/': { group: '概览', title: '工作台' },
-  '/home-hero': { group: '内容运营', title: '首页头图' },
-  '/home-videos': { group: '内容运营', title: '首页宣传视频' },
-  '/company': { group: '内容运营', title: '公司介绍' },
-  '/scenics': { group: '内容运营', title: '景区管理' },
-  '/products': { group: '内容运营', title: '会员福利管理' },
-  '/cooperation': { group: '合作权益', title: '收益板块管理' },
-  '/cooperation/branch': { group: '合作权益', title: '分公司方案' },
-  '/cooperation/membership': { group: '合作权益', title: '会员体系' },
-  '/users': { group: '系统管理', title: '注册用户' },
-  '/staff': { group: '系统管理', title: '后台人员' },
-}
-
-function pageMeta(pathname: string) {
-  return routeMeta[pathname] ?? { group: '管理中心', title: '页面' }
 }

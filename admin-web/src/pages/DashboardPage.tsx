@@ -1,28 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/authContextValue'
 import { AdminIcon } from '../components/AdminIcon'
-import type { AdminIconName } from '../components/AdminIcon'
-
-interface DashboardModule {
-  to: string
-  title: string
-  description: string
-  icon: AdminIconName
-  permission: string
-}
-
-const contentModules: DashboardModule[] = [
-  { to: '/home-hero', title: '首页头图', description: '首页首屏画面与文案', icon: 'hero', permission: 'content:read' },
-  { to: '/home-videos', title: '宣传视频', description: '视频封面与播放内容', icon: 'video', permission: 'content:read' },
-  { to: '/company', title: '公司介绍', description: '品牌简介与展示图片', icon: 'company', permission: 'content:read' },
-  { to: '/scenics', title: '景区管理', description: '景区内容、顺序与导航', icon: 'scenic', permission: 'content:read' },
-  { to: '/products', title: '会员福利', description: '福利分类与产品内容', icon: 'gift', permission: 'content:read' },
-  { to: '/cooperation', title: '合作权益', description: '收益来源与合作价值', icon: 'cooperation', permission: 'content:read' },
-]
+import { workspaceModules } from '../config/adminModules'
 
 export function DashboardPage() {
   const auth = useAuth()
-  const visibleModules = contentModules.filter((module) => auth.hasPermission(module.permission))
+  const visibleModules = workspaceModules.filter(
+    (module) => !module.permission || auth.hasPermission(module.permission),
+  )
   const today = new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
     day: 'numeric',
@@ -63,7 +48,7 @@ export function DashboardPage() {
               <Link className="dashboard-module" key={module.to} to={module.to}>
                 <span className="dashboard-module__icon"><AdminIcon name={module.icon} /></span>
                 <span className="dashboard-module__copy">
-                  <strong>{module.title}</strong>
+                  <strong>{module.workspaceLabel ?? module.label}</strong>
                   <small>{module.description}</small>
                 </span>
                 <span className="dashboard-module__arrow" aria-hidden="true">›</span>
