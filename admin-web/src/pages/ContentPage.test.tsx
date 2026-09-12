@@ -90,6 +90,10 @@ describe('ContentPage', () => {
     )
     render(<RouterProvider router={router} />)
     expect(await screen.findByText('尚未保存')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '基础信息' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('小程序预览')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '详情页' }))
+    expect(screen.getByText('上传详情图片后在此预览')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('标题'), {
       target: { value: revision.title },
@@ -97,6 +101,7 @@ describe('ContentPage', () => {
     fireEvent.change(screen.getByLabelText('首页简介'), {
       target: { value: revision.summary },
     })
+    fireEvent.click(screen.getByRole('tab', { name: /内容板块/ }))
     fireEvent.change(screen.getByLabelText('第 1 个板块标题'), {
       target: { value: '公司简介' },
     })
