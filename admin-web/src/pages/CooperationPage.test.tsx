@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resetAdminApiForTests } from '../api/admin'
@@ -30,14 +30,19 @@ describe('Cooperation operations pages', () => {
 
     expect(await screen.findByRole('heading', { name: '收益板块管理' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '核心收益来源' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '收益板块' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '敬请期待' })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('招商收益')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '收起收益分类 1' }))
+    expect(screen.queryByDisplayValue('招商收益')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '敬请期待' }))
+    expect(screen.getByText('更多合作方案正在准备中')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /合作价值总结/ }))
     expect(screen.getByRole('heading', { name: '合作价值总结' })).toBeInTheDocument()
     expect(screen.queryByText('页面信息')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('页面标题')).not.toBeInTheDocument()
-    expect(screen.getByDisplayValue('招商收益')).toBeInTheDocument()
-    const firstIconPicker = screen.getByRole('group', { name: '收益分类 1 图标' })
-    expect(within(firstIconPicker).getByRole('button', { name: '合作' })).toHaveAttribute('aria-pressed', 'true')
-    expect(within(firstIconPicker).getByRole('button', { name: '通用' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: '添加合作价值' })).toBeInTheDocument()
+    expect(screen.queryByText('合作价值图片（选填）')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /添加合作价值/ })).toBeInTheDocument()
   })
 
   it('maps legacy free-form icons to a system icon instead of exposing the raw value', async () => {
@@ -56,8 +61,8 @@ describe('Cooperation operations pages', () => {
 
     render(<RouterProvider router={router} />)
 
-    const iconPicker = await screen.findByRole('group', { name: '收益分类 1 图标' })
-    expect(within(iconPicker).getByRole('button', { name: '产品' })).toHaveAttribute('aria-pressed', 'true')
+    const iconPicker = await screen.findByLabelText('收益分类 1 图标')
+    expect(iconPicker).toHaveValue('product')
     expect(screen.queryByDisplayValue('2')).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue('旧标题')).not.toBeInTheDocument()
   })
