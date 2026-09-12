@@ -6,39 +6,40 @@
   padding: 22px 22px 64px;
 }
 
-.company-gallery {
+.company-section-gallery {
   background: #183e34;
   border: 1px solid rgba(32, 53, 45, 0.16);
-  border-radius: 26px;
-  box-shadow: 0 15px 42px rgba(51, 47, 38, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 10px 28px rgba(51, 47, 38, 0.1);
+  margin-top: 25px;
   overflow: hidden;
-  padding: 7px;
+  padding: 6px;
   position: relative;
 }
 
-.company-gallery__swiper {
-  border-radius: 19px;
-  height: 422px;
+.company-section-gallery__swiper {
+  border-radius: 15px;
+  height: 338px;
   overflow: hidden;
   width: 100%;
 }
 
-.company-gallery__image {
+.company-section-gallery__image {
   display: block;
   height: 100%;
   width: 100%;
 }
 
-.company-gallery__hint {
+.company-section-gallery__hint {
   background: rgba(15, 36, 30, 0.62);
   border-radius: 999px;
-  bottom: 27px;
+  bottom: 22px;
   color: rgba(255, 253, 247, 0.86);
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: 2px;
-  padding: 7px 14px;
+  padding: 6px 12px;
   position: absolute;
-  right: 22px;
+  right: 18px;
   z-index: 2;
 }
 

@@ -9,21 +9,34 @@ import './index.scss'
 interface CompanySection {
   title: string
   text: string
+  imageUrls: string[]
 }
 
 function sectionsFromBlocks(content: CompanyContent): CompanySection[] {
   const sections: CompanySection[] = []
   for (const block of content.blocks) {
     if (block.type === 'HEADING') {
-      sections.push({ title: block.text ?? '', text: '' })
+      sections.push({ title: block.text ?? '', text: '', imageUrls: [] })
       continue
     }
-    if (block.type !== 'PARAGRAPH') continue
-    if (sections.length === 0) {
-      sections.push({ title: '公司介绍', text: '' })
+    if (block.type === 'PARAGRAPH') {
+      if (sections.length === 0) {
+        sections.push({ title: '公司介绍', text: '', imageUrls: [] })
+      }
+      const section = sections[sections.length - 1]
+      section.text = [section.text, block.text ?? ''].filter(Boolean).join('\n\n')
+      continue
     }
-    const section = sections[sections.length - 1]
-    section.text = [section.text, block.text ?? ''].filter(Boolean).join('\n\n')
+    if (block.type === 'IMAGE' && block.imageUrl) {
+      if (sections.length === 0) {
+        sections.push({ title: '公司介绍', text: '', imageUrls: [] })
+      }
+      sections[sections.length - 1].imageUrls.push(block.imageUrl)
+    }
+  }
+  if (content.galleryUrls?.length) {
+    if (sections.length === 0) sections.push({ title: '公司介绍', text: '', imageUrls: [] })
+    sections[0].imageUrls.push(...content.galleryUrls)
   }
   return sections.filter((section) => section.title || section.text)
 }
@@ -77,37 +90,10 @@ export default function CompanyPage() {
     )
   }
 
-  const galleryUrls = content.galleryUrls?.length
-    ? content.galleryUrls
-    : content.coverUrl ? [content.coverUrl] : []
   const sections = sectionsFromBlocks(content)
 
   return (
     <View className='page company-page'>
-      {galleryUrls.length > 0 && (
-        <View className='company-gallery'>
-          <Swiper
-            className='company-gallery__swiper'
-            circular={galleryUrls.length > 1}
-            indicatorActiveColor='#f5f2e9'
-            indicatorColor='rgba(245, 242, 233, 0.45)'
-            indicatorDots={galleryUrls.length > 1}
-          >
-            {galleryUrls.map((imageUrl, index) => (
-              <SwiperItem key={`${imageUrl}-${index}`}>
-                <Image
-                  className='company-gallery__image'
-                  mode='aspectFill'
-                  src={imageUrl}
-                />
-              </SwiperItem>
-            ))}
-          </Swiper>
-          {galleryUrls.length > 1 && (
-            <Text className='company-gallery__hint'>左右滑动查看</Text>
-          )}
-        </View>
-      )}
       <View className='company-page__body'>
         {sections.map((section, index) => (
           <View className='company-content-section' key={`${section.title}-${index}`}>
@@ -117,6 +103,30 @@ export default function CompanyPage() {
               <View className='company-content-heading-line' />
             </View>
             <Text className='company-content-paragraph'>{section.text}</Text>
+            {section.imageUrls.length > 0 && (
+              <View className='company-section-gallery'>
+                <Swiper
+                  className='company-section-gallery__swiper'
+                  circular={section.imageUrls.length > 1}
+                  indicatorActiveColor='#f5f2e9'
+                  indicatorColor='rgba(245, 242, 233, 0.45)'
+                  indicatorDots={section.imageUrls.length > 1}
+                >
+                  {section.imageUrls.map((imageUrl, imageIndex) => (
+                    <SwiperItem key={`${imageUrl}-${imageIndex}`}>
+                      <Image
+                        className='company-section-gallery__image'
+                        mode='aspectFill'
+                        src={imageUrl}
+                      />
+                    </SwiperItem>
+                  ))}
+                </Swiper>
+                {section.imageUrls.length > 1 && (
+                  <Text className='company-section-gallery__hint'>左右滑动查看</Text>
+                )}
+              </View>
+            )}
           </View>
         ))}
       </View>

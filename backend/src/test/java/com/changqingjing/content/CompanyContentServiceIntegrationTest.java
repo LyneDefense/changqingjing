@@ -136,7 +136,7 @@ class CompanyContentServiceIntegrationTest {
     }
 
     @Test
-    void recordsCoverAndOrderedGalleryReferencesForEveryImmutableRevision() {
+    void migratesLegacyGalleryImagesIntoTheFirstContentSection() {
         AdminPrincipal actor = bootstrapAdmin();
         UUID coverId = insertReadyMedia(
                 actor.accountId(), MediaPurpose.COMPANY_COVER, MediaType.IMAGE);
@@ -163,18 +163,28 @@ class CompanyContentServiceIntegrationTest {
                 "company-media");
 
         assertThat(saved.draft().coverMediaId()).isEqualTo(coverId);
+        assertThat(saved.draft().galleryMediaIds()).isEmpty();
+        assertThat(saved.draft().blocks()).extracting(CompanyContentBlock::type)
+                .containsExactly(
+                        CompanyBlockType.HEADING,
+                        CompanyBlockType.PARAGRAPH,
+                        CompanyBlockType.IMAGE,
+                        CompanyBlockType.IMAGE);
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM content_revision_media WHERE revision_id = ?",
                 Long.class,
                 saved.draft().id())).isEqualTo(3);
         assertThat(jdbcTemplate.queryForList("""
                         SELECT media_id FROM content_revision_media
-                        WHERE revision_id = ? AND usage = 'GALLERY_IMAGE'
+                        WHERE revision_id = ? AND usage = 'BODY_IMAGE'
                         ORDER BY display_order
                         """, UUID.class, saved.draft().id()))
                 .containsExactly(firstImageId, secondImageId);
         contentService.publish(saved.version(), actor, "company-media-publish");
-        assertThat(contentService.getPublished().orElseThrow().revision().galleryMediaIds())
+        assertThat(contentService.getPublished().orElseThrow().revision().blocks().stream()
+                .filter(block -> block.type() == CompanyBlockType.IMAGE)
+                .map(CompanyContentBlock::mediaId)
+                .toList())
                 .containsExactly(firstImageId, secondImageId);
     }
 

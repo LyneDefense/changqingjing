@@ -12,6 +12,7 @@ import com.changqingjing.media.MediaService;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +68,13 @@ public class CompanyContentService {
                         UUID.randomUUID(), actor.accountId(), now()));
         verifyVersion(entry, request.expectedVersion());
 
-        List<CompanyContentBlock> blocks = request.blocks().stream()
+        List<CompanyContentBlock> blocks = mergeLegacyGallery(
+                request.blocks().stream()
                 .map(CompanyContentBlock::normalized)
-                .toList();
-        List<UUID> galleryMediaIds = List.copyOf(request.galleryMediaIds());
+                .toList(),
+                request.galleryMediaIds());
         validateContentBlocks(blocks);
-        validateMedia(request.coverMediaId(), galleryMediaIds);
+        validateMedia(request.coverMediaId(), blocks);
         String title = request.title().strip();
         String summary = request.summary().strip();
         OffsetDateTime now = now();
@@ -84,12 +86,12 @@ public class CompanyContentService {
                 title,
                 summary,
                 request.coverMediaId(),
-                galleryMediaIds,
+                List.of(),
                 blocks,
                 actor.accountId(),
                 now);
         repository.insertMediaReferences(
-                revision.id(), request.coverMediaId(), galleryMediaIds, blocks);
+                revision.id(), request.coverMediaId(), List.of(), blocks);
         if (!repository.pointDraft(
                 entry.id(), revision.id(), entry.version(), actor.accountId(), now)) {
             throw versionConflict();
@@ -183,35 +185,83 @@ public class CompanyContentService {
         }
     }
 
+    private List<CompanyContentBlock> mergeLegacyGallery(
+            List<CompanyContentBlock> blocks,
+            List<UUID> galleryMediaIds) {
+        if (galleryMediaIds.isEmpty()) {
+            return blocks;
+        }
+        List<CompanyContentBlock> merged = new ArrayList<>(blocks);
+        int insertionIndex = 0;
+        for (int index = 0; index < merged.size(); index++) {
+            if (merged.get(index).type() == CompanyBlockType.PARAGRAPH) {
+                insertionIndex = index + 1;
+                break;
+            }
+        }
+        merged.addAll(insertionIndex, galleryMediaIds.stream()
+                .map(mediaId -> new CompanyContentBlock(
+                        CompanyBlockType.IMAGE, null, mediaId, null))
+                .toList());
+        return List.copyOf(merged);
+    }
+
     private void validateMedia(
             UUID coverMediaId,
-            List<UUID> galleryMediaIds) {
+            List<CompanyContentBlock> blocks) {
         if (coverMediaId != null) {
             requirePurpose(coverMediaId, MediaPurpose.COMPANY_COVER);
         }
-        if (new HashSet<>(galleryMediaIds).size() != galleryMediaIds.size()) {
-            throw invalidBlock("公司详情图片不能重复");
+        List<UUID> imageMediaIds = blocks.stream()
+                .filter(block -> block.type() == CompanyBlockType.IMAGE)
+                .map(CompanyContentBlock::mediaId)
+                .toList();
+        if (imageMediaIds.size() > 10) {
+            throw invalidBlock("公司介绍插图最多 10 张");
         }
-        for (UUID mediaId : galleryMediaIds) {
+        if (new HashSet<>(imageMediaIds).size() != imageMediaIds.size()) {
+            throw invalidBlock("公司介绍插图不能重复");
+        }
+        for (UUID mediaId : imageMediaIds) {
             requirePurpose(mediaId, MediaPurpose.COMPANY_IMAGE);
         }
     }
 
     private void validateContentBlocks(List<CompanyContentBlock> blocks) {
-        if (blocks.size() % 2 != 0) {
-            throw invalidBlock("每个公司介绍板块必须包含一个标题和一段文字");
-        }
+        CompanyBlockType previousType = null;
         for (int index = 0; index < blocks.size(); index++) {
             CompanyContentBlock block = blocks.get(index);
-            CompanyBlockType expectedType = index % 2 == 0
-                    ? CompanyBlockType.HEADING
-                    : CompanyBlockType.PARAGRAPH;
-            if (block.type() != expectedType
-                    || block.text() == null
-                    || block.text().isBlank()
-                    || block.mediaId() != null) {
-                throw invalidBlock("公司介绍板块只支持按顺序填写板块标题和文字内容");
+            if (block.type() == CompanyBlockType.HEADING) {
+                if (index > 0 && previousType != CompanyBlockType.PARAGRAPH
+                        && previousType != CompanyBlockType.IMAGE) {
+                    throw invalidBlock("每个公司介绍板块必须包含标题和文字内容");
+                }
+                requireTextBlock(block);
+            } else if (block.type() == CompanyBlockType.PARAGRAPH) {
+                if (previousType != CompanyBlockType.HEADING) {
+                    throw invalidBlock("文字内容必须紧跟在板块标题之后");
+                }
+                requireTextBlock(block);
+            } else if (block.type() == CompanyBlockType.IMAGE) {
+                if (previousType != CompanyBlockType.PARAGRAPH
+                        && previousType != CompanyBlockType.IMAGE) {
+                    throw invalidBlock("插图必须放在板块文字内容之后");
+                }
+                if (block.mediaId() == null) {
+                    throw invalidBlock("公司介绍插图不能为空");
+                }
             }
+            previousType = block.type();
+        }
+        if (previousType != CompanyBlockType.PARAGRAPH
+                && previousType != CompanyBlockType.IMAGE) {
+            throw invalidBlock("每个公司介绍板块必须包含标题和文字内容");
+        }
+    }
+
+    private void requireTextBlock(CompanyContentBlock block) {
+        if (block.text() == null || block.text().isBlank() || block.mediaId() != null) {
+            throw invalidBlock("公司介绍标题和文字内容不能为空");
         }
     }
 

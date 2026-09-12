@@ -89,13 +89,11 @@ async function main() {
           title: '自动化公司介绍',
           summary: '首页公开摘要',
           coverUrl: 'https://media.example/company-cover.jpg?signature=short',
-          galleryUrls: [
-            'https://media.example/company-detail-1.jpg?signature=short',
-            'https://media.example/company-detail-2.jpg?signature=short',
-          ],
           blocks: [
             { type: 'HEADING', text: '我们的使命' },
             { type: 'PARAGRAPH', text: '连接文化与旅行。' },
+            { type: 'IMAGE', imageUrl: 'https://media.example/company-detail-1.jpg?signature=short' },
+            { type: 'IMAGE', imageUrl: 'https://media.example/company-detail-2.jpg?signature=short' },
           ],
           firstPublishedAt: '2026-09-08T08:00:00Z',
         },
@@ -115,8 +113,8 @@ async function main() {
     assert.equal(await heading.text(), '我们的使命')
     assert.equal(await paragraph.text(), '连接文化与旅行。')
     assert.equal(await company.$('.company-page__header'), null)
-    const galleryImages = await company.$$('.company-gallery__image')
-    assert.equal(galleryImages.length, 2, '公司详情图片应在轮播中展示')
+    const galleryImages = await company.$$('.company-section-gallery__image')
+    assert.equal(galleryImages.length, 2, '公司插图应跟随所属文字板块展示')
     assert.match(await galleryImages[0].attribute('src'), /company-detail-1\.jpg/)
 
     await miniProgram.restoreWxMethod('request')

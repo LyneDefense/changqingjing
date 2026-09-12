@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -193,30 +194,40 @@ public class CompanyContentRepository {
 
     private Revision mapRevision(ResultSet rows, int rowNumber) throws SQLException {
         CompanyPayload payload = fromPayload(rows.getString("payload"));
-        List<CompanyContentBlock> blocks = payload.blocks() == null
-                ? List.of()
-                : payload.blocks().stream()
-                        .filter(block -> block.type() != CompanyBlockType.IMAGE)
-                        .toList();
-        List<UUID> galleryMediaIds = payload.galleryMediaIds() == null
-                ? payload.blocks() == null
-                        ? List.of()
-                        : payload.blocks().stream()
-                                .filter(block -> block.type() == CompanyBlockType.IMAGE)
-                                .map(CompanyContentBlock::mediaId)
-                                .filter(java.util.Objects::nonNull)
-                                .toList()
-                : List.copyOf(payload.galleryMediaIds());
+        List<CompanyContentBlock> blocks = mergeLegacyGallery(
+                payload.blocks() == null ? List.of() : payload.blocks(),
+                payload.galleryMediaIds() == null ? List.of() : payload.galleryMediaIds());
         return new Revision(
                 rows.getObject("id", UUID.class),
                 rows.getInt("revision_no"),
                 rows.getString("title"),
                 rows.getString("summary"),
                 rows.getObject("cover_media_id", UUID.class),
-                galleryMediaIds,
+                List.of(),
                 blocks,
                 rows.getObject("created_by", UUID.class),
                 rows.getObject("created_at", OffsetDateTime.class));
+    }
+
+    private List<CompanyContentBlock> mergeLegacyGallery(
+            List<CompanyContentBlock> blocks,
+            List<UUID> galleryMediaIds) {
+        if (galleryMediaIds.isEmpty()) {
+            return List.copyOf(blocks);
+        }
+        List<CompanyContentBlock> merged = new ArrayList<>(blocks);
+        int insertionIndex = 0;
+        for (int index = 0; index < merged.size(); index++) {
+            if (merged.get(index).type() == CompanyBlockType.PARAGRAPH) {
+                insertionIndex = index + 1;
+                break;
+            }
+        }
+        merged.addAll(insertionIndex, galleryMediaIds.stream()
+                .map(mediaId -> new CompanyContentBlock(
+                        CompanyBlockType.IMAGE, null, mediaId, null))
+                .toList());
+        return List.copyOf(merged);
     }
 
     private String toPayload(

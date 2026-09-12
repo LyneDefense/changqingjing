@@ -2248,6 +2248,12 @@
   padding: 6px 13px;
 }
 
+.company-panel-actions {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
 .company-inline-field {
   align-items: center;
   grid-template-columns: 92px minmax(0, 1fr);
@@ -2368,6 +2374,82 @@
 
 .company-section-fields textarea {
   min-height: 128px;
+}
+
+.company-section-images {
+  border-top: 1px solid rgba(57, 73, 65, 0.08);
+  display: grid;
+  gap: 10px;
+  padding-top: 11px;
+}
+
+.company-section-images__heading,
+.company-section-images__heading > div {
+  align-items: center;
+  display: flex;
+}
+
+.company-section-images__heading {
+  justify-content: space-between;
+}
+
+.company-section-images__heading > div {
+  gap: 9px;
+}
+
+.company-section-images__heading strong {
+  color: #354b42;
+  font-size: 13px;
+}
+
+.company-section-images__heading span,
+.company-section-images__heading small {
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+.company-section-image-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-section-image-item {
+  background: #fffdf9;
+  border: 1px solid rgba(57, 73, 65, 0.1);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+}
+
+.company-section-image-item .media-upload-field {
+  background: transparent;
+  border: 0;
+  gap: 8px;
+  padding: 0;
+}
+
+.company-section-image-item .media-upload-copy {
+  display: none;
+}
+
+.company-section-image-item .media-image-preview {
+  aspect-ratio: 16 / 9;
+  max-height: 170px;
+  object-fit: cover;
+}
+
+.company-section-image-item .media-upload-actions .secondary-button,
+.company-section-image-uploader .media-upload-actions .secondary-button {
+  min-height: 34px;
+  padding: 5px 12px;
+}
+
+.company-section-image-uploader .media-upload-field {
+  background: rgba(255, 253, 248, 0.65);
+  border-style: dashed;
+  padding: 10px;
 }
 
 .company-mini-preview {
@@ -2583,6 +2665,14 @@
   margin: 6px 0 0 9px;
   overflow: hidden;
   white-space: pre-wrap;
+}
+
+.company-detail-preview__section .content-image-preview {
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  margin-top: 8px;
+  max-height: none;
+  object-fit: cover;
 }
 
 .editor-grid-two {
@@ -3276,6 +3366,10 @@
     gap: 10px;
   }
 
+  .company-panel-actions {
+    flex-wrap: wrap;
+  }
+
   .company-summary-field > span {
     padding-top: 0;
   }
@@ -3290,6 +3384,10 @@
   .company-cover-field .media-upload-field .field-error {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  .company-section-image-list {
+    grid-template-columns: 1fr;
   }
 
   .hero-compact-editor .media-upload-field {

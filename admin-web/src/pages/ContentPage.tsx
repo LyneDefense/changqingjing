@@ -23,31 +23,44 @@ interface EditableCompanySection {
   key: string
   title: string
   text: string
+  imageMediaIds: string[]
 }
 
-type CompanyEditorPanel = 'BASIC' | 'GALLERY' | 'SECTIONS'
+type CompanyEditorPanel = 'BASIC' | 'SECTIONS'
 type CompanyPreviewMode = 'HOME' | 'DETAIL'
 
 let sectionSequence = 0
 
-function newSection(title = '', text = ''): EditableCompanySection {
+function newSection(title = '', text = '', imageMediaIds: string[] = []): EditableCompanySection {
   sectionSequence += 1
-  return { key: `company-section-${sectionSequence}`, title, text }
+  return { key: `company-section-${sectionSequence}`, title, text, imageMediaIds }
 }
 
-function sectionsFromBlocks(blocks: CompanyContentBlock[]): EditableCompanySection[] {
+function sectionsFromBlocks(
+  blocks: CompanyContentBlock[],
+  legacyGalleryMediaIds: string[] = [],
+): EditableCompanySection[] {
   const sections: EditableCompanySection[] = []
   for (const block of blocks) {
     if (block.type === 'HEADING') {
       sections.push(newSection(block.text ?? ''))
       continue
     }
-    if (block.type !== 'PARAGRAPH') continue
-    if (sections.length === 0) sections.push(newSection('公司简介'))
-    const section = sections[sections.length - 1]
-    section.text = [section.text, block.text ?? ''].filter(Boolean).join('\n\n')
+    if (block.type === 'PARAGRAPH') {
+      if (sections.length === 0) sections.push(newSection('公司简介'))
+      const section = sections[sections.length - 1]
+      section.text = [section.text, block.text ?? ''].filter(Boolean).join('\n\n')
+      continue
+    }
+    if (block.type === 'IMAGE' && block.mediaId) {
+      if (sections.length === 0) sections.push(newSection('公司简介'))
+      sections[sections.length - 1].imageMediaIds.push(block.mediaId)
+    }
   }
   if (sections.length === 0) return [newSection()]
+  if (legacyGalleryMediaIds.length > 0) {
+    sections[0].imageMediaIds.push(...legacyGalleryMediaIds)
+  }
   return sections
 }
 
@@ -55,6 +68,11 @@ function blocksFromSections(sections: EditableCompanySection[]): CompanyContentB
   return sections.flatMap((section) => [
     { type: 'HEADING' as const, text: section.title },
     { type: 'PARAGRAPH' as const, text: section.text },
+    ...section.imageMediaIds.map((mediaId, index) => ({
+      type: 'IMAGE' as const,
+      mediaId,
+      altText: `${section.title} 图片 ${index + 1}`,
+    })),
   ])
 }
 
@@ -70,8 +88,7 @@ export function ContentPage() {
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [coverMediaId, setCoverMediaId] = useState('')
-  const [galleryMediaIds, setGalleryMediaIds] = useState<string[]>([])
-  const [galleryUploadKey, setGalleryUploadKey] = useState(0)
+  const [sectionImageUploadKey, setSectionImageUploadKey] = useState(0)
   const [sections, setSections] = useState<EditableCompanySection[]>([newSection()])
   const [preview, setPreview] = useState<AdminCompanyRevision>()
   const [activePanel, setActivePanel] = useState<CompanyEditorPanel>('BASIC')
@@ -89,8 +106,10 @@ export function ContentPage() {
     setTitle(editable?.title ?? '')
     setSummary(editable?.summary ?? '')
     setCoverMediaId(editable?.coverMediaId ?? '')
-    setGalleryMediaIds(editable?.galleryMediaIds ?? [])
-    setSections(sectionsFromBlocks(editable?.blocks ?? []))
+    setSections(sectionsFromBlocks(
+      editable?.blocks ?? [],
+      editable?.galleryMediaIds ?? [],
+    ))
     setDirty(false)
   }, [])
 
@@ -147,16 +166,25 @@ export function ContentPage() {
     setNotice('')
   }
 
-  function moveGalleryImage(index: number, direction: -1 | 1) {
-    const target = index + direction
-    if (target < 0 || target >= galleryMediaIds.length) return
-    setGalleryMediaIds((current) => {
-      const next = [...current]
-      ;[next[index], next[target]] = [next[target], next[index]]
-      return next
-    })
+  function updateSectionImages(
+    sectionIndex: number,
+    update: (imageMediaIds: string[]) => string[],
+  ) {
+    setSections((current) => current.map((section, index) => index === sectionIndex
+      ? { ...section, imageMediaIds: update(section.imageMediaIds) }
+      : section))
     setDirty(true)
     setNotice('')
+  }
+
+  function moveSectionImage(sectionIndex: number, imageIndex: number, direction: -1 | 1) {
+    updateSectionImages(sectionIndex, (current) => {
+      const target = imageIndex + direction
+      if (target < 0 || target >= current.length) return current
+      const next = [...current]
+      ;[next[imageIndex], next[target]] = [next[target], next[imageIndex]]
+      return next
+    })
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -178,7 +206,7 @@ export function ContentPage() {
         title,
         summary,
         coverMediaId: coverMediaId || undefined,
-        galleryMediaIds,
+        galleryMediaIds: [],
         blocks: blocksFromSections(sections),
         expectedVersion: content?.version ?? 0,
       })
@@ -240,6 +268,10 @@ export function ContentPage() {
   const hasUnpublishedDraft = Boolean(
     content?.draft && content.draft.id !== content.published?.id,
   )
+  const totalSectionImages = sections.reduce(
+    (total, section) => total + section.imageMediaIds.length,
+    0,
+  )
 
   return (
     <div className="company-admin-page">
@@ -247,7 +279,7 @@ export function ContentPage() {
         <div className="company-page-heading__title">
           <PageIntro
             title="公司介绍管理"
-            description="分别维护首页卡片、详情相册和文字板块，发布后统一更新小程序。"
+            description="维护首页卡片与详情内容；插图跟随所属文字板块一起展示。"
           />
           <span className={`status-pill ${content?.visibility === 'PUBLISHED' ? 'active' : 'disabled'}`}>
             {content?.visibility === 'PUBLISHED' ? '线上展示中' : '未发布'}
@@ -282,11 +314,8 @@ export function ContentPage() {
             <button aria-selected={activePanel === 'BASIC'} className={activePanel === 'BASIC' ? 'active' : ''} onClick={() => setActivePanel('BASIC')} role="tab" type="button">
               基础信息
             </button>
-            <button aria-selected={activePanel === 'GALLERY'} className={activePanel === 'GALLERY' ? 'active' : ''} onClick={() => setActivePanel('GALLERY')} role="tab" type="button">
-              详情图片 <span>{galleryMediaIds.length}</span>
-            </button>
             <button aria-selected={activePanel === 'SECTIONS'} className={activePanel === 'SECTIONS' ? 'active' : ''} onClick={() => setActivePanel('SECTIONS')} role="tab" type="button">
-              内容板块 <span>{sections.length}</span>
+              详情内容 <span>{sections.length}</span>
             </button>
           </div>
 
@@ -340,62 +369,17 @@ export function ContentPage() {
             </section>
           )}
 
-          {activePanel === 'GALLERY' && (
-            <section className="company-editor-panel" aria-labelledby="company-gallery-title">
-              <div className="company-panel-heading">
-                <div className="compact-editor-heading">
-                  <span><AdminIcon name="hero" /></span>
-                  <div><h3 id="company-gallery-title">详情图片</h3><p>详情页支持左右滑动，最多上传 10 张。</p></div>
-                </div>
-                <span className="gallery-count">{galleryMediaIds.length} / 10 张</span>
-              </div>
-              {galleryMediaIds.length > 0 && (
-                <div className="company-gallery-list">
-                  {galleryMediaIds.map((mediaId, imageIndex) => (
-                    <div className="company-gallery-item" key={mediaId}>
-                      <div className="company-gallery-item__toolbar">
-                        <strong>图片 {imageIndex + 1}</strong>
-                        <div className="section-content-actions">
-                          <button aria-label={`上移第 ${imageIndex + 1} 张详情图片`} className="icon-text-button" disabled={imageIndex === 0} onClick={() => moveGalleryImage(imageIndex, -1)} type="button">上移</button>
-                          <button aria-label={`下移第 ${imageIndex + 1} 张详情图片`} className="icon-text-button" disabled={imageIndex === galleryMediaIds.length - 1} onClick={() => moveGalleryImage(imageIndex, 1)} type="button">下移</button>
-                          <button aria-label={`删除第 ${imageIndex + 1} 张详情图片`} className="icon-text-button danger" onClick={() => { setGalleryMediaIds((current) => current.filter((_, index) => index !== imageIndex)); setDirty(true); setNotice('') }} type="button">删除</button>
-                        </div>
-                      </div>
-                      <MediaUploadField
-                        accept="image/jpeg,image/png,image/webp"
-                        label={`详情图片 ${imageIndex + 1}`}
-                        mediaId={mediaId}
-                        mediaType="IMAGE"
-                        onReady={(media) => { setGalleryMediaIds((current) => current.map((currentId, index) => index === imageIndex ? media.id : currentId)); setDirty(true); setNotice('') }}
-                        purpose="COMPANY_IMAGE"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {galleryMediaIds.length < 10 && (
-                <div className="company-gallery-uploader">
-                  <MediaUploadField
-                    key={galleryUploadKey}
-                    accept="image/jpeg,image/png,image/webp"
-                    label={galleryMediaIds.length === 0 ? '上传第一张详情图片' : '继续添加详情图片'}
-                    mediaType="IMAGE"
-                    onReady={(media) => { setGalleryMediaIds((current) => [...current, media.id]); setGalleryUploadKey((current) => current + 1); setDirty(true); setNotice('') }}
-                    purpose="COMPANY_IMAGE"
-                  />
-                </div>
-              )}
-            </section>
-          )}
-
           {activePanel === 'SECTIONS' && (
             <section className="company-editor-panel" aria-labelledby="company-sections-title">
               <div className="company-panel-heading">
                 <div className="compact-editor-heading">
                   <span><AdminIcon name="company" /></span>
-                  <div><h3 id="company-sections-title">内容板块</h3><p>仅维护板块标题和文字内容，可调整展示顺序。</p></div>
+                  <div><h3 id="company-sections-title">详情内容</h3><p>每个板块包含标题、文字和可选插图，可调整展示顺序。</p></div>
                 </div>
-                <button aria-label="添加板块" className="secondary-button" onClick={() => { setSections((current) => [...current, newSection()]); setDirty(true); setNotice('') }} type="button">＋ 添加板块</button>
+                <div className="company-panel-actions">
+                  <span className="gallery-count">共 {totalSectionImages} / 10 张插图</span>
+                  <button aria-label="添加板块" className="secondary-button" onClick={() => { setSections((current) => [...current, newSection()]); setDirty(true); setNotice('') }} type="button">＋ 添加板块</button>
+                </div>
               </div>
               <div className="company-sections">
                 {sections.map((section, sectionIndex) => (
@@ -416,6 +400,51 @@ export function ContentPage() {
                         文字内容
                         <textarea aria-label={`第 ${sectionIndex + 1} 个板块文字内容`} maxLength={10000} onChange={(event) => updateSection(sectionIndex, { text: event.target.value })} placeholder="输入该板块的详细介绍，可使用换行组织段落" required rows={5} value={section.text} />
                       </label>
+                    </div>
+                    <div className="company-section-images">
+                      <div className="company-section-images__heading">
+                        <div><strong>内容插图</strong><span>可选，跟随本板块文字一起展示</span></div>
+                        <small>{section.imageMediaIds.length} 张</small>
+                      </div>
+                      {section.imageMediaIds.length > 0 && (
+                        <div className="company-section-image-list">
+                          {section.imageMediaIds.map((mediaId, imageIndex) => (
+                            <div className="company-section-image-item" key={mediaId}>
+                              <div className="company-gallery-item__toolbar">
+                                <strong>插图 {imageIndex + 1}</strong>
+                                <div className="section-content-actions">
+                                  <button aria-label={`上移第 ${sectionIndex + 1} 个板块的第 ${imageIndex + 1} 张插图`} className="icon-text-button" disabled={imageIndex === 0} onClick={() => moveSectionImage(sectionIndex, imageIndex, -1)} type="button">上移</button>
+                                  <button aria-label={`下移第 ${sectionIndex + 1} 个板块的第 ${imageIndex + 1} 张插图`} className="icon-text-button" disabled={imageIndex === section.imageMediaIds.length - 1} onClick={() => moveSectionImage(sectionIndex, imageIndex, 1)} type="button">下移</button>
+                                  <button aria-label={`删除第 ${sectionIndex + 1} 个板块的第 ${imageIndex + 1} 张插图`} className="icon-text-button danger" onClick={() => updateSectionImages(sectionIndex, (current) => current.filter((_, index) => index !== imageIndex))} type="button">删除</button>
+                                </div>
+                              </div>
+                              <MediaUploadField
+                                accept="image/jpeg,image/png,image/webp"
+                                label={`板块 ${sectionIndex + 1} 插图 ${imageIndex + 1}`}
+                                mediaId={mediaId}
+                                mediaType="IMAGE"
+                                onReady={(media) => updateSectionImages(sectionIndex, (current) => current.map((currentId, index) => index === imageIndex ? media.id : currentId))}
+                                purpose="COMPANY_IMAGE"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {totalSectionImages < 10 && (
+                        <div className="company-section-image-uploader">
+                          <MediaUploadField
+                            key={`${section.key}-${sectionImageUploadKey}`}
+                            accept="image/jpeg,image/png,image/webp"
+                            label="添加插图（可选）"
+                            mediaType="IMAGE"
+                            onReady={(media) => {
+                              updateSectionImages(sectionIndex, (current) => [...current, media.id])
+                              setSectionImageUploadKey((current) => current + 1)
+                            }}
+                            purpose="COMPANY_IMAGE"
+                          />
+                        </div>
+                      )}
                     </div>
                   </section>
                 ))}
@@ -452,15 +481,14 @@ export function ContentPage() {
               </div>
             ) : (
               <div className="company-detail-preview">
-                <div className={`company-detail-preview__gallery${galleryMediaIds[0] ? ' has-image' : ''}`}>
-                  {galleryMediaIds[0] ? <MediaPreview alt="公司详情首图预览" mediaId={galleryMediaIds[0]} /> : <span>上传详情图片后在此预览</span>}
-                </div>
-                {galleryMediaIds.length > 1 && <div className="company-detail-preview__dots">{galleryMediaIds.map((mediaId, index) => <i className={index === 0 ? 'active' : ''} key={mediaId} />)}</div>}
                 <div className="company-detail-preview__body">
                   {sections.slice(0, 3).map((section) => (
                     <div className="company-detail-preview__section" key={section.key}>
                       <div><i /><strong>{section.title || '板块标题'}</strong><span /></div>
                       <p>{section.text || '板块文字内容将在这里展示。'}</p>
+                      {section.imageMediaIds.map((mediaId, index) => (
+                        <MediaPreview alt={`${section.title || '板块'}插图 ${index + 1}`} key={mediaId} mediaId={mediaId} />
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -487,20 +515,12 @@ export function ContentPage() {
                 <MediaPreview alt={preview.title} mediaId={preview.coverMediaId} />
               </section>
             )}
-            {Boolean(preview.galleryMediaIds?.length) && (
-              <section className="preview-media-section">
-                <h3>公司详情图片</h3>
-                <div className="preview-gallery">
-                  {preview.galleryMediaIds?.map((mediaId, index) => (
-                    <MediaPreview alt={`公司详情图片 ${index + 1}`} key={mediaId} mediaId={mediaId} />
-                  ))}
-                </div>
-              </section>
-            )}
             <div className="preview-body">
               {preview.blocks.map((block, index) => {
                 if (block.type === 'HEADING') return <h3 key={index}>{block.text}</h3>
-                if (block.type === 'IMAGE') return null
+                if (block.type === 'IMAGE' && block.mediaId) {
+                  return <MediaPreview alt={block.altText || `公司介绍插图 ${index + 1}`} key={index} mediaId={block.mediaId} />
+                }
                 return <p key={index}>{block.text}</p>
               })}
             </div>

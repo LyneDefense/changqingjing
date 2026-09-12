@@ -93,7 +93,7 @@ describe('ContentPage', () => {
     expect(screen.getByRole('tab', { name: '基础信息' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('小程序预览')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '详情页' }))
-    expect(screen.getByText('上传详情图片后在此预览')).toBeInTheDocument()
+    expect(screen.getByText('板块文字内容将在这里展示。')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('标题'), {
       target: { value: revision.title },
@@ -101,7 +101,7 @@ describe('ContentPage', () => {
     fireEvent.change(screen.getByLabelText('首页简介'), {
       target: { value: revision.summary },
     })
-    fireEvent.click(screen.getByRole('tab', { name: /内容板块/ }))
+    fireEvent.click(screen.getByRole('tab', { name: /详情内容/ }))
     fireEvent.change(screen.getByLabelText('第 1 个板块标题'), {
       target: { value: '公司简介' },
     })
