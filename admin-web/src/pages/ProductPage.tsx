@@ -213,8 +213,7 @@ export function ProductPage() {
 
   if (editingId !== undefined) {
     return (
-      <>
-        <PageIntro title="会员福利管理" description="维护会员登录后可以浏览的福利产品。" />
+      <div className="product-admin-page">
         <ProductEditor
           categories={categories}
           onChanged={() => void Promise.all([loadProducts(), loadCategories()])}
@@ -222,24 +221,24 @@ export function ProductPage() {
           onDirtyChange={setDirty}
           productId={editingId ?? undefined}
         />
-      </>
+      </div>
     )
   }
 
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize))
 
   return (
-    <>
-      <div className="page-heading-row">
+    <div className="product-admin-page">
+      <div className="page-heading-row product-page-heading">
         <PageIntro
           title="会员福利管理"
           description="运营人员可在这里维护福利产品；产品只做图文展示，不包含购买或领取功能。"
         />
         {activeTab === 'products' && (
-          <button className="primary-button" onClick={() => setEditingId(null)} type="button">新增福利产品</button>
+          <button className="primary-button" onClick={() => setEditingId(null)} type="button">＋ 新增福利产品</button>
         )}
         {activeTab === 'categories' && (
-          <button className="primary-button" onClick={() => setCategoryForm({ name: '', displayOrder: 0, expectedVersion: 0 })} type="button">新增分类</button>
+          <button className="primary-button" onClick={() => setCategoryForm({ name: '', displayOrder: 0, expectedVersion: 0 })} type="button">＋ 新增分类</button>
         )}
       </div>
 
@@ -253,9 +252,10 @@ export function ProductPage() {
 
       {activeTab === 'products' ? (
         <>
-          <form className="filter-bar" onSubmit={search}>
-            <label>
+          <form className="filter-bar product-filter-bar" onSubmit={search}>
+            <label className="video-search-field">
               <span className="visually-hidden">搜索产品名称</span>
+              <span aria-hidden="true" className="video-search-field__icon">⌕</span>
               <input placeholder="搜索产品名称" value={keywordInput} onChange={(event) => setKeywordInput(event.target.value)} />
             </label>
             <label>
@@ -283,7 +283,14 @@ export function ProductPage() {
             <button className="secondary-button" type="submit">搜索</button>
           </form>
 
-          <div className="table-card">
+          <div className="table-card product-table-card">
+            <div className="video-table-summary">
+              <div>
+                <strong>福利产品</strong>
+                <span>共 {result.total} 条记录</span>
+              </div>
+              <small>会员端以双列卡片展示已上架产品</small>
+            </div>
             <table>
               <thead><tr><th>福利产品</th><th>分类</th><th>上架状态</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
               <tbody>
@@ -323,7 +330,11 @@ export function ProductPage() {
       ) : (
         <>
           <p className="notice warning-notice">分类是可选筛选项。停用分类只隐藏会员端的分类入口，不会下架这个分类中的产品。</p>
-          <div className="table-card category-table">
+          <div className="table-card category-table product-category-table">
+            <div className="video-table-summary">
+              <div><strong>产品分类</strong><span>共 {categories.length} 个分类</span></div>
+              <small>分类仅用于会员端筛选</small>
+            </div>
             <table>
               <thead><tr><th>分类名称</th><th>展示顺序</th><th>状态</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
               <tbody>
@@ -365,6 +376,6 @@ export function ProductPage() {
           </form>
         </div>
       )}
-    </>
+    </div>
   )
 }
