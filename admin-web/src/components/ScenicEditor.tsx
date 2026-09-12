@@ -17,9 +17,11 @@ import type {
   ScenicLocation,
   ScenicOpenStatus,
 } from '../api/admin'
+import { AdminIcon } from './AdminIcon'
 import { MapLocationPicker } from './MapLocationPicker'
 import { MediaPreview } from './MediaPreview'
 import { MediaUploadField } from './MediaUploadField'
+import { PageIntro } from './PageIntro'
 
 interface ScenicEditorProps {
   scenicId?: string
@@ -36,6 +38,7 @@ function errorText(error: unknown) {
 }
 
 const blankBlock: ScenicContentBlock = { type: 'PARAGRAPH', text: '' }
+type ScenicEditorPanel = 'BASIC' | 'DETAIL' | 'LOCATION'
 
 export function ScenicEditor({
   scenicId,
@@ -54,6 +57,7 @@ export function ScenicEditor({
   const [displayName, setDisplayName] = useState('')
   const [locationSelectionId, setLocationSelectionId] = useState('')
   const [preview, setPreview] = useState<AdminScenicRevision>()
+  const [activePanel, setActivePanel] = useState<ScenicEditorPanel>('BASIC')
   const [dirty, setDirty] = useState(false)
   const [loading, setLoading] = useState(Boolean(scenicId))
   const [busy, setBusy] = useState(false)
@@ -137,6 +141,16 @@ export function ScenicEditor({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!title.trim() || !summary.trim()) {
+      setActivePanel('BASIC')
+      setError('请先填写景区名称和简短介绍。')
+      return
+    }
+    if (blocks.some((block) => block.type === 'IMAGE' ? !block.mediaId : !block.text?.trim())) {
+      setActivePanel('DETAIL')
+      setError('请补充未填写完整的详情内容。')
+      return
+    }
     setBusy(true)
     setError('')
     setNotice('')
@@ -152,8 +166,9 @@ export function ScenicEditor({
       expectedVersion: content?.version ?? 0,
     }
     try {
-      const saved = scenicId
-        ? await saveAdminScenicDraft(scenicId, input)
+      const currentScenicId = content?.id ?? scenicId
+      const saved = currentScenicId
+        ? await saveAdminScenicDraft(currentScenicId, input)
         : await createAdminScenic(input)
       hydrate(saved)
       setNotice('草稿已保存，不会立即影响小程序。')
@@ -209,159 +224,209 @@ export function ScenicEditor({
     }
   }
 
+  function closeEditor() {
+    if (dirty && !window.confirm('景区内容还有修改没有保存，确定返回列表吗？')) return
+    onDirtyChange(false)
+    onClose()
+  }
+
   if (loading) return <p className="empty-state">正在加载景区内容…</p>
 
+  const currentScenicId = content?.id ?? scenicId
+
   return (
-    <>
-      <div className="editor-title-row">
-        <div>
-          <h3>{scenicId ? '编辑景区介绍' : '新增景区介绍'}</h3>
-          <p>先保存草稿并预览，确认无误后再发布到小程序。</p>
+    <section className="scenic-editor-page">
+      <div className="page-heading-row scenic-editor-heading">
+        <div className="scenic-editor-heading__title">
+          <button aria-label="返回景区列表" className="video-editor-back" onClick={closeEditor} type="button">←</button>
+          <PageIntro
+            title={currentScenicId ? '编辑景区' : '新增景区'}
+            description="维护首页卡片、详情图文和可选导航位置。"
+          />
+          <span className={`status-pill ${content?.visibility === 'PUBLISHED' ? 'active' : 'disabled'}`}>
+            {content?.visibility === 'PUBLISHED' ? '线上展示中' : content?.firstPublishedAt ? '已下架' : '草稿'}
+          </span>
         </div>
-        <button className="secondary-button" onClick={onClose} type="button">返回景区列表</button>
+        <div className="scenic-page-actions">
+          <button className="secondary-button" disabled={busy || !dirty} form="scenic-content-form" type="submit">{busy ? '处理中…' : '保存草稿'}</button>
+          <button className="secondary-button" disabled={busy || dirty || !content?.draft} onClick={() => void showPreview()} type="button">预览草稿</button>
+          <button className="primary-button" disabled={busy || dirty || !content?.draft} onClick={() => void publish()} type="button">发布</button>
+          {content?.visibility === 'PUBLISHED' && (
+            <button className="text-button danger" disabled={busy} onClick={() => void unpublish()} type="button">下架</button>
+          )}
+        </div>
       </div>
 
       {error && <p className="notice error-notice" role="alert">{error}</p>}
       {notice && <p className="notice success-notice">{notice}</p>}
 
-      <form className="content-editor" onSubmit={save}>
-        <div className="editor-section-heading">
-          <span>1</span>
-          <div><h3>基本信息</h3><p>用于小程序景区卡片和详情页顶部。</p></div>
-        </div>
-        <label className="editor-field">
-          景区名称
-          <input required maxLength={255} value={title} onChange={(event) => {
-            setTitle(event.target.value)
-            markDirty()
-          }} />
-        </label>
-        <label className="editor-field">
-          简短介绍
-          <textarea required maxLength={2000} rows={4} value={summary} onChange={(event) => {
-            setSummary(event.target.value)
-            markDirty()
-          }} />
-        </label>
-        <MediaUploadField
-          accept="image/jpeg,image/png,image/webp"
-          label="景区列表封面"
-          mediaId={coverMediaId || undefined}
-          mediaType="IMAGE"
-          onReady={(media) => {
-            setCoverMediaId(media.id)
-            markDirty()
-          }}
-          purpose="SCENIC_IMAGE"
-        />
-        <div className="two-column-fields">
-          <label className="editor-field">
-            景区开放状态
-            <select value={openStatus} onChange={(event) => {
-              setOpenStatus(event.target.value as ScenicOpenStatus)
-              markDirty()
-            }}>
-              <option value="OPEN">正常开放</option>
-              <option value="PAUSED">暂停开放</option>
-            </select>
-            <small className="field-help">暂停开放仍会展示介绍和导航位置，不等同于下架。</small>
-          </label>
-          <label className="editor-field">
-            首页展示顺序
-            <input min={0} max={10000} type="number" value={displayOrder} onChange={(event) => {
-              setDisplayOrder(Number(event.target.value))
-              markDirty()
-            }} />
-            <small className="field-help">数字越小越靠前。</small>
-          </label>
-        </div>
+      <div className="scenic-editor-layout">
+        <form className="scenic-compact-editor" id="scenic-content-form" onSubmit={save}>
+          <div aria-label="景区编辑内容" className="company-editor-tabs" role="tablist">
+            <button aria-selected={activePanel === 'BASIC'} className={activePanel === 'BASIC' ? 'active' : ''} onClick={() => setActivePanel('BASIC')} role="tab" type="button">基础信息</button>
+            <button aria-selected={activePanel === 'DETAIL'} className={activePanel === 'DETAIL' ? 'active' : ''} onClick={() => setActivePanel('DETAIL')} role="tab" type="button">详情内容 <span>{blocks.length}</span></button>
+            <button aria-selected={activePanel === 'LOCATION'} className={activePanel === 'LOCATION' ? 'active' : ''} onClick={() => setActivePanel('LOCATION')} role="tab" type="button">导航位置 <span>{location ? '已配置' : '选填'}</span></button>
+          </div>
 
-        <div className="editor-section-heading">
-          <span>2</span>
-          <div><h3>详细介绍</h3><p>按顺序添加小标题、正文和图片。</p></div>
-        </div>
-        <div className="content-blocks">
-          {blocks.map((block, index) => (
-            <div className="content-block" key={index}>
-              <div className="block-toolbar">
-                <select value={block.type} onChange={(event) => updateBlock(index, {
-                  type: event.target.value as ScenicContentBlock['type'],
-                  text: event.target.value === 'IMAGE' ? undefined : block.text ?? '',
-                  mediaId: event.target.value === 'IMAGE' ? block.mediaId : undefined,
-                })}>
-                  <option value="HEADING">小标题</option>
-                  <option value="PARAGRAPH">正文</option>
-                  <option value="IMAGE">图片</option>
-                </select>
-                <span>内容 {index + 1}</span>
-                <button className="icon-text-button" disabled={index === 0} onClick={() => moveBlock(index, -1)} type="button">上移</button>
-                <button className="icon-text-button" disabled={index === blocks.length - 1} onClick={() => moveBlock(index, 1)} type="button">下移</button>
-                <button className="icon-text-button danger" disabled={blocks.length === 1} onClick={() => {
-                  setBlocks((current) => current.filter((_, blockIndex) => blockIndex !== index))
-                  markDirty()
-                }} type="button">删除</button>
+          <div className="company-version-strip">
+            <span><small>线上版本</small><strong>{content?.published ? `第 ${content.published.revisionNumber} 版` : '暂无'}</strong></span>
+            <i />
+            <span><small>当前草稿</small><strong>{content?.draft ? `第 ${content.draft.revisionNumber} 版` : '尚未保存'}</strong></span>
+            <i />
+            <span><small>开放状态</small><strong>{openStatus === 'OPEN' ? '正常开放' : '暂停开放'}</strong></span>
+          </div>
+
+          {activePanel === 'BASIC' && (
+            <section className="scenic-editor-panel">
+              <div className="compact-editor-heading">
+                <span><AdminIcon name="scenic" /></span>
+                <div><h3>首页卡片与基本信息</h3><p>名称、简介和封面同时用于景区列表及详情页。</p></div>
               </div>
-              {block.type === 'IMAGE' ? (
-                <>
+              <div className="scenic-basic-fields">
+                <label className="editor-field scenic-title-field">
+                  <span>景区名称</span>
+                  <input aria-label="景区名称" maxLength={255} onChange={(event) => { setTitle(event.target.value); markDirty() }} placeholder="输入景区名称" required value={title} />
+                </label>
+                <label className="editor-field scenic-summary-field">
+                  <span>简短介绍</span>
+                  <textarea aria-label="简短介绍" maxLength={2000} onChange={(event) => { setSummary(event.target.value); markDirty() }} placeholder="用于首页卡片的简短说明" required rows={3} value={summary} />
+                </label>
+                <div className="scenic-cover-field">
                   <MediaUploadField
                     accept="image/jpeg,image/png,image/webp"
-                    label={`详情图片 ${index + 1}`}
-                    mediaId={block.mediaId}
+                    label="景区列表封面"
+                    mediaId={coverMediaId || undefined}
                     mediaType="IMAGE"
-                    onReady={(media) => updateBlock(index, { mediaId: media.id })}
+                    onReady={(media) => { setCoverMediaId(media.id); markDirty() }}
                     purpose="SCENIC_IMAGE"
                   />
-                  <input maxLength={255} placeholder="图片说明（选填）" value={block.altText ?? ''} onChange={(event) => updateBlock(index, { altText: event.target.value })} />
-                </>
-              ) : (
-                <textarea required maxLength={10000} rows={block.type === 'HEADING' ? 2 : 6} value={block.text ?? ''} onChange={(event) => updateBlock(index, { text: event.target.value })} />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="section-add-actions">
-          <button className="secondary-button" onClick={() => {
-            setBlocks((current) => [...current, { ...blankBlock }])
-            markDirty()
-          }} type="button">添加文字</button>
-          <button className="secondary-button" onClick={() => {
-            setBlocks((current) => [...current, { type: 'IMAGE', altText: '' }])
-            markDirty()
-          }} type="button">添加图片</button>
-        </div>
-
-        <div className="editor-section-heading">
-          <span>3</span>
-          <div><h3>导航位置（选填）</h3><p>需要让游客导航时再配置；不配置不影响景区发布。</p></div>
-        </div>
-        <MapLocationPicker location={location} onConfirmed={locationConfirmed} />
-        {location && (
-          <label className="editor-field">
-            小程序展示名称
-            <input maxLength={255} placeholder="默认使用地图地点名称" value={displayName} onChange={(event) => {
-              const nextName = event.target.value
-              setDisplayName(nextName)
-              setLocation({
-                ...location,
-                displayName: nextName,
-                nameCustomized: nextName.trim() !== location.providerName,
-              })
-              markDirty()
-            }} />
-            <small className="field-help">这里只改变小程序显示的名称，不会重新搜索或修改坐标。</small>
-          </label>
-        )}
-
-        <div className="editor-actions">
-          <button className="primary-button" disabled={busy || !dirty} type="submit">{busy ? '处理中…' : '保存草稿'}</button>
-          <button className="secondary-button" disabled={busy || dirty || !content?.draft} onClick={() => void showPreview()} type="button">预览草稿</button>
-          <button className="secondary-button publish-button" disabled={busy || dirty || !content?.draft} onClick={() => void publish()} type="button">发布</button>
-          {content?.visibility === 'PUBLISHED' && (
-            <button className="secondary-button danger-button" disabled={busy} onClick={() => void unpublish()} type="button">下架</button>
+                </div>
+                <div className="two-column-fields scenic-state-fields">
+                  <label className="editor-field">
+                    景区开放状态
+                    <select value={openStatus} onChange={(event) => { setOpenStatus(event.target.value as ScenicOpenStatus); markDirty() }}>
+                      <option value="OPEN">正常开放</option>
+                      <option value="PAUSED">暂停开放</option>
+                    </select>
+                    <small className="field-help">暂停开放仍展示内容，不等同于下架。</small>
+                  </label>
+                  <label className="editor-field">
+                    首页展示顺序
+                    <input max={10000} min={0} onChange={(event) => { setDisplayOrder(Number(event.target.value)); markDirty() }} type="number" value={displayOrder} />
+                    <small className="field-help">数字越小越靠前。</small>
+                  </label>
+                </div>
+              </div>
+            </section>
           )}
-        </div>
-        {dirty && <p className="unsaved-indicator">修改尚未保存。预览和发布前请先保存草稿。</p>}
-      </form>
+
+          {activePanel === 'DETAIL' && (
+            <section className="scenic-editor-panel">
+              <div className="scenic-panel-heading">
+                <div className="compact-editor-heading">
+                  <span><AdminIcon name="company" /></span>
+                  <div><h3>详情图文</h3><p>小标题、正文和图片将按当前顺序展示。</p></div>
+                </div>
+                <div className="section-add-actions">
+                  <button className="secondary-button" onClick={() => { setBlocks((current) => [...current, { ...blankBlock }]); markDirty() }} type="button">＋ 添加文字</button>
+                  <button className="secondary-button" onClick={() => { setBlocks((current) => [...current, { type: 'IMAGE', altText: '' }]); markDirty() }} type="button">＋ 添加图片</button>
+                </div>
+              </div>
+              <div className="content-blocks scenic-content-blocks">
+                {blocks.map((block, index) => (
+                  <div className="content-block scenic-content-block" key={index}>
+                    <div className="block-toolbar">
+                      <select aria-label={`第 ${index + 1} 项内容类型`} value={block.type} onChange={(event) => updateBlock(index, {
+                        type: event.target.value as ScenicContentBlock['type'],
+                        text: event.target.value === 'IMAGE' ? undefined : block.text ?? '',
+                        mediaId: event.target.value === 'IMAGE' ? block.mediaId : undefined,
+                      })}>
+                        <option value="HEADING">小标题</option>
+                        <option value="PARAGRAPH">正文</option>
+                        <option value="IMAGE">图片</option>
+                      </select>
+                      <span>内容 {String(index + 1).padStart(2, '0')}</span>
+                      <button className="icon-text-button" disabled={index === 0} onClick={() => moveBlock(index, -1)} type="button">上移</button>
+                      <button className="icon-text-button" disabled={index === blocks.length - 1} onClick={() => moveBlock(index, 1)} type="button">下移</button>
+                      <button className="icon-text-button danger" disabled={blocks.length === 1} onClick={() => { setBlocks((current) => current.filter((_, blockIndex) => blockIndex !== index)); markDirty() }} type="button">删除</button>
+                    </div>
+                    {block.type === 'IMAGE' ? (
+                      <div className="scenic-block-image-fields">
+                        <MediaUploadField
+                          accept="image/jpeg,image/png,image/webp"
+                          label={`详情图片 ${index + 1}`}
+                          mediaId={block.mediaId}
+                          mediaType="IMAGE"
+                          onReady={(media) => updateBlock(index, { mediaId: media.id })}
+                          purpose="SCENIC_IMAGE"
+                        />
+                        <input aria-label={`第 ${index + 1} 张图片说明`} maxLength={255} onChange={(event) => updateBlock(index, { altText: event.target.value })} placeholder="图片说明（选填）" value={block.altText ?? ''} />
+                      </div>
+                    ) : (
+                      <textarea aria-label={`第 ${index + 1} 项文字内容`} maxLength={10000} onChange={(event) => updateBlock(index, { text: event.target.value })} placeholder={block.type === 'HEADING' ? '输入小标题' : '输入正文内容'} required rows={block.type === 'HEADING' ? 2 : 4} value={block.text ?? ''} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activePanel === 'LOCATION' && (
+            <section className="scenic-editor-panel">
+              <div className="compact-editor-heading">
+                <span><AdminIcon name="scenic" /></span>
+                <div><h3>导航位置</h3><p>按需配置；不选择地图位置也能正常保存和发布。</p></div>
+              </div>
+              <MapLocationPicker location={location} onConfirmed={locationConfirmed} />
+              {location && (
+                <label className="editor-field scenic-location-name">
+                  小程序展示名称
+                  <input maxLength={255} onChange={(event) => {
+                    const nextName = event.target.value
+                    setDisplayName(nextName)
+                    setLocation({ ...location, displayName: nextName, nameCustomized: nextName.trim() !== location.providerName })
+                    markDirty()
+                  }} placeholder="默认使用地图地点名称" value={displayName} />
+                  <small className="field-help">只修改展示名称，不会改变地图坐标。</small>
+                </label>
+              )}
+            </section>
+          )}
+
+          <div className="hero-draft-note">
+            <span aria-hidden="true">i</span>
+            {dirty ? '修改尚未保存。预览和发布前请先保存草稿。' : '草稿不会影响小程序，发布后才会更新线上景区内容。'}
+          </div>
+        </form>
+
+        <aside className="scenic-mini-preview">
+          <div className="hero-mini-preview__heading">
+            <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
+            <small>景区详情实时预览</small>
+          </div>
+          <div className="hero-phone-preview scenic-phone-preview">
+            <div className="hero-phone-preview__status"><strong>9:41</strong><span>● ◒ ▰</span></div>
+            <div className="hero-phone-preview__nav"><strong>景区详情</strong><span>•••　◉</span></div>
+            <div className="scenic-phone-preview__content">
+              <div className={`scenic-phone-preview__cover${coverMediaId ? ' has-image' : ''}`}>
+                {coverMediaId ? <MediaPreview alt={title || '景区封面'} mediaId={coverMediaId} /> : <span>上传封面后在此预览</span>}
+              </div>
+              <div className="scenic-phone-preview__intro">
+                <div><strong>{title || '景区名称'}</strong><small>{openStatus === 'OPEN' ? '正常开放' : '暂停开放'}</small></div>
+                <p>{summary || '填写简短介绍后在此预览。'}</p>
+              </div>
+              <div className="scenic-phone-preview__blocks">
+                {blocks.slice(0, 4).map((block, index) => {
+                  if (block.type === 'HEADING') return <strong key={index}>{block.text || '详情小标题'}</strong>
+                  if (block.type === 'IMAGE') return block.mediaId ? <MediaPreview alt={block.altText || '景区详情图片'} key={index} mediaId={block.mediaId} /> : <span className="scenic-phone-preview__image-placeholder" key={index}>详情图片</span>
+                  return <p key={index}>{block.text || '景区正文内容将在这里展示。'}</p>
+                })}
+              </div>
+              {location && <div className="scenic-phone-preview__location"><span>导航位置</span><strong>{displayName || location.providerName}</strong></div>}
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {preview && (
         <div className="modal-backdrop" role="presentation">
@@ -387,6 +452,6 @@ export function ScenicEditor({
           </article>
         </div>
       )}
-    </>
+    </section>
   )
 }

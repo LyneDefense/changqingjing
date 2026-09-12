@@ -139,35 +139,32 @@ export function ScenicPage() {
 
   if (editingId !== undefined) {
     return (
-      <>
-        <PageIntro
-          title="景区管理"
-          description="维护景区图文、开放状态和首页顺序；导航位置按需配置。"
-        />
+      <div className="scenic-admin-page">
         <ScenicEditor
           onChanged={() => void load()}
           onClose={() => setEditingId(undefined)}
           onDirtyChange={setDirty}
           scenicId={editingId ?? undefined}
         />
-      </>
+      </div>
     )
   }
 
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize))
 
   return (
-    <>
-      <div className="page-heading-row">
+    <div className="scenic-admin-page">
+      <div className="page-heading-row scenic-page-heading">
         <PageIntro
           title="景区管理"
           description="维护小程序中的景区介绍、开放状态、首页顺序和导航目的地。"
         />
-        <button className="primary-button" onClick={() => setEditingId(null)} type="button">新增景区</button>
+        <button className="primary-button" onClick={() => setEditingId(null)} type="button">＋ 新增景区</button>
       </div>
-      <form className="filter-bar" onSubmit={search}>
-        <label>
+      <form className="filter-bar scenic-filter-bar" onSubmit={search}>
+        <label className="video-search-field">
           <span className="visually-hidden">搜索景区名称</span>
+          <span aria-hidden="true" className="video-search-field__icon">⌕</span>
           <input placeholder="搜索景区名称" value={keywordInput} onChange={(event) => setKeywordInput(event.target.value)} />
         </label>
         <label>
@@ -188,7 +185,14 @@ export function ScenicPage() {
       {error && <p className="notice error-notice" role="alert">{error}</p>}
       {notice && <p className="notice success-notice">{notice}</p>}
 
-      <div className="table-card">
+      <div className="table-card scenic-table-card">
+        <div className="video-table-summary">
+          <div>
+            <strong>景区内容</strong>
+            <span>共 {result.total} 条记录</span>
+          </div>
+          <small>首页按照展示顺序排列已发布景区</small>
+        </div>
         <table>
           <thead><tr><th>景区</th><th>内容状态</th><th>开放状态</th><th>浏览量</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
           <tbody>
@@ -225,6 +229,6 @@ export function ScenicPage() {
         <span>第 {page} / {totalPages} 页，共 {result.total} 条</span>
         <button className="secondary-button" disabled={page >= totalPages || loading} onClick={() => setPage((current) => current + 1)} type="button">下一页</button>
       </div>
-    </>
+    </div>
   )
 }

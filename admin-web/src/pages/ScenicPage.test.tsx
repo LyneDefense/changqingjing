@@ -66,5 +66,13 @@ describe('ScenicPage', () => {
         expect.anything(),
       )
     })
+
+    fireEvent.click(screen.getByRole('button', { name: /新增景区/ }))
+    expect(screen.getByRole('tab', { name: '基础信息' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('景区详情实时预览')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /详情内容/ }))
+    expect(screen.getByRole('button', { name: '＋ 添加图片' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: /导航位置/ }))
+    expect(screen.getByText(/不选择地图位置也能正常保存和发布/)).toBeInTheDocument()
   })
 })
