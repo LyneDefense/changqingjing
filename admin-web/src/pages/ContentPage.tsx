@@ -90,6 +90,7 @@ export function ContentPage() {
   const [coverMediaId, setCoverMediaId] = useState('')
   const [sectionImageUploadKey, setSectionImageUploadKey] = useState(0)
   const [sections, setSections] = useState<EditableCompanySection[]>([newSection()])
+  const [expandedSectionKeys, setExpandedSectionKeys] = useState<Set<string>>(new Set())
   const [preview, setPreview] = useState<AdminCompanyRevision>()
   const [activePanel, setActivePanel] = useState<CompanyEditorPanel>('BASIC')
   const [previewMode, setPreviewMode] = useState<CompanyPreviewMode>('HOME')
@@ -106,10 +107,12 @@ export function ContentPage() {
     setTitle(editable?.title ?? '')
     setSummary(editable?.summary ?? '')
     setCoverMediaId(editable?.coverMediaId ?? '')
-    setSections(sectionsFromBlocks(
+    const nextSections = sectionsFromBlocks(
       editable?.blocks ?? [],
       editable?.galleryMediaIds ?? [],
-    ))
+    )
+    setSections(nextSections)
+    setExpandedSectionKeys(new Set(nextSections[0] ? [nextSections[0].key] : []))
     setDirty(false)
   }, [])
 
@@ -187,6 +190,34 @@ export function ContentPage() {
     })
   }
 
+  function toggleSection(sectionKey: string) {
+    setExpandedSectionKeys((current) => {
+      const next = new Set(current)
+      if (next.has(sectionKey)) next.delete(sectionKey)
+      else next.add(sectionKey)
+      return next
+    })
+  }
+
+  function addSection() {
+    const section = newSection()
+    setSections((current) => [...current, section])
+    setExpandedSectionKeys((current) => new Set([...current, section.key]))
+    setDirty(true)
+    setNotice('')
+  }
+
+  function removeSection(sectionIndex: number, sectionKey: string) {
+    setSections((current) => current.filter((_, index) => index !== sectionIndex))
+    setExpandedSectionKeys((current) => {
+      const next = new Set(current)
+      next.delete(sectionKey)
+      return next
+    })
+    setDirty(true)
+    setNotice('')
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!title.trim() || !summary.trim()) {
@@ -194,8 +225,15 @@ export function ContentPage() {
       setError('请先填写首页标题和简介。')
       return
     }
-    if (sections.some((section) => !section.title.trim() || !section.text.trim())) {
+    const invalidSections = sections.filter(
+      (section) => !section.title.trim() || !section.text.trim(),
+    )
+    if (invalidSections.length > 0) {
       setActivePanel('SECTIONS')
+      setExpandedSectionKeys((current) => new Set([
+        ...current,
+        ...invalidSections.map((section) => section.key),
+      ]))
       setError('每个公司介绍板块都需要填写标题和文字内容。')
       return
     }
@@ -378,20 +416,30 @@ export function ContentPage() {
                 </div>
                 <div className="company-panel-actions">
                   <span className="gallery-count">共 {totalSectionImages} / 10 张插图</span>
-                  <button aria-label="添加板块" className="secondary-button" onClick={() => { setSections((current) => [...current, newSection()]); setDirty(true); setNotice('') }} type="button">＋ 添加板块</button>
+                  <button className="icon-text-button" disabled={expandedSectionKeys.size === sections.length} onClick={() => setExpandedSectionKeys(new Set(sections.map((section) => section.key)))} type="button">全部展开</button>
+                  <button className="icon-text-button" disabled={expandedSectionKeys.size === 0} onClick={() => setExpandedSectionKeys(new Set())} type="button">全部收起</button>
+                  <button aria-label="添加板块" className="secondary-button" onClick={addSection} type="button">＋ 添加板块</button>
                 </div>
               </div>
               <div className="company-sections">
-                {sections.map((section, sectionIndex) => (
-                  <section className="company-section-card" key={section.key}>
+                {sections.map((section, sectionIndex) => {
+                  const expanded = expandedSectionKeys.has(section.key)
+                  return (
+                  <section className={`company-section-card${expanded ? ' expanded' : ' collapsed'}`} key={section.key}>
                     <div className="company-section-toolbar">
-                      <strong>板块 {String(sectionIndex + 1).padStart(2, '0')}</strong>
-                      <span>{section.title || '未命名板块'}</span>
-                      <button aria-label={`上移第 ${sectionIndex + 1} 个板块`} className="icon-text-button" disabled={sectionIndex === 0} onClick={() => moveSection(sectionIndex, -1)} type="button">上移</button>
-                      <button aria-label={`下移第 ${sectionIndex + 1} 个板块`} className="icon-text-button" disabled={sectionIndex === sections.length - 1} onClick={() => moveSection(sectionIndex, 1)} type="button">下移</button>
-                      <button className="icon-text-button danger" disabled={sections.length === 1} onClick={() => { setSections((current) => current.filter((_, index) => index !== sectionIndex)); setDirty(true); setNotice('') }} type="button">删除</button>
+                      <button aria-expanded={expanded} aria-label={`${expanded ? '收起' : '展开'}第 ${sectionIndex + 1} 个板块`} className="company-section-toggle" onClick={() => toggleSection(section.key)} type="button">
+                        <strong>板块 {String(sectionIndex + 1).padStart(2, '0')}</strong>
+                        <span>{section.title || '未命名板块'}</span>
+                        <small>{section.imageMediaIds.length > 0 ? `${section.imageMediaIds.length} 张插图` : '无插图'}</small>
+                        <i aria-hidden="true">⌄</i>
+                      </button>
+                      <div className="company-section-toolbar__actions">
+                        <button aria-label={`上移第 ${sectionIndex + 1} 个板块`} className="icon-text-button" disabled={sectionIndex === 0} onClick={() => moveSection(sectionIndex, -1)} type="button">上移</button>
+                        <button aria-label={`下移第 ${sectionIndex + 1} 个板块`} className="icon-text-button" disabled={sectionIndex === sections.length - 1} onClick={() => moveSection(sectionIndex, 1)} type="button">下移</button>
+                        <button className="icon-text-button danger" disabled={sections.length === 1} onClick={() => removeSection(sectionIndex, section.key)} type="button">删除</button>
+                      </div>
                     </div>
-                    <div className="company-section-fields">
+                    {expanded && <div className="company-section-fields">
                       <label className="editor-field">
                         板块标题
                         <input aria-label={`第 ${sectionIndex + 1} 个板块标题`} maxLength={255} onChange={(event) => updateSection(sectionIndex, { title: event.target.value })} placeholder="例如：企业定位" required value={section.title} />
@@ -400,8 +448,8 @@ export function ContentPage() {
                         文字内容
                         <textarea aria-label={`第 ${sectionIndex + 1} 个板块文字内容`} maxLength={10000} onChange={(event) => updateSection(sectionIndex, { text: event.target.value })} placeholder="输入该板块的详细介绍，可使用换行组织段落" required rows={5} value={section.text} />
                       </label>
-                    </div>
-                    <div className="company-section-images">
+                    </div>}
+                    {expanded && <div className="company-section-images">
                       <div className="company-section-images__heading">
                         <div><strong>内容插图</strong><span>可选，跟随本板块文字一起展示</span></div>
                         <small>{section.imageMediaIds.length} 张</small>
@@ -445,9 +493,10 @@ export function ContentPage() {
                           />
                         </div>
                       )}
-                    </div>
+                    </div>}
                   </section>
-                ))}
+                  )
+                })}
               </div>
             </section>
           )}

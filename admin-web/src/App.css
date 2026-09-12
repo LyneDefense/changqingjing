@@ -2349,21 +2349,90 @@
   border-radius: 11px;
   gap: 12px;
   padding: 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.company-editor-panel .company-section-card.collapsed {
+  gap: 0;
+}
+
+.company-editor-panel .company-section-card.expanded {
+  border-color: rgba(154, 118, 61, 0.2);
+  box-shadow: 0 8px 20px rgba(46, 59, 52, 0.04);
 }
 
 .company-editor-panel .company-section-toolbar {
   border-bottom: 1px solid rgba(57, 73, 65, 0.08);
+  gap: 12px;
   padding-bottom: 9px;
 }
 
-.company-editor-panel .company-section-toolbar strong {
-  color: #9a763d;
-  font-size: 12px;
+.company-editor-panel .company-section-card.collapsed .company-section-toolbar {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
-.company-editor-panel .company-section-toolbar span {
+.company-section-toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+  padding: 2px 0;
+  text-align: left;
+}
+
+.company-section-toggle:focus-visible {
+  border-radius: 7px;
+  outline: 2px solid rgba(154, 118, 61, 0.45);
+  outline-offset: 4px;
+}
+
+.company-editor-panel .company-section-toggle strong {
+  color: #9a763d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.company-editor-panel .company-section-toggle span {
   color: #40564e;
+  flex: 1;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.company-section-toggle small {
+  background: rgba(238, 244, 241, 0.9);
+  border-radius: 999px;
+  color: var(--admin-muted);
+  font-size: 11px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.company-section-toggle i {
+  color: #9a763d;
+  font-size: 17px;
+  font-style: normal;
+  line-height: 1;
+  transform: rotate(-90deg);
+  transition: transform 160ms ease;
+}
+
+.company-section-toggle[aria-expanded='true'] i {
+  transform: rotate(0deg);
+}
+
+.company-section-toolbar__actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
 }
 
 .company-section-fields {
@@ -3368,6 +3437,19 @@
 
   .company-panel-actions {
     flex-wrap: wrap;
+  }
+
+  .company-editor-panel .company-section-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .company-section-toggle {
+    flex-basis: 100%;
+  }
+
+  .company-section-toolbar__actions {
+    margin-left: auto;
   }
 
   .company-summary-field > span {

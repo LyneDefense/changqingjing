@@ -102,6 +102,11 @@ describe('ContentPage', () => {
       target: { value: revision.summary },
     })
     fireEvent.click(screen.getByRole('tab', { name: /详情内容/ }))
+    const firstSectionToggle = screen.getByRole('button', { name: '收起第 1 个板块' })
+    expect(firstSectionToggle).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(firstSectionToggle)
+    expect(screen.queryByLabelText('第 1 个板块标题')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '展开第 1 个板块' }))
     fireEvent.change(screen.getByLabelText('第 1 个板块标题'), {
       target: { value: '公司简介' },
     })
@@ -109,6 +114,7 @@ describe('ContentPage', () => {
       target: { value: revision.blocks[0].text },
     })
     fireEvent.click(screen.getByRole('button', { name: '添加板块' }))
+    expect(screen.getByRole('button', { name: '收起第 2 个板块' })).toHaveAttribute('aria-expanded', 'true')
     fireEvent.change(screen.getByLabelText('第 2 个板块标题'), {
       target: { value: '企业定位' },
     })
