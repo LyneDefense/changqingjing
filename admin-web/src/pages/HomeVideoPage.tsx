@@ -148,35 +148,30 @@ export function HomeVideoPage() {
 
   if (editingId !== undefined) {
     return (
-      <>
-        <PageIntro
-          title="首页宣传视频管理"
-          description="维护小程序首页展示的宣传视频。发布新视频时会自动替换当前视频。"
-        />
-        <HomeVideoEditor
-          onChanged={() => void loadVideos()}
-          onClose={() => setEditingId(undefined)}
-          onDirtyChange={setDirty}
-          videoId={editingId ?? undefined}
-        />
-      </>
+      <HomeVideoEditor
+        onChanged={() => void loadVideos()}
+        onClose={() => setEditingId(undefined)}
+        onDirtyChange={setDirty}
+        videoId={editingId ?? undefined}
+      />
     )
   }
 
   return (
-    <>
-      <div className="page-heading-row">
+    <div className="video-admin-page">
+      <div className="page-heading-row video-page-heading">
         <PageIntro
           title="首页宣传视频管理"
-          description="查看和维护宣传视频。首页同一时间只展示一条，发布新视频会自动替换当前视频。"
+          description="维护首页视频与封面；发布新视频时会自动替换当前展示内容。"
         />
         <button className="primary-button" onClick={() => setEditingId(null)} type="button">
-          新增宣传视频
+          ＋ 新增宣传视频
         </button>
       </div>
-      <form className="filter-bar" onSubmit={handleSearch}>
-        <label>
+      <form className="filter-bar video-filter-bar" onSubmit={handleSearch}>
+        <label className="video-search-field">
           <span className="visually-hidden">搜索视频标题</span>
+          <span aria-hidden="true" className="video-search-field__icon">⌕</span>
           <input
             onChange={(event) => setKeywordInput(event.target.value)}
             placeholder="搜索视频标题"
@@ -203,7 +198,14 @@ export function HomeVideoPage() {
 
       {error && <p className="notice error-notice" role="alert">{error}</p>}
       {notice && <p className="notice success-notice">{notice}</p>}
-      <div className="table-card">
+      <div className="table-card video-table-card">
+        <div className="video-table-summary">
+          <div>
+            <strong>视频内容</strong>
+            <span>共 {result.total} 条记录</span>
+          </div>
+          <small>首页同一时间仅展示一条已发布视频</small>
+        </div>
         <table>
           <thead>
             <tr>
@@ -275,6 +277,6 @@ export function HomeVideoPage() {
           下一页
         </button>
       </div>
-    </>
+    </div>
   )
 }

@@ -10,8 +10,10 @@ import {
   unpublishAdminHomeVideo,
 } from '../api/admin'
 import type { AdminHomeVideoContent, AdminHomeVideoRevision } from '../api/admin'
+import { AdminIcon } from './AdminIcon'
 import { MediaPreview } from './MediaPreview'
 import { MediaUploadField } from './MediaUploadField'
+import { PageIntro } from './PageIntro'
 
 interface HomeVideoEditorProps {
   videoId?: string
@@ -163,74 +165,107 @@ export function HomeVideoEditor({
   if (loading) return <p className="empty-state">正在加载宣传视频…</p>
 
   return (
-    <section className="content-editor home-video-editor">
-      <div className="block-heading">
-        <div>
-          <p className="eyebrow">{entryId ? '编辑宣传视频' : '新增宣传视频'}</p>
-          <h2>{title || '未命名宣传视频'}</h2>
-          <p>先上传视频和封面并保存草稿，核对无误后再发布。</p>
+    <section className="video-editor-page">
+      <div className="page-heading-row video-editor-heading">
+        <div className="video-editor-heading__title">
+          <button className="video-editor-back" onClick={closeEditor} type="button" aria-label="返回视频列表">←</button>
+          <PageIntro
+            title={entryId ? '编辑宣传视频' : '新增宣传视频'}
+            description="上传视频与首页封面，保存草稿后再核对发布。"
+          />
+          <span className={'status-pill ' + (content?.visibility === 'PUBLISHED' ? 'active' : 'disabled')}>
+            {content?.visibility === 'PUBLISHED' ? '首页展示中' : content?.firstPublishedAt ? '已下架' : '草稿'}
+          </span>
         </div>
-        <div className="editor-heading-actions">
-          {content && (
-            <span className={'status-pill ' + (content.visibility === 'PUBLISHED' ? 'active' : 'disabled')}>
-              {content.visibility === 'PUBLISHED' ? '首页展示中' : content.firstPublishedAt ? '已下架' : '草稿'}
-            </span>
+        <div className="video-page-actions">
+          <button className="secondary-button" disabled={busy || !dirty || !videoMediaId || !coverMediaId} form="home-video-form" type="submit">
+            {busy ? '处理中…' : '保存草稿'}
+          </button>
+          <button className="secondary-button" disabled={busy || dirty || !content?.draft} onClick={() => void showPreview()} type="button">播放预览</button>
+          <button className="primary-button" disabled={busy || dirty || !content?.draft} onClick={() => void publish()} type="button">发布到首页</button>
+          {content?.visibility === 'PUBLISHED' && (
+            <button className="text-button danger" disabled={busy} onClick={() => void unpublish()} type="button">下架</button>
           )}
-          <button className="secondary-button" onClick={closeEditor} type="button">返回视频列表</button>
         </div>
       </div>
       {error && <div className="notice error-notice" role="alert">{error}</div>}
       {notice && <div className="notice success-notice">{notice}</div>}
-      <form onSubmit={save}>
-        <label className="editor-field">
-          视频标题
-          <input
-            maxLength={255}
-            onChange={(event) => {
-              setTitle(event.target.value)
-              markDirty()
-            }}
-            placeholder="输入便于运营人员识别的视频标题"
-            required
-            value={title}
-          />
-        </label>
-        <div className="media-editor-grid">
-          <MediaUploadField
-            accept="video/mp4"
-            label="宣传视频文件"
-            mediaId={videoMediaId || undefined}
-            mediaType="VIDEO"
-            onReady={(media) => {
-              setVideoMediaId(media.id)
-              markDirty()
-            }}
-            purpose="HOME_VIDEO"
-          />
-          <MediaUploadField
-            accept="image/jpeg,image/png,image/webp"
-            label="首页展示封面"
-            mediaId={coverMediaId || undefined}
-            mediaType="IMAGE"
-            onReady={(media) => {
-              setCoverMediaId(media.id)
-              markDirty()
-            }}
-            purpose="HOME_VIDEO_COVER"
-          />
-        </div>
-        <div className="editor-actions">
-          <button className="primary-button" disabled={busy || !dirty || !videoMediaId || !coverMediaId} type="submit">
-            {busy ? '处理中…' : '保存草稿'}
-          </button>
-          <button className="secondary-button" disabled={busy || dirty || !content?.draft} onClick={() => void showPreview()} type="button">播放预览</button>
-          <button className="secondary-button publish-button" disabled={busy || dirty || !content?.draft} onClick={() => void publish()} type="button">发布到首页</button>
-          {content?.visibility === 'PUBLISHED' && (
-            <button className="secondary-button danger-button" disabled={busy} onClick={() => void unpublish()} type="button">下架</button>
-          )}
-        </div>
-        {dirty && <p className="unsaved-indicator">修改尚未保存，请先保存草稿。</p>}
-      </form>
+      <div className="video-editor-layout">
+        <form className="video-compact-editor" id="home-video-form" onSubmit={save}>
+          <div className="compact-editor-heading">
+            <span><AdminIcon name="video" /></span>
+            <div>
+              <h3>视频内容</h3>
+              <p>视频与封面均为首页展示所需内容。</p>
+            </div>
+          </div>
+          <label className="editor-field video-title-field">
+            <span>视频标题</span>
+            <input
+              maxLength={255}
+              onChange={(event) => {
+                setTitle(event.target.value)
+                markDirty()
+              }}
+              placeholder="输入便于运营人员识别的视频标题"
+              required
+              value={title}
+            />
+          </label>
+          <div className="video-media-fields">
+            <MediaUploadField
+              accept="video/mp4"
+              label="宣传视频文件"
+              mediaId={videoMediaId || undefined}
+              mediaType="VIDEO"
+              onReady={(media) => {
+                setVideoMediaId(media.id)
+                markDirty()
+              }}
+              purpose="HOME_VIDEO"
+            />
+            <MediaUploadField
+              accept="image/jpeg,image/png,image/webp"
+              label="首页展示封面"
+              mediaId={coverMediaId || undefined}
+              mediaType="IMAGE"
+              onReady={(media) => {
+                setCoverMediaId(media.id)
+                markDirty()
+              }}
+              purpose="HOME_VIDEO_COVER"
+            />
+          </div>
+          <div className="hero-draft-note">
+            <span aria-hidden="true">i</span>
+            {dirty ? '修改尚未保存，请先保存草稿。' : '草稿不会影响小程序，发布后才会替换当前首页视频。'}
+          </div>
+        </form>
+
+        <aside className="video-mini-preview">
+          <div className="hero-mini-preview__heading">
+            <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
+            <small>首页封面实时预览</small>
+          </div>
+          <div className="hero-phone-preview video-phone-preview">
+            <div className="hero-phone-preview__status"><strong>9:41</strong><span>● ◒ ▰</span></div>
+            <div className="hero-phone-preview__nav"><strong>常清净文旅投</strong><span>•••　◉</span></div>
+            <div className="hero-phone-preview__content video-phone-preview__content">
+              <div className="hero-phone-preview__section-title"><strong>视频介绍</strong><i /></div>
+              <div className={`video-phone-preview__cover${coverMediaId ? ' has-image' : ''}`}>
+                {coverMediaId
+                  ? <MediaPreview alt={title || '宣传视频封面'} mediaId={coverMediaId} />
+                  : <span>上传封面后在此预览</span>}
+                <span className="video-phone-preview__play" aria-hidden="true">▶</span>
+              </div>
+              <div className="video-phone-preview__company">
+                <div><strong>公司介绍</strong><small>深耕文旅，筑就清净生态</small></div>
+                <span aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
       {preview && (
         <div className="modal-backdrop" role="presentation">
           <article aria-labelledby="video-preview-title" aria-modal="true" className="modal-card content-preview" role="dialog">

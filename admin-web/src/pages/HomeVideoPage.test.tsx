@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resetAdminApiForTests } from '../api/admin'
@@ -16,6 +16,7 @@ function response(data: unknown) {
 
 describe('HomeVideoPage', () => {
   afterEach(() => {
+    cleanup()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
     resetAdminApiForTests()
@@ -63,5 +64,29 @@ describe('HomeVideoPage', () => {
         expect.anything(),
       )
     })
+  })
+
+  it('opens the compact editor with a mini program preview', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => response({
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0,
+    })))
+
+    const router = createMemoryRouter(
+      [{ path: '/', Component: HomeVideoPage }],
+      { initialEntries: ['/'] },
+    )
+    render(<RouterProvider router={router} />)
+
+    await screen.findByText('暂无宣传视频，点击“新增宣传视频”开始上传。')
+    fireEvent.click(screen.getByRole('button', { name: /新增宣传视频/ }))
+
+    expect(screen.getByRole('heading', { name: '新增宣传视频' })).toBeInTheDocument()
+    expect(screen.getByText('宣传视频文件')).toBeInTheDocument()
+    expect(screen.getByText('首页展示封面')).toBeInTheDocument()
+    expect(screen.getByText('小程序预览')).toBeInTheDocument()
+    expect(screen.getByText('上传封面后在此预览')).toBeInTheDocument()
   })
 })
