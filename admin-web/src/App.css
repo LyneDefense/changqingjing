@@ -6,10 +6,10 @@
 }
 
 .sidebar {
-  background:
-    radial-gradient(circle at 20% 92%, rgba(181, 153, 98, 0.12), transparent 25%),
-    linear-gradient(165deg, #17483f 0%, #10372f 76%, #0c302a 100%);
-  color: #fffdf8;
+  --sidebar-muted: #606e65;
+  background: var(--admin-bg);
+  border-right: 1px solid var(--admin-border);
+  color: var(--admin-green);
   display: flex;
   flex-direction: column;
   height: calc(100vh - 48px);
@@ -28,7 +28,7 @@
 }
 
 .sidebar-brand__mark {
-  color: #d8bd7f;
+  color: var(--admin-gold);
   fill: currentColor;
   flex: 0 0 auto;
   height: 42px;
@@ -38,7 +38,7 @@
 
 .sidebar-brand__mark path:last-child {
   fill: none;
-  stroke: #f3dfad;
+  stroke: var(--admin-gold);
   stroke-linecap: round;
   stroke-width: 1.5;
 }
@@ -57,7 +57,7 @@
 }
 
 .sidebar-brand__copy span {
-  color: rgba(245, 239, 223, 0.66);
+  color: var(--sidebar-muted);
   font-size: 11px;
   letter-spacing: 0.24em;
 }
@@ -74,7 +74,7 @@
 }
 
 .nav-group > p {
-  color: rgba(218, 229, 222, 0.48);
+  color: var(--sidebar-muted);
   font-size: 11px;
   letter-spacing: 0.18em;
   margin: 0 0 5px 14px;
@@ -84,7 +84,7 @@
   align-items: center;
   border: 1px solid transparent;
   border-radius: 10px;
-  color: rgba(245, 249, 246, 0.76);
+  color: var(--admin-green);
   display: flex;
   font-size: 14px;
   gap: 12px;
@@ -96,19 +96,24 @@
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #fff;
+  background: var(--admin-surface-soft);
+  color: var(--admin-green-deep);
   transform: translateX(2px);
 }
 
 .nav-link.active {
-  background: linear-gradient(90deg, rgba(218, 190, 128, 0.22), rgba(255, 255, 255, 0.08));
-  border-color: rgba(225, 201, 149, 0.12);
-  color: #fffdf7;
+  background: var(--admin-surface);
+  border-color: rgba(173, 137, 80, 0.28);
+  color: var(--admin-green-deep);
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--admin-gold);
+  outline-offset: 2px;
 }
 
 .nav-link.active::before {
-  background: #c6a263;
+  background: var(--admin-gold);
   border-radius: 0 4px 4px 0;
   content: '';
   height: 24px;
@@ -124,7 +129,7 @@
 }
 
 .sidebar-signature {
-  color: rgba(237, 226, 199, 0.5);
+  color: var(--sidebar-muted);
   display: grid;
   font-family: "Songti SC", STSong, serif;
   font-size: 12px;

@@ -64,7 +64,7 @@
   .mobile-nav-close {
     background: transparent;
     border: 0;
-    color: #f6f0df;
+    color: var(--admin-green);
     cursor: pointer;
     flex-shrink: 0;
     font-size: 30px;
