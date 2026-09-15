@@ -23,6 +23,9 @@ miniprogram/node_modules/
 miniprogram/dist/
 miniprogram/project.private.config.json
 
+# Design generations are local references, not application assets.
+docs/assets/generated/
+
 deploy/certbot/conf/
 deploy/certbot/www/
 deploy/backups/
