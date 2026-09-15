@@ -36,6 +36,7 @@ ENVIRONMENT
 
 bash -n "$deploy_dir/deploy.sh" "$deploy_dir/runtime.sh" "$deploy_dir/install-runtime.sh" "$deploy_dir/monitor.sh" "$deploy_dir/test-stack.sh"
 bash "$deploy_dir/test-deploy.sh"
+bash "$deploy_dir/test-install-runtime.sh"
 docker compose --project-directory "$deploy_dir" \
   --env-file "$temporary_environment" --file "$deploy_dir/compose.production.yaml" config --quiet
 

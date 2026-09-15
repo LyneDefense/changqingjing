@@ -37,11 +37,20 @@ sudo ./deploy/deploy.sh bootstrap
 
 脚本会按顺序完成：
 
-1. 检查 Ubuntu；未安装 Docker 时，从 Docker 官方软件源安装 Engine 和 Compose 插件。遇到冲突软件包会停止，不会自行卸载。
+1. 检查 Ubuntu；未安装 Docker 时，通过腾讯云提供的 Docker Ubuntu 镜像源安装 Engine 和 Compose 插件，校验下载公钥与已核对的 Docker 官方公钥一致。遇到冲突软件包会停止，不会自行卸载。
 2. 检查端口和配置，依次构建 Java、管理后台镜像，避免在 2 GB 内存服务器上同时构建。
 3. 启动 PostgreSQL，执行 Flyway，启动后端和 Nginx。
 4. 检查健康状态，生成并校验首份数据库备份，记录可回退的镜像版本。
 5. 安装宿主机证书续签、每日备份、五分钟健康检查三个 systemd timer。
+
+公钥下载失败会自动重试 3 次，APT 下载也配置 3 次重试。公钥先下载到临时目录，确认不为空且 SHA-256 校验通过后才写入正式配置；失败不会留下半截公钥或覆盖原软件源。若 Docker 官方公钥将来更新，需要先核对新公钥，再更新脚本中的校验值。此处只解决 Docker 安装软件源访问，Docker Hub 镜像拉取是另一条网络链路，不配置未经确认的镜像加速地址。
+
+如首次部署在安装 Docker 阶段因网络中断退出，更新代码后重新运行即可，不必重装系统，也不需要删除生产环境文件：
+
+```bash
+git pull --ff-only
+sudo ./deploy/deploy.sh bootstrap
+```
 
 无域名时后台只绑定服务器的 `127.0.0.1:8088`，不把 HTTP 后台暴露到公网；后端和数据库不发布宿主机端口。要求 Docker Engine 28 或更新版本，避免旧版 localhost 端口发布的局域网访问问题。
 
@@ -121,6 +130,7 @@ sudo journalctl -u changqingjing-cert-renew.service
 
 ```bash
 bash deploy/test-deploy.sh
+bash deploy/test-install-runtime.sh
 bash deploy/test-config.sh
 # 本机先构建 changqingjing-backend:verification 后，可验证隔离的空库启动和备份恢复：
 bash deploy/test-stack.sh
@@ -128,4 +138,4 @@ bash deploy/test-stack.sh
 
 测试仅使用本机 Docker 的验证镜像/独立数据库，不读取生产密钥，不连接服务器。覆盖模式选择、Cookie/端口隔离、证书重载逻辑、Compose、三种 Nginx 配置和 HTTP 后台路由。
 
-参考：[Docker 官方 Ubuntu 安装说明](https://docs.docker.com/engine/install/ubuntu/)、[端口发布安全说明](https://docs.docker.com/engine/network/port-publishing/)、[Certbot 续签与 deploy-hook](https://eff-certbot.readthedocs.io/en/stable/man/certbot.html)。
+参考：[Docker 官方 Ubuntu 安装说明](https://docs.docker.com/engine/install/ubuntu/)、[腾讯云 Docker 软件源安装说明](https://cloud.tencent.com/document/product/213/46000)、[端口发布安全说明](https://docs.docker.com/engine/network/port-publishing/)、[Certbot 续签与 deploy-hook](https://eff-certbot.readthedocs.io/en/stable/man/certbot.html)。
