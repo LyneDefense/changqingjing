@@ -47,11 +47,14 @@ test('operators read and search guidance without any business API writes', async
   await expect(entry).not.toHaveAttribute('open', '')
 
   await page.getByRole('button', { name: '清空搜索' }).click()
+  await page.getByRole('searchbox', { name: '搜索使用指南' }).fill('qa')
+  await expect(page.getByText('保存了草稿，为什么小程序里还是旧内容？')).toBeVisible()
+  await page.getByRole('button', { name: '清空搜索' }).click()
   await page.getByRole('button', { name: '后台账号与权限' }).click()
   await expect(page.getByRole('link', { name: '进入后台人员' })).toHaveCount(0)
   for (const viewport of [{ width: 1366, height: 900 }, { width: 900, height: 900 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    expect(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')).toBe(true)
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(243, 240, 232)')
     await expect(page.locator('.guide-article')).toHaveCSS('background-color', 'rgb(255, 253, 248)')
   }

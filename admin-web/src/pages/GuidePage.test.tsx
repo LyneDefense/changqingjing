@@ -65,6 +65,14 @@ describe('GuidePage', () => {
     expect(screen.getByRole('button', { name: '公司介绍' })).toBeInTheDocument()
   })
 
+  it('keeps FAQ entries visible when searching for lowercase qa', () => {
+    renderGuide()
+    fireEvent.change(screen.getByRole('searchbox', { name: '搜索使用指南' }), { target: { value: ' qa ' } })
+    expect(screen.getByRole('heading', { name: '常见问题 QA' })).toBeInTheDocument()
+    expect(screen.getByText('保存了草稿，为什么小程序里还是旧内容？')).toBeInTheDocument()
+    expect(screen.getByText('不配置地图，景区能保存和发布吗？')).toBeInTheDocument()
+  })
+
   it('allows operators to read account guidance without linking to restricted pages', () => {
     renderGuide(['content:read'])
     fireEvent.click(screen.getByRole('button', { name: '后台账号与权限' }))

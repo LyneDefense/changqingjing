@@ -19,7 +19,7 @@ export function GuidePage() {
   const canVisitModule = module && (!module.permission || auth.hasPermission(module.permission))
   const questions = selected?.questions.filter((question) => selected.id !== 'faq'
     || !query.trim()
-    || selected.title.includes(query.trim())
+    || selected.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
     || matchesGuideQuestion(question, query)) ?? []
 
   return (
