@@ -21,9 +21,40 @@
 
 body {
   background: var(--admin-bg);
+  display: flex;
+  flex-direction: column;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+}
+
+#root {
+  flex: 1;
+}
+
+.site-footer {
+  align-items: center;
+  background: var(--admin-bg);
+  border-top: 1px solid var(--admin-border);
+  display: flex;
+  flex-shrink: 0;
+  font-size: 12px;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+}
+
+.site-footer a {
+  color: var(--admin-muted);
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--admin-green);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 button,

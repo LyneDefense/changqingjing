@@ -2,7 +2,7 @@
   background: var(--admin-bg);
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
-  min-height: 100vh;
+  min-height: calc(100vh - 48px);
 }
 
 .sidebar {
@@ -12,7 +12,7 @@
   color: #fffdf8;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 48px);
   overflow-y: auto;
   padding: 28px 18px 22px;
   position: sticky;
@@ -664,7 +664,7 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  min-height: 100vh;
+  min-height: calc(100vh - 48px);
   padding: 28px;
 }
 
