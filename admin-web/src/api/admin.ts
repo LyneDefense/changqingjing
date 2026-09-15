@@ -50,6 +50,7 @@ export interface RegisteredAppUser {
   status: AppUserStatus
   registeredAt: string
   lastLoginAt?: string
+  version: number
 }
 
 export interface PageResponse<T> {
@@ -518,6 +519,19 @@ export function searchRegisteredUsers(options: {
 
 export function getRegisteredUser(userId: string) {
   return request<RegisteredAppUser>(`/users/${encodeURIComponent(userId)}`)
+}
+
+export function updateRegisteredUserStatus(user: RegisteredAppUser, status: AppUserStatus) {
+  return writeRequest<RegisteredAppUser>(`/users/${encodeURIComponent(user.id)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, expectedVersion: user.version }),
+  })
+}
+
+export function deleteRegisteredUser(user: RegisteredAppUser) {
+  return writeRequest<string>(`/users/${encodeURIComponent(user.id)}?expectedVersion=${user.version}`, {
+    method: 'DELETE',
+  })
 }
 
 export function createAdminStaff(input: CreateAdminStaffInput) {

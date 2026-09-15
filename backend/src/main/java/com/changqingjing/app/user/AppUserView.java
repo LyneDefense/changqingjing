@@ -13,5 +13,6 @@ public record AppUserView(
         OffsetDateTime lastLoginAt,
         String maskedPhone,
         boolean phoneBound,
-        boolean wechatBound) {
+        boolean wechatBound,
+        long lockVersion) {
 }

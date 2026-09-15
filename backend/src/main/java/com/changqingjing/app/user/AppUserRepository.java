@@ -16,7 +16,7 @@ public class AppUserRepository {
 
     private static final String USER_COLUMNS = """
             u.id, u.display_name, u.avatar_media_id, u.profile_onboarding_completed_at,
-            u.status, u.registered_at, u.last_login_at,
+            u.status, u.registered_at, u.last_login_at, u.lock_version,
             p.masked_phone, (p.user_id IS NOT NULL) AS phone_bound,
             EXISTS (SELECT 1 FROM wechat_identity wi2 WHERE wi2.user_id = u.id) AS wechat_bound
             """;
@@ -32,8 +32,52 @@ public class AppUserRepository {
                 SELECT %s
                 FROM app_user u
                 LEFT JOIN user_phone p ON p.user_id = u.id
-                WHERE u.id = ?
+                WHERE u.id = ? AND u.deleted_at IS NULL
                 """.formatted(USER_COLUMNS), id);
+    }
+
+    public Optional<AppUserView> lockById(UUID id) {
+        return findOne("""
+                SELECT %s
+                FROM app_user u
+                LEFT JOIN user_phone p ON p.user_id = u.id
+                WHERE u.id = ? AND u.deleted_at IS NULL
+                FOR UPDATE OF u
+                """.formatted(USER_COLUMNS), id);
+    }
+
+    public void changeStatus(UUID id, AppUserStatus status, OffsetDateTime now) {
+        jdbcTemplate.update("""
+                UPDATE app_user
+                SET status = ?, updated_at = ?, lock_version = lock_version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """, status.name(), now, id);
+        jdbcTemplate.update("DELETE FROM app_session WHERE user_id = ?", id);
+    }
+
+    public void deleteAccount(UUID id, OffsetDateTime now) {
+        // Keep a minimal tombstone without profile/bindings so COS cleanup metadata is retained.
+        jdbcTemplate.update("""
+                UPDATE app_user
+                SET status = 'DISABLED', deleted_at = ?, updated_at = ?,
+                    display_name = NULL, avatar_media_id = NULL,
+                    profile_onboarding_completed_at = NULL, last_login_at = NULL,
+                    lock_version = lock_version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """, now, now, id);
+        jdbcTemplate.update("DELETE FROM app_session WHERE user_id = ?", id);
+        jdbcTemplate.update("DELETE FROM user_phone WHERE user_id = ?", id);
+        jdbcTemplate.update("DELETE FROM wechat_identity WHERE user_id = ?", id);
+        // The existing cleanup worker retries unreferenced expired FAILED assets.
+        jdbcTemplate.update("""
+                UPDATE media_asset
+                SET status = 'FAILED', failure_code = 'APP_ACCOUNT_DELETED',
+                    upload_expires_at = ?, deletion_requested_at = ?, updated_at = ?
+                WHERE uploaded_by_app_user = ? AND status NOT IN ('DELETED', 'PENDING_DELETE')
+                  AND NOT EXISTS (SELECT 1 FROM content_revision_media r WHERE r.media_id = media_asset.id)
+                  AND NOT EXISTS (SELECT 1 FROM content_revision r WHERE r.cover_media_id = media_asset.id)
+                  AND NOT EXISTS (SELECT 1 FROM app_user u WHERE u.avatar_media_id = media_asset.id)
+                """, now, now, now, id);
     }
 
     public Optional<AppUserView> findByWechatIdentity(String appId, String openid) {
@@ -42,7 +86,7 @@ public class AppUserRepository {
                 FROM wechat_identity wi
                 JOIN app_user u ON u.id = wi.user_id
                 LEFT JOIN user_phone p ON p.user_id = u.id
-                WHERE wi.app_id = ? AND wi.openid = ?
+                WHERE wi.app_id = ? AND wi.openid = ? AND u.deleted_at IS NULL
                 """.formatted(USER_COLUMNS), appId, openid);
     }
 
@@ -141,7 +185,7 @@ public class AppUserRepository {
                     profile_onboarding_completed_at = COALESCE(profile_onboarding_completed_at, ?),
                     updated_at = ?,
                     lock_version = lock_version + 1
-                WHERE id = ?
+                WHERE id = ? AND deleted_at IS NULL AND status = 'ACTIVE'
                 """, displayName, now, now, userId);
     }
 
@@ -149,7 +193,7 @@ public class AppUserRepository {
         jdbcTemplate.update("""
                 UPDATE app_user
                 SET avatar_media_id = ?, updated_at = ?, lock_version = lock_version + 1
-                WHERE id = ?
+                WHERE id = ? AND deleted_at IS NULL AND status = 'ACTIVE'
                 """, avatarMediaId, now, userId);
     }
 
@@ -159,7 +203,7 @@ public class AppUserRepository {
                 SET profile_onboarding_completed_at = COALESCE(profile_onboarding_completed_at, ?),
                     updated_at = ?,
                     lock_version = lock_version + 1
-                WHERE id = ?
+                WHERE id = ? AND deleted_at IS NULL AND status = 'ACTIVE'
                 """, now, now, userId);
     }
 
@@ -174,7 +218,7 @@ public class AppUserRepository {
                 SELECT %s
                 FROM app_user u
                 LEFT JOIN user_phone p ON p.user_id = u.id
-                WHERE (? = ''
+                WHERE u.deleted_at IS NULL AND (? = ''
                        OR lower(COALESCE(u.display_name, '')) LIKE '%%' || ? || '%%'
                        OR lower(CAST(u.id AS text)) LIKE '%%' || ? || '%%'
                        OR lower(COALESCE(p.masked_phone, '')) LIKE '%%' || ? || '%%')
@@ -202,7 +246,7 @@ public class AppUserRepository {
                 SELECT count(*)
                 FROM app_user u
                 LEFT JOIN user_phone p ON p.user_id = u.id
-                WHERE (? = ''
+                WHERE u.deleted_at IS NULL AND (? = ''
                        OR lower(COALESCE(u.display_name, '')) LIKE '%%' || ? || '%%'
                        OR lower(CAST(u.id AS text)) LIKE '%%' || ? || '%%'
                        OR lower(COALESCE(p.masked_phone, '')) LIKE '%%' || ? || '%%')
@@ -240,6 +284,7 @@ public class AppUserRepository {
                 resultSet.getObject("last_login_at", OffsetDateTime.class),
                 resultSet.getString("masked_phone"),
                 resultSet.getBoolean("phone_bound"),
-                resultSet.getBoolean("wechat_bound"));
+                resultSet.getBoolean("wechat_bound"),
+                resultSet.getLong("lock_version"));
     }
 }

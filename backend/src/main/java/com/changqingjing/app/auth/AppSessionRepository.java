@@ -39,6 +39,7 @@ class AppSessionRepository {
                       AND s.revoked_at IS NULL
                       AND s.expires_at > ?
                       AND u.status = 'ACTIVE'
+                      AND u.deleted_at IS NULL
                     """, (resultSet, rowNumber) -> new AppSessionRecord(
                             resultSet.getObject("user_id", UUID.class),
                             resultSet.getObject("expires_at", OffsetDateTime.class)),

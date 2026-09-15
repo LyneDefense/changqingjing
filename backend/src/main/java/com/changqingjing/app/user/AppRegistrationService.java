@@ -45,6 +45,7 @@ public class AppRegistrationService {
                         HttpStatus.CONFLICT,
                         "REGISTRATION_REQUIRED",
                         "该微信尚未注册，请先授权手机号登录"));
+        existing = lockExisting(existing.id());
         requireActive(existing);
         userRepository.markWechatVerified(
                 identity.appId(), identity.openid(), identity.unionid(), now);
@@ -90,6 +91,7 @@ public class AppRegistrationService {
                     identity.unionid(),
                     now);
         } else {
+            existing = lockExisting(existing.id());
             requireActive(existing);
             userId = existing.id();
             if (phoneOwner != null && !phoneOwner.equals(userId)) {
@@ -120,6 +122,11 @@ public class AppRegistrationService {
                     "APP_ACCOUNT_DISABLED",
                     "当前账号不可用，请联系管理员");
         }
+    }
+
+    private AppUserView lockExisting(UUID userId) {
+        return userRepository.lockById(userId).orElseThrow(() -> new BusinessException(
+                HttpStatus.CONFLICT, "REGISTRATION_REQUIRED", "账号已删除，请重新授权手机号注册"));
     }
 
     private BusinessException phoneConflict() {

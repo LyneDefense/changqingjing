@@ -1013,6 +1013,24 @@
   margin-top: 6px;
 }
 
+.user-action-identity {
+  background: var(--admin-surface-soft);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  display: grid;
+  gap: 7px;
+  padding: 15px;
+}
+
+.user-action-identity span,
+.user-action-identity small {
+  color: var(--admin-muted);
+}
+
+.user-action-dialog .modal-actions {
+  margin-top: 22px;
+}
+
 .detail-list {
   display: grid;
   gap: 0;

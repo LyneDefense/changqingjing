@@ -351,6 +351,10 @@ COS 会使用腾讯云提供的 HTTPS 访问域名，因此网络上仍会访问
 
 ### 6.2 管理 API
 
+注册用户冻结／解冻复用 `DISABLED`／`ACTIVE` 状态，并清除该用户的所有会话。状态管理、删除、已有账号登录和资料修改使用同一用户行锁，避免冻结／删除与重新登录并发造成失效凭据恢复。写操作携带当前版本，版本变化返回 409，后台刷新后需再次确认。
+
+删除采用保留最小删除记录的方式：`deleted_at` 非空、状态 `DISABLED`，清空昵称、头像关联及资料完善标记，删除手机号、微信身份和会话；列表和本人资料查询排除删除记录。非业务引用的自有头像进入现有媒体清理队列，保留对象 Key 元数据直到 COS 删除成功；其他用户／业务引用的媒体不删除。操作审计仅记录管理员、目标 ID 和状态，不保存昵称、手机号或微信身份凭证。既有安全备份按原保留策略处理，不在删除操作中改写。
+
 | 方法与路径 | 权限 | 用途 |
 | --- | --- | --- |
 | `GET /admin/auth/csrf` | 认证准备 | 初始化或更新 CSRF token |
@@ -362,6 +366,8 @@ COS 会使用腾讯云提供的 HTTPS 访问域名，因此网络上仍会访问
 | `PATCH /admin/staff/{id}` | `staff:manage` | 姓名、角色、状态修改 |
 | `POST /admin/staff/{id}/reset-password` | `staff:manage` | 重置密码并撤销会话 |
 | `GET /admin/users`、`GET /admin/users/{id}` | `user:read` | 注册用户列表、详情 |
+| `PATCH /admin/users/{id}/status` | `user:manage`，仅 ADMIN、CSRF | `ACTIVE` / `DISABLED`，携带 `expectedVersion`；冻结／解冻并清除旧会话 |
+| `DELETE /admin/users/{id}?expectedVersion=...` | `user:manage`，仅 ADMIN、CSRF | 删除个人资料及绑定，清除会话，允许以后重新注册 |
 | `GET /admin/contents?kind=...` | `content:read` | 各类内容列表 |
 | `POST /admin/contents` | `content:write` | 创建类型明确的内容条目 |
 | `GET /admin/contents/{id}` | `content:read` | 编辑数据、草稿和当前发布信息 |

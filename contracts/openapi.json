@@ -1448,6 +1448,47 @@
         }
       }
     },
+    "/api/v1/admin/users/{userId}/status": {
+      "patch": {
+        "tags": [
+          "admin-app-user-controller"
+        ],
+        "operationId": "changeStatus",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppUserStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminAppUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/staff/{accountId}": {
       "patch": {
         "tags": [
@@ -1785,6 +1826,45 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseAdminAppUserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin-app-user-controller"
+        ],
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedVersion",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseString"
                 }
               }
             }
@@ -3799,6 +3879,71 @@
           }
         }
       },
+      "UpdateAppUserStatusRequest": {
+        "required": [
+          "expectedVersion",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "expectedVersion": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AdminAppUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "maskedPhone": {
+            "type": "string"
+          },
+          "phoneBound": {
+            "type": "boolean"
+          },
+          "wechatBound": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ApiResponseAdminAppUserResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminAppUserResponse"
+          }
+        }
+      },
       "UpdateAdminStaffRequest": {
         "type": "object",
         "properties": {
@@ -4407,38 +4552,6 @@
           }
         }
       },
-      "AdminAppUserResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "maskedPhone": {
-            "type": "string"
-          },
-          "phoneBound": {
-            "type": "boolean"
-          },
-          "wechatBound": {
-            "type": "boolean"
-          },
-          "status": {
-            "type": "string"
-          },
-          "registeredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastLoginAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "ApiResponsePageResponseAdminAppUserResponse": {
         "type": "object",
         "properties": {
@@ -4467,14 +4580,6 @@
           "total": {
             "type": "integer",
             "format": "int64"
-          }
-        }
-      },
-      "ApiResponseAdminAppUserResponse": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/AdminAppUserResponse"
           }
         }
       },
@@ -4913,13 +5018,13 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string"
-          },
           "headerName": {
             "type": "string"
           },
           "parameterName": {
+            "type": "string"
+          },
+          "token": {
             "type": "string"
           }
         }

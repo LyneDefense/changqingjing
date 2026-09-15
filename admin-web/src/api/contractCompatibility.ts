@@ -86,5 +86,6 @@ export type AdminApiContractAssertions = [
   HasRoute<'/api/v1/admin/products'>,
   HasRoute<'/api/v1/admin/contents/cooperation'>,
   HasRoute<'/api/v1/admin/users'>,
+  HasRoute<'/api/v1/admin/users/{userId}/status'>,
   HasRoute<'/api/v1/admin/staff'>,
 ]

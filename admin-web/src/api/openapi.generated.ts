@@ -628,6 +628,22 @@ export interface paths {
         patch: operations["updateAppProfile"];
         trace?: never;
     };
+    "/api/v1/admin/users/{userId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["changeStatus"];
+        trace?: never;
+    };
     "/api/v1/admin/staff/{accountId}": {
         parameters: {
             query?: never;
@@ -830,7 +846,7 @@ export interface paths {
         get: operations["get_1"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["deleteUser"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1597,6 +1613,30 @@ export interface components {
         UpdateAppProfileRequest: {
             displayName?: string;
         };
+        UpdateAppUserStatusRequest: {
+            /** @enum {string} */
+            status: "ACTIVE" | "DISABLED";
+            /** Format: int64 */
+            expectedVersion: number;
+        };
+        AdminAppUserResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            maskedPhone?: string;
+            phoneBound?: boolean;
+            wechatBound?: boolean;
+            status?: string;
+            /** Format: date-time */
+            registeredAt?: string;
+            /** Format: date-time */
+            lastLoginAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
+        ApiResponseAdminAppUserResponse: {
+            data?: components["schemas"]["AdminAppUserResponse"];
+        };
         UpdateAdminStaffRequest: {
             displayName?: string;
             /** @enum {string} */
@@ -1810,19 +1850,6 @@ export interface components {
             status?: "ACTIVE" | "DISABLED";
             phoneBound?: boolean;
         };
-        AdminAppUserResponse: {
-            /** Format: uuid */
-            id?: string;
-            displayName?: string;
-            maskedPhone?: string;
-            phoneBound?: boolean;
-            wechatBound?: boolean;
-            status?: string;
-            /** Format: date-time */
-            registeredAt?: string;
-            /** Format: date-time */
-            lastLoginAt?: string;
-        };
         ApiResponsePageResponseAdminAppUserResponse: {
             data?: components["schemas"]["PageResponseAdminAppUserResponse"];
         };
@@ -1834,9 +1861,6 @@ export interface components {
             pageSize?: number;
             /** Format: int64 */
             total?: number;
-        };
-        ApiResponseAdminAppUserResponse: {
-            data?: components["schemas"]["AdminAppUserResponse"];
         };
         AdminStaffQuery: {
             /** Format: int32 */
@@ -2000,9 +2024,9 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            token?: string;
             headerName?: string;
             parameterName?: string;
+            token?: string;
         };
         AdminCsrfResponse: {
             headerName?: string;
@@ -3093,6 +3117,32 @@ export interface operations {
             };
         };
     };
+    changeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAppUserStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminAppUserResponse"];
+                };
+            };
+        };
+    };
     update: {
         parameters: {
             query?: never;
@@ -3367,6 +3417,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAdminAppUserResponse"];
+                };
+            };
+        };
+    };
+    deleteUser: {
+        parameters: {
+            query: {
+                expectedVersion: number;
+            };
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseString"];
                 };
             };
         };

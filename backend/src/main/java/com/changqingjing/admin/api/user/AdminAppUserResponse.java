@@ -12,7 +12,8 @@ public record AdminAppUserResponse(
         boolean wechatBound,
         String status,
         OffsetDateTime registeredAt,
-        OffsetDateTime lastLoginAt) {
+        OffsetDateTime lastLoginAt,
+        long version) {
 
     public static AdminAppUserResponse from(AppUserView user) {
         return new AdminAppUserResponse(
@@ -23,6 +24,7 @@ public record AdminAppUserResponse(
                 user.wechatBound(),
                 user.status().name(),
                 user.registeredAt(),
-                user.lastLoginAt());
+                user.lastLoginAt(),
+                user.lockVersion());
     }
 }

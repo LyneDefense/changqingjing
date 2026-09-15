@@ -37,6 +37,7 @@ public class AppProfileService {
     public AppUserResponse update(
             UUID userId,
             UpdateAppProfileRequest request) {
+        lockActiveUser(userId);
         String displayName = normalizedDisplayName(request.displayName());
         userRepository.updateProfile(userId, displayName, now());
         return response(requiredUser(userId));
@@ -44,12 +45,14 @@ public class AppProfileService {
 
     @Transactional
     public AppUserResponse skip(UUID userId) {
+        lockActiveUser(userId);
         userRepository.completeProfileOnboarding(userId, now());
         return response(requiredUser(userId));
     }
 
     @Transactional
     public AppUserResponse uploadAvatar(UUID userId, MultipartFile avatar) {
+        lockActiveUser(userId);
         MediaAssetRepository.Asset media = mediaService.storeAppAvatar(avatar, userId);
         userRepository.updateAvatar(userId, media.id(), now());
         return response(requiredUser(userId));
@@ -77,10 +80,17 @@ public class AppProfileService {
     }
 
     private AppUserView requiredUser(UUID userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new BusinessException(
+        return userRepository.findById(userId).filter(user -> user.status() == AppUserStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(
                 HttpStatus.UNAUTHORIZED,
                 "UNAUTHENTICATED",
                 "请重新登录"));
+    }
+
+    private void lockActiveUser(UUID userId) {
+        userRepository.lockById(userId).filter(user -> user.status() == AppUserStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "请重新登录"));
     }
 
     private OffsetDateTime now() {
