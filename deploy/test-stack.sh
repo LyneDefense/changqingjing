@@ -4,7 +4,7 @@ set -Eeuo pipefail
 deploy_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 temporary_environment="$(mktemp)"
 temporary_backup="$(mktemp)"
-validation_project="changqingjing-verify"
+validation_project="changqingjing-verify-$$"
 
 cleanup() {
   docker compose --project-name "$validation_project" --project-directory "$deploy_dir" \
@@ -59,7 +59,8 @@ done
 migration_count="$("${compose[@]}" exec -T postgres psql \
   --username changqingjing --dbname changqingjing --tuples-only --no-align \
   --command 'select count(*) from flyway_schema_history;')"
-[[ "$migration_count" == "5" ]]
+expected_migration_count="$(find "$deploy_dir/../backend/src/main/resources/db/migration" -maxdepth 1 -name 'V*__*.sql' | wc -l | tr -d '[:space:]')"
+[[ "$migration_count" == "$expected_migration_count" ]]
 
 "${compose[@]}" exec -T postgres pg_dump \
   --format=custom --no-owner --no-acl \
@@ -73,6 +74,6 @@ migration_count="$("${compose[@]}" exec -T postgres psql \
 restored_migration_count="$("${compose[@]}" exec -T postgres psql \
   --username changqingjing --dbname restore_check --tuples-only --no-align \
   --command 'select count(*) from flyway_schema_history;')"
-[[ "$restored_migration_count" == "5" ]]
+[[ "$restored_migration_count" == "$expected_migration_count" ]]
 
 echo "Production stack migration, health, backup, and restore verification passed."

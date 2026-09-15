@@ -6,8 +6,10 @@ repository_root="$(cd "$deploy_dir/.." && pwd)"
 temporary_environment="$(mktemp)"
 temporary_certificates="$(mktemp -d)"
 verification_image="changqingjing-web:verification"
+preview_container=''
 
 cleanup() {
+  [[ -z "$preview_container" ]] || docker rm -f "$preview_container" >/dev/null 2>&1 || true
   rm -f "$temporary_environment"
   rm -rf "$temporary_certificates"
 }
@@ -32,11 +34,39 @@ COS_SECRET_KEY=test
 COS_OBJECT_PREFIX=prod
 ENVIRONMENT
 
-bash -n "$deploy_dir/deploy.sh" "$deploy_dir/monitor.sh" "$deploy_dir/test-stack.sh"
+bash -n "$deploy_dir/deploy.sh" "$deploy_dir/runtime.sh" "$deploy_dir/install-runtime.sh" "$deploy_dir/monitor.sh" "$deploy_dir/test-stack.sh"
+bash "$deploy_dir/test-deploy.sh"
 docker compose --project-directory "$deploy_dir" \
   --env-file "$temporary_environment" --file "$deploy_dir/compose.production.yaml" config --quiet
 
+# Exercise the same derived Compose variables as deploy.sh, without production secrets.
+source "$deploy_dir/runtime.sh"
+DOMAIN=''
+configure_deployment_runtime
+compose_configuration="$(docker compose --project-directory "$deploy_dir" \
+  --env-file "$temporary_environment" --file "$deploy_dir/compose.production.yaml" config)"
+[[ "$compose_configuration" == *'DEPLOY_MODE: preview'* && "$compose_configuration" == *'SERVER_SERVLET_SESSION_COOKIE_SECURE: "false"'* ]]
+[[ "$(printf '%s\n' "$compose_configuration" | awk '/host_ip:/ {print $2}' | sort -u)" == 127.0.0.1 ]]
+DOMAIN=example.test
+configure_deployment_runtime
+compose_configuration="$(docker compose --project-directory "$deploy_dir" \
+  --env-file "$temporary_environment" --file "$deploy_dir/compose.production.yaml" config)"
+[[ "$compose_configuration" == *'DEPLOY_MODE: https'* && "$compose_configuration" == *'SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"'* ]]
+
 docker build --tag "$verification_image" --file "$deploy_dir/web.Dockerfile" "$repository_root"
+docker run --rm --read-only --env DEPLOY_MODE=preview --env DOMAIN= --add-host backend:127.0.0.1 \
+  --tmpfs /etc/nginx/conf.d --tmpfs /var/cache/nginx --tmpfs /var/run \
+  --entrypoint /opt/changqingjing/nginx/entrypoint.sh \
+  "$verification_image" nginx -t
+
+preview_container="$(docker run --detach --read-only --env DEPLOY_MODE=preview --env DOMAIN= \
+  --publish 127.0.0.1::80 --add-host backend:127.0.0.1 \
+  --tmpfs /etc/nginx/conf.d --tmpfs /var/cache/nginx --tmpfs /var/run \
+  "$verification_image")"
+preview_address="$(docker port "$preview_container" 80/tcp)"
+curl --fail --silent --show-error --retry 5 --retry-delay 1 --retry-connrefused \
+  "http://$preview_address/admin/" >/dev/null
+curl --fail --silent --show-error "http://$preview_address/admin/company-intro" >/dev/null
 docker run --rm --read-only --env DOMAIN=example.test --add-host backend:127.0.0.1 \
   --tmpfs /etc/nginx/conf.d --tmpfs /var/cache/nginx --tmpfs /var/run \
   --entrypoint /opt/changqingjing/nginx/entrypoint.sh \
@@ -53,4 +83,4 @@ docker run --rm --read-only --env DOMAIN=example.test --add-host backend:127.0.0
   --entrypoint /opt/changqingjing/nginx/entrypoint.sh \
   "$verification_image" nginx -t
 
-echo "Production Compose and both Nginx modes are valid."
+echo "Production Compose and preview/ACME/HTTPS Nginx modes are valid."

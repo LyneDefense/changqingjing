@@ -9,6 +9,8 @@ backup_dir="$deploy_dir/backups"
 release_state_file="$deploy_dir/.release-state"
 lock_file="$deploy_dir/.deploy.lock"
 compose=(docker compose --project-directory "$deploy_dir" --env-file "$environment_file" --file "$compose_file")
+# shellcheck source=runtime.sh
+source "$deploy_dir/runtime.sh"
 
 log() {
   printf '[changqingjing] %s\n' "$*"
@@ -24,14 +26,15 @@ usage() {
 Usage: ./deploy.sh <command>
 
 Commands:
-  bootstrap             首次检查服务器、建库迁移、申请证书并安装全部运维定时器
+  bootstrap             首次安装运行环境、建库并部署；无域名时仅允许 SSH 隧道访问
+  enable-https          填入域名后申请证书、切换 HTTPS，并启用自动续签
   deploy                备份、迁移、发布、健康检查，失败时自动回退应用镜像
   backup                立即生成并校验一份 PostgreSQL 备份
   restore-check [file]  把指定或最新备份恢复到临时数据库并校验，然后删除临时库
   rollback              切换到上一个成功发布的应用镜像
   renew-cert            续签证书，通过 nginx -t 后重新加载
   renew-cert --dry-run  执行 Let's Encrypt 续签演练
-  status                显示容器、HTTPS 健康和证书有效期
+  status                显示容器、当前模式健康和证书有效期
 USAGE
 }
 
@@ -50,7 +53,7 @@ load_environment() {
   set +a
 
   local required=(
-    DOMAIN SERVER_PUBLIC_IP CERTBOT_EMAIL POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD
+    POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD
     BACKEND_IMAGE WEB_IMAGE WECHAT_APP_ID WECHAT_APP_SECRET APP_PHONE_ENCRYPTION_KEY_BASE64
     COS_BUCKET COS_REGION COS_SECRET_ID COS_SECRET_KEY COS_OBJECT_PREFIX
   )
@@ -64,9 +67,14 @@ load_environment() {
   export VITE_TENCENT_MAP_KEY="${VITE_TENCENT_MAP_KEY:-}"
   export VITE_TENCENT_MAP_REFERER="${VITE_TENCENT_MAP_REFERER:-changqingjing-admin}"
 
-  [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ && "$DOMAIN" == *.* ]] || die "DOMAIN 格式无效。"
-  [[ "$SERVER_PUBLIC_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || die "SERVER_PUBLIC_IP 必须是服务器公网 IPv4。"
-  [[ "$CERTBOT_EMAIL" == *@*.* ]] || die "CERTBOT_EMAIL 格式无效。"
+  configure_deployment_runtime
+  if [[ "$DEPLOY_MODE" == https ]]; then
+    [[ "$DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ && "$DOMAIN" == *.* && "$DOMAIN" != *..* ]] || die "DOMAIN 格式无效。"
+    [[ "${SERVER_PUBLIC_IP:-}" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || die "启用 HTTPS 需要配置 SERVER_PUBLIC_IP。"
+    [[ "${CERTBOT_EMAIL:-}" == *@*.* ]] || die "启用 HTTPS 需要配置 CERTBOT_EMAIL。"
+  fi
+  [[ "$HTTP_PORT" =~ ^[0-9]+$ && "$HTTP_PORT" -ge 1024 && "$HTTP_PORT" -le 65535 || "$DEPLOY_MODE" == https ]] || die "PREVIEW_HTTP_PORT 必须是 1024～65535。"
+  [[ "$DEPLOY_MODE" == https || "$HTTP_PORT" -ne "$HTTPS_PORT" ]] || die "PREVIEW_HTTP_PORT 不能使用预留端口 $HTTPS_PORT。"
   [[ ${#POSTGRES_PASSWORD} -ge 20 ]] || die "POSTGRES_PASSWORD 至少需要 20 位。"
   [[ "$COS_OBJECT_PREFIX" != "dev" && "$COS_OBJECT_PREFIX" != "local" ]] || die "生产 COS_OBJECT_PREFIX 不能使用 dev 或 local。"
   validate_image_reference "$BACKEND_IMAGE" BACKEND_IMAGE
@@ -81,7 +89,8 @@ load_environment() {
   case "${ADMIN_BOOTSTRAP_ENABLED:-false}" in
     true)
       [[ -n "${ADMIN_BOOTSTRAP_LOGIN_NAME:-}" && -n "${ADMIN_BOOTSTRAP_DISPLAY_NAME:-}" ]] || die "首次管理员初始化缺少登录名或显示名。"
-      [[ ${#ADMIN_BOOTSTRAP_PASSWORD} -ge 12 && "$ADMIN_BOOTSTRAP_PASSWORD" =~ [[:alpha:]] && "$ADMIN_BOOTSTRAP_PASSWORD" =~ [[:digit:]] ]] || die "首次管理员密码需为 12～128 位并同时包含字母和数字。"
+      local bootstrap_password="${ADMIN_BOOTSTRAP_PASSWORD:-}"
+      [[ ${#bootstrap_password} -ge 12 && ${#bootstrap_password} -le 128 && "$bootstrap_password" =~ [[:alpha:]] && "$bootstrap_password" =~ [[:digit:]] ]] || die "首次管理员密码需为 12～128 位并同时包含字母和数字。"
       ;;
     false) ;;
     *) die "ADMIN_BOOTSTRAP_ENABLED 只能是 true 或 false。" ;;
@@ -116,20 +125,28 @@ check_server_prerequisites() {
   [[ "${ID:-}" == "ubuntu" ]] || die "bootstrap 仅支持 Ubuntu；当前系统是 ${ID:-unknown}。"
 
   local command_name
-  for command_name in docker curl getent ss openssl flock systemctl base64 sudo; do
+  for command_name in docker curl getent ss openssl flock systemctl base64 sudo timeout; do
     command -v "$command_name" >/dev/null || die "缺少命令：$command_name。"
   done
   docker info >/dev/null || die "Docker 服务不可用，或当前用户没有 Docker 权限。"
   docker compose version >/dev/null || die "缺少 Docker Compose v2 插件。"
+
+  local docker_major
+  docker_major="$(docker version --format '{{.Server.Version}}' | cut -d. -f1)"
+  [[ "$docker_major" =~ ^[0-9]+$ && "$docker_major" -ge 28 ]] || die "需要 Docker Engine 28 或更新版本，以确保 loopback 发布端口不会泄露到局域网。"
+
+  if [[ -z "$("${compose[@]}" ps -q web 2>/dev/null || true)" ]]; then
+    if ss -H -ltn | awk '{print $4}' | grep -Eq "(^|:)($HTTP_PORT|$HTTPS_PORT)$"; then
+      die "$HTTP_PORT 或 $HTTPS_PORT 端口已被其他进程占用。"
+    fi
+  fi
+  [[ "$DEPLOY_MODE" == https ]] || return 0
 
   local resolved_ips
   resolved_ips="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u)"
   [[ -n "$resolved_ips" ]] || die "域名 $DOMAIN 尚无 IPv4 解析。"
   grep -Fxq "$SERVER_PUBLIC_IP" <<<"$resolved_ips" || die "域名 $DOMAIN 未解析到 SERVER_PUBLIC_IP=$SERVER_PUBLIC_IP；当前为：$resolved_ips"
 
-  if [[ -z "$("${compose[@]}" ps -q web 2>/dev/null || true)" ]] && ss -H -ltn | awk '{print $4}' | grep -Eq '(^|:)(80|443)$'; then
-    die "80 或 443 端口已被其他进程占用。"
-  fi
 }
 
 pull_runtime_images() {
@@ -195,7 +212,11 @@ build_release_images() {
     die "BACKEND_IMAGE 和 WEB_IMAGE 都与当前版本相同；请至少为变更项设置新的可追溯标签。"
   fi
   log "构建发布镜像：${services[*]}"
-  "${compose[@]}" build --pull "${services[@]}"
+  # The target server has 2 GB RAM; don't build Java and Node concurrently.
+  local service
+  for service in "${services[@]}"; do
+    "${compose[@]}" build --pull "$service"
+  done
 }
 
 wait_for_service() {
@@ -259,7 +280,7 @@ check_external_health() {
   curl --fail --silent --show-error \
     --retry 20 --retry-delay 3 --retry-all-errors \
     --connect-timeout 5 --max-time 10 \
-    "https://$DOMAIN/healthz" >/dev/null
+    "$(deployment_base_url)/healthz" >/dev/null
 }
 
 rollback_services_to() {
@@ -277,7 +298,8 @@ rollback_services_to() {
 install_operations_timers() {
   [[ "$deploy_dir" =~ ^/[A-Za-z0-9._/-]+$ ]] || die "部署目录含 systemd 不支持的字符：$deploy_dir"
   local unit temporary_unit service_user
-  service_user="${SUDO_USER:-$(id -un)}"
+  # Bootstrap runs as root; timers need access to its private certs, lock and backups.
+  service_user=root
   [[ "$service_user" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]] || die "无法确定安全的 systemd 运行用户。"
   local units=(
     changqingjing-cert-renew.service changqingjing-cert-renew.timer
@@ -328,13 +350,15 @@ request_first_certificate() {
   "${compose[@]}" run --rm certbot certonly \
     --webroot --webroot-path /var/www/certbot \
     --domain "$DOMAIN" --email "$CERTBOT_EMAIL" \
-    --agree-tos --no-eff-email --non-interactive "${staging[@]}"
+    --agree-tos --no-eff-email --non-interactive ${staging[@]+"${staging[@]}"}
 }
 
 bootstrap() {
+  bash "$deploy_dir/install-runtime.sh"
   check_server_prerequisites
   ensure_runtime_directories
   read_release_state
+  [[ -z "$CURRENT_BACKEND_IMAGE" && -z "$CURRENT_WEB_IMAGE" ]] || die "已完成首次部署；更新请使用 deploy，接入域名请使用 enable-https。"
   pull_runtime_images
   build_release_images
 
@@ -345,20 +369,49 @@ bootstrap() {
   wait_for_service backend 180 || die "后端未就绪。"
   "${compose[@]}" up -d --no-deps web
   wait_for_service web 120 || die "Nginx 未就绪。"
-  check_acme_route
-  request_first_certificate
-  "${compose[@]}" up -d --force-recreate --no-deps web
-  wait_for_service web 120 || die "HTTPS Nginx 未就绪。"
-  check_external_health || die "HTTPS 健康检查失败。"
+  if [[ "$DEPLOY_MODE" == https ]]; then
+    check_acme_route
+    request_first_certificate
+    "${compose[@]}" up -d --force-recreate --no-deps web
+    wait_for_service web 120 || die "HTTPS Nginx 未就绪。"
+  fi
+  check_external_health || die "应用健康检查失败。"
   create_backup
   write_release_state "$BACKEND_IMAGE" "$WEB_IMAGE" "" ""
   install_operations_timers
-  log "首次部署完成：https://$DOMAIN/admin/"
+  log "首次部署完成：$(deployment_base_url)/admin/"
+  [[ "$DEPLOY_MODE" != preview ]] || log "预部署仅在服务器本机监听；请使用 SSH 隧道访问，不能用于小程序正式发布。"
+}
+
+enable_https() {
+  [[ "$DEPLOY_MODE" == https ]] || die "请先填写 DOMAIN、SERVER_PUBLIC_IP 和 CERTBOT_EMAIL。"
+  [[ "${ADMIN_BOOTSTRAP_ENABLED:-false}" == false ]] || die "启用 HTTPS 前请关闭首次管理员初始化。"
+  check_server_prerequisites
+  ensure_runtime_directories
+  read_release_state
+  [[ -n "$CURRENT_BACKEND_IMAGE" && -n "$CURRENT_WEB_IMAGE" ]] || die "请先执行 bootstrap。"
+  # Use the verified release, not unbuilt image tags from the edited env file.
+  export BACKEND_IMAGE="$CURRENT_BACKEND_IMAGE" WEB_IMAGE="$CURRENT_WEB_IMAGE"
+  "${compose[@]}" pull certbot
+  create_backup
+  "${compose[@]}" up -d --no-build --no-deps backend
+  wait_for_service backend 180 || die "后端未就绪。"
+  "${compose[@]}" up -d --no-build --no-deps web
+  wait_for_service web 120 || die "Nginx 未就绪。"
+  check_acme_route
+  request_first_certificate
+  "${compose[@]}" up -d --no-build --force-recreate --no-deps web
+  wait_for_service web 120 || die "HTTPS Nginx 未就绪。"
+  check_external_health || die "HTTPS 健康检查失败。"
+  install_operations_timers
+  log "HTTPS 已启用：$(deployment_base_url)/admin/；备份、证书续签和监控定时器已启用。"
 }
 
 deploy_release() {
   [[ "${ADMIN_BOOTSTRAP_ENABLED:-false}" == "false" ]] || die "日常发布前必须把 ADMIN_BOOTSTRAP_ENABLED 改回 false。"
-  [[ -f "$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem" ]] || die "尚无 HTTPS 证书，请先执行 bootstrap。"
+  if [[ "$DEPLOY_MODE" == https ]]; then
+    [[ -f "$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem" ]] || die "尚无 HTTPS 证书，请先执行 enable-https。"
+  fi
   ensure_runtime_directories
   read_release_state
   [[ -n "$CURRENT_BACKEND_IMAGE" && -n "$CURRENT_WEB_IMAGE" ]] || die "缺少上一次成功发布记录，请先执行 bootstrap。"
@@ -383,7 +436,7 @@ deploy_release() {
   fi
 
   write_release_state "$BACKEND_IMAGE" "$WEB_IMAGE" "$CURRENT_BACKEND_IMAGE" "$CURRENT_WEB_IMAGE"
-  log "发布完成：https://$DOMAIN/admin/"
+  log "发布完成：$(deployment_base_url)/admin/"
 }
 
 backup_now() {
@@ -433,26 +486,39 @@ rollback_release() {
 
 renew_certificate() {
   local dry_run="${1:-}"
+  if [[ "$DEPLOY_MODE" == preview ]]; then
+    log "尚未配置域名，跳过证书续签；填入域名后执行 enable-https。"
+    return 0
+  fi
   [[ -f "$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem" ]] || die "找不到 $DOMAIN 的现有证书。"
   local extra=()
   [[ "$dry_run" == "--dry-run" ]] && extra+=(--dry-run)
   [[ -z "$dry_run" || "$dry_run" == "--dry-run" ]] || die "renew-cert 只接受可选参数 --dry-run。"
-  "${compose[@]}" run --rm certbot renew \
-    --webroot --webroot-path /var/www/certbot --non-interactive "${extra[@]}"
-  "${compose[@]}" exec -T web nginx -t
-  "${compose[@]}" exec -T web nginx -s reload
-  log "证书续签${dry_run:+演练}完成，Nginx 配置有效并已重新加载"
+  local renewal_marker="$deploy_dir/certbot/www/.renewed-$DOMAIN"
+  "${compose[@]}" run --rm certbot renew --cert-name "$DOMAIN" \
+    --webroot --webroot-path /var/www/certbot --non-interactive \
+    --deploy-hook "touch /var/www/certbot/.renewed-$DOMAIN" ${extra[@]+"${extra[@]}"} || return 1
+  "${compose[@]}" exec -T web nginx -t || return 1
+  if [[ -z "$dry_run" && -f "$renewal_marker" ]]; then
+    "${compose[@]}" exec -T web nginx -s reload || return 1
+    rm -f "$renewal_marker"
+    log "证书已续签，Nginx 配置有效并已重新加载"
+  else
+    log "证书检查${dry_run:+演练}完成；无证书变更，未重新加载 Nginx"
+  fi
 }
 
 show_status() {
   "${compose[@]}" ps
   if check_external_health; then
-    log "HTTPS 健康检查通过"
+    log "$DEPLOY_MODE 健康检查通过"
   else
-    log "HTTPS 健康检查失败"
+    log "$DEPLOY_MODE 健康检查失败"
   fi
-  openssl s_client -servername "$DOMAIN" -connect "$DOMAIN:443" </dev/null 2>/dev/null \
-    | openssl x509 -noout -subject -issuer -dates || true
+  if [[ "$DEPLOY_MODE" == https ]]; then
+    timeout 10 openssl s_client -servername "$DOMAIN" -connect "$DOMAIN:443" </dev/null 2>/dev/null \
+      | openssl x509 -noout -subject -issuer -dates || true
+  fi
   if [[ -f "$release_state_file" ]]; then
     grep -E '^(CURRENT_|PREVIOUS_|SOURCE_REVISION|DEPLOYED_AT)' "$release_state_file"
   fi
@@ -461,15 +527,19 @@ show_status() {
 main() {
   local command="${1:-}"
   case "$command" in
-    bootstrap|deploy|backup|restore-check|rollback|renew-cert|status) ;;
+    bootstrap|enable-https|deploy|backup|restore-check|rollback|renew-cert|status) ;;
     -h|--help|help|"") usage; exit 0 ;;
     *) usage >&2; die "未知命令：$command" ;;
   esac
 
+  if [[ "$command" == bootstrap && "$EUID" -ne 0 ]]; then
+    exec sudo "$deploy_dir/deploy.sh" "$@"
+  fi
   load_environment
   acquire_lock
   case "$command" in
     bootstrap) bootstrap ;;
+    enable-https) enable_https ;;
     deploy) deploy_release ;;
     backup) backup_now ;;
     restore-check) restore_check "${2:-}" ;;
@@ -479,4 +549,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

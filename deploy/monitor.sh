@@ -21,10 +21,9 @@ set -a
 source "$environment_file"
 set +a
 
-if [[ -z "${DOMAIN:-}" ]]; then
-  printf '[changqingjing-monitor] ERROR: DOMAIN 未配置\n' >&2
-  exit 1
-fi
+# shellcheck source=runtime.sh
+source "$deploy_dir/runtime.sh"
+configure_deployment_runtime
 
 compose=(docker compose --project-directory "$deploy_dir" --env-file "$environment_file" --file "$compose_file")
 
@@ -38,8 +37,8 @@ for service in postgres backend web; do
   [[ "$status" == "healthy" ]] || record_failure "$service 状态为 $status"
 done
 
-if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 10 "https://$DOMAIN/healthz" >/dev/null; then
-  record_failure "HTTPS 外部健康检查失败"
+if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 10 "$(deployment_base_url)/healthz" >/dev/null; then
+  record_failure "$DEPLOY_MODE 外部健康检查失败"
 fi
 
 tls_warning_days="${TLS_WARNING_DAYS:-30}"
@@ -47,11 +46,13 @@ if [[ ! "$tls_warning_days" =~ ^[0-9]+$ ]]; then
   record_failure "TLS_WARNING_DAYS 不是正整数"
   tls_warning_days=30
 fi
-certificate="$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem"
-if [[ ! -f "$certificate" ]]; then
-  record_failure "找不到 TLS 证书"
-elif ! openssl x509 -checkend "$((tls_warning_days * 86400))" -noout -in "$certificate" >/dev/null; then
-  record_failure "TLS 证书将在 $tls_warning_days 天内到期"
+if [[ "$DEPLOY_MODE" == https ]]; then
+  certificate="$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem"
+  if [[ ! -f "$certificate" ]]; then
+    record_failure "找不到 TLS 证书"
+  elif ! openssl x509 -checkend "$((tls_warning_days * 86400))" -noout -in "$certificate" >/dev/null; then
+    record_failure "TLS 证书将在 $tls_warning_days 天内到期"
+  fi
 fi
 
 backup_max_age_hours="${BACKUP_MAX_AGE_HOURS:-26}"
@@ -86,4 +87,4 @@ if (( ${#failures[@]} > 0 )); then
   exit 1
 fi
 
-printf '[changqingjing-monitor] OK: containers, HTTPS, certificate, backup, and disk are healthy\n'
+printf '[changqingjing-monitor] OK: mode=%s, containers, endpoint, backup, and disk are healthy\n' "$DEPLOY_MODE"

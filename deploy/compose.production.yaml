@@ -32,6 +32,7 @@ x-backend-environment: &backend-environment
   RATE_LIMIT_MEDIA_UPLOAD_PER_MINUTE: ${RATE_LIMIT_MEDIA_UPLOAD_PER_MINUTE:-60}
   RATE_LIMIT_SCENIC_VIEW_PER_MINUTE: ${RATE_LIMIT_SCENIC_VIEW_PER_MINUTE:-120}
   SERVER_FORWARD_HEADERS_STRATEGY: framework
+  SERVER_SERVLET_SESSION_COOKIE_SECURE: ${ADMIN_SESSION_COOKIE_SECURE:-true}
   JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8}
 
 services:
@@ -107,13 +108,14 @@ services:
         MAP_BROWSER_ID: ${VITE_TENCENT_MAP_KEY:-}
         MAP_REFERER_NAME: ${VITE_TENCENT_MAP_REFERER:-changqingjing-admin}
     environment:
-      DOMAIN: ${DOMAIN:?DOMAIN is required}
+      DOMAIN: ${DOMAIN:-}
+      DEPLOY_MODE: ${DEPLOY_MODE:-https}
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-80}:80"
+      - "${HTTPS_BIND_ADDRESS:-0.0.0.0}:${HTTPS_PORT:-443}:443"
     volumes:
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
