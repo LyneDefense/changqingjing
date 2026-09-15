@@ -37,15 +37,17 @@ sudo ./deploy/deploy.sh bootstrap
 
 脚本会按顺序完成：
 
-1. 检查 Ubuntu；未安装 Docker 时，通过腾讯云提供的 Docker Ubuntu 镜像源安装 Engine 和 Compose 插件，校验下载公钥与已核对的 Docker 官方公钥一致。遇到冲突软件包会停止，不会自行卸载。
+1. 检查 Ubuntu；未安装 Docker 时，通过腾讯云提供的 Docker Ubuntu 镜像源安装 Engine 和 Compose 插件，校验下载公钥与已核对的 Docker 官方公钥一致。遇到冲突软件包会停止，不会自行卸载。无论 Docker 是否已安装，都会检查并配置腾讯云 Docker Hub 镜像加速器。
 2. 检查端口和配置，依次构建 Java、管理后台镜像，避免在 2 GB 内存服务器上同时构建。
 3. 启动 PostgreSQL，执行 Flyway，启动后端和 Nginx。
 4. 检查健康状态，生成并校验首份数据库备份，记录可回退的镜像版本。
 5. 安装宿主机证书续签、每日备份、五分钟健康检查三个 systemd timer。
 
-公钥下载失败会自动重试 3 次，APT 下载也配置 3 次重试。公钥先下载到临时目录，确认不为空且 SHA-256 校验通过后才写入正式配置；失败不会留下半截公钥或覆盖原软件源。若 Docker 官方公钥将来更新，需要先核对新公钥，再更新脚本中的校验值。此处只解决 Docker 安装软件源访问，Docker Hub 镜像拉取是另一条网络链路，不配置未经确认的镜像加速地址。
+公钥下载失败会自动重试 3 次，APT 下载也配置 3 次重试。公钥先下载到临时目录，确认不为空且 SHA-256 校验通过后才写入正式配置；失败不会留下半截公钥或覆盖原软件源。若 Docker 官方公钥将来更新，需要先核对新公钥，再更新脚本中的校验值。
 
-如首次部署在安装 Docker 阶段因网络中断退出，更新代码后重新运行即可，不必重装系统，也不需要删除生产环境文件：
+Docker Hub 镜像拉取与 APT 软件安装是两条独立的网络链路。脚本使用腾讯云官方内网加速器 `https://mirror.ccs.tencentyun.com`，先检查可达性，再合并 `/etc/docker/daemon.json`：保留现有配置及其他镜像地址，将腾讯云地址置于首位，不修改 DNS、不关闭 TLS 校验。现有配置备份到同目录的 `daemon.json.changqingjing-backup.*`，权限为 600。候选配置通过 `dockerd --validate` 后才原子替换，并通过 `systemctl reload docker` 热加载，确认运行中的 Docker 已启用该地址；不重启 Docker 或容器。配置已经生效时不会重复热加载；失败会恢复原文件并停止部署。这个内网地址只能在腾讯云服务器使用，不适用于本机或其他云厂商。
+
+如首次部署在安装 Docker 或拉取基础镜像阶段因网络中断退出，更新代码后重新运行即可，不必重装系统，也不需要删除生产环境文件：
 
 ```bash
 git pull --ff-only
@@ -131,11 +133,12 @@ sudo journalctl -u changqingjing-cert-renew.service
 ```bash
 bash deploy/test-deploy.sh
 bash deploy/test-install-runtime.sh
+bash deploy/test-docker-mirror.sh
 bash deploy/test-config.sh
 # 本机先构建 changqingjing-backend:verification 后，可验证隔离的空库启动和备份恢复：
 bash deploy/test-stack.sh
 ```
 
-测试仅使用本机 Docker 的验证镜像/独立数据库，不读取生产密钥，不连接服务器。覆盖模式选择、Cookie/端口隔离、证书重载逻辑、Compose、三种 Nginx 配置和 HTTP 后台路由。
+测试仅使用本机 Docker 的验证镜像/独立数据库，不读取生产密钥，不连接服务器。覆盖模式选择、Cookie/端口隔离、证书重载逻辑、镜像加速配置合并/幂等/失败回退、Compose、三种 Nginx 配置和 HTTP 后台路由。镜像加速测试中的 Docker、网络和 systemd 操作均使用替身，不修改本机 Docker 配置。
 
-参考：[Docker 官方 Ubuntu 安装说明](https://docs.docker.com/engine/install/ubuntu/)、[腾讯云 Docker 软件源安装说明](https://cloud.tencent.com/document/product/213/46000)、[端口发布安全说明](https://docs.docker.com/engine/network/port-publishing/)、[Certbot 续签与 deploy-hook](https://eff-certbot.readthedocs.io/en/stable/man/certbot.html)。
+参考：[Docker 官方 Ubuntu 安装说明](https://docs.docker.com/engine/install/ubuntu/)、[腾讯云 Docker 软件源安装说明](https://cloud.tencent.com/document/product/213/46000)、[腾讯云 Docker Hub 内网加速器](https://cloud.tencent.com/document/product/213/8623)、[Docker 配置校验及热加载](https://docs.docker.com/reference/cli/dockerd/#configuration-reload-behavior)、[端口发布安全说明](https://docs.docker.com/engine/network/port-publishing/)、[Certbot 续签与 deploy-hook](https://eff-certbot.readthedocs.io/en/stable/man/certbot.html)。
