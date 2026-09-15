@@ -16,6 +16,7 @@ import type {
 } from '../api/admin'
 import { AdminIcon } from '../components/AdminIcon'
 import { PageIntro } from '../components/PageIntro'
+import { MobilePreview } from '../components/MobilePreview'
 import { MediaPreview } from '../components/MediaPreview'
 import { MediaUploadField } from '../components/MediaUploadField'
 
@@ -507,7 +508,7 @@ export function ContentPage() {
           </div>
         </form>
 
-        <aside className="company-mini-preview">
+        <MobilePreview><aside className="company-mini-preview">
           <div className="company-preview-heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <div className="company-preview-switch" role="group" aria-label="预览页面">
@@ -544,7 +545,7 @@ export function ContentPage() {
               </div>
             )}
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
 
       {preview && (

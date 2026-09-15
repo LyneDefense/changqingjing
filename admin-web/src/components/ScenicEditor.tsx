@@ -22,6 +22,7 @@ import { MapLocationPicker } from './MapLocationPicker'
 import { MediaPreview } from './MediaPreview'
 import { MediaUploadField } from './MediaUploadField'
 import { PageIntro } from './PageIntro'
+import { MobilePreview } from './MobilePreview'
 
 interface ScenicEditorProps {
   scenicId?: string
@@ -399,7 +400,7 @@ export function ScenicEditor({
           </div>
         </form>
 
-        <aside className="scenic-mini-preview">
+        <MobilePreview><aside className="scenic-mini-preview">
           <div className="hero-mini-preview__heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <small>景区详情实时预览</small>
@@ -425,7 +426,7 @@ export function ScenicEditor({
               {location && <div className="scenic-phone-preview__location"><span>导航位置</span><strong>{displayName || location.providerName}</strong></div>}
             </div>
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
 
       {preview && (

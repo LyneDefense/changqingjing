@@ -85,6 +85,7 @@ export function MediaUploadField({
           {displayedMedia ? '替换文件' : '选择文件'}
           <input
             accept={accept}
+            aria-label={`选择${label}`}
             disabled={uploading}
             onChange={(event) => {
               void selectFile(event.target.files?.[0])
@@ -93,9 +94,13 @@ export function MediaUploadField({
             type="file"
           />
         </label>
-        {uploading && <span>上传中 {progress}%</span>}
+        {uploading && <span aria-live="polite" role="status">上传中 {progress}%</span>}
         {!uploading && displayedMedia?.status === 'READY' && <span className="media-ready">已校验</span>}
       </div>
+      <small className="mobile-upload-hint">
+        {mediaType === 'IMAGE' ? '请选 JPG、PNG 或 WebP 图片；HEIC 原图需先转换。' : '请选 MP4 视频；MOV 视频需先转换。'}
+        上传期间请保持页面打开。
+      </small>
       {uploading && <progress max={100} value={progress} />}
       {error && <p className="field-error" role="alert">{error}</p>}
     </div>

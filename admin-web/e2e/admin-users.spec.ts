@@ -5,7 +5,9 @@ const admin = {
   permissions: ['content:read', 'user:read', 'user:manage', 'staff:manage'],
 }
 
-test('administrator confirms freeze, unfreeze and deletion in the existing warm UI', async ({ page }) => {
+for (const width of [1366, 390]) {
+test(`administrator confirms freeze, unfreeze and deletion at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 })
   let users = [{
     id: '2f3976a4-0ad8-448e-ab54-81baf5c2d391', displayName: '山水旅人', maskedPhone: '138****8000',
     phoneBound: true, wechatBound: true, status: 'ACTIVE', version: 0, registeredAt: '2026-09-09T08:00:00Z',
@@ -60,6 +62,7 @@ test('administrator confirms freeze, unfreeze and deletion in the existing warm 
   await expect(page.getByText('没有符合条件的注册用户。')).toBeVisible()
   expect(writes).toEqual([{ method: 'PATCH', version: 0 }, { method: 'PATCH', version: 1 }, { method: 'DELETE', version: 2 }])
 })
+}
 
 test('operator cannot navigate to registered-user management', async ({ page }) => {
   await page.route('**/api/v1/admin/auth/me', (route) => route.fulfill({ json: { data: {

@@ -14,6 +14,7 @@ import { AdminIcon } from './AdminIcon'
 import { MediaPreview } from './MediaPreview'
 import { MediaUploadField } from './MediaUploadField'
 import { PageIntro } from './PageIntro'
+import { MobilePreview } from './MobilePreview'
 
 interface HomeVideoEditorProps {
   videoId?: string
@@ -242,7 +243,7 @@ export function HomeVideoEditor({
           </div>
         </form>
 
-        <aside className="video-mini-preview">
+        <MobilePreview><aside className="video-mini-preview">
           <div className="hero-mini-preview__heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <small>首页封面实时预览</small>
@@ -264,7 +265,7 @@ export function HomeVideoEditor({
               </div>
             </div>
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
       {preview && (
         <div className="modal-backdrop" role="presentation">

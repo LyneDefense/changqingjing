@@ -12,6 +12,7 @@ import type { AdminHomeHeroContent } from '../api/admin'
 import { AdminIcon } from '../components/AdminIcon'
 import { MediaPreview } from '../components/MediaPreview'
 import { MediaUploadField } from '../components/MediaUploadField'
+import { MobilePreview } from '../components/MobilePreview'
 import { PageIntro } from '../components/PageIntro'
 
 function errorText(error: unknown) {
@@ -149,7 +150,7 @@ export function HomeHeroPage() {
           </div>
         </form>
 
-        <aside className="hero-mini-preview">
+        <MobilePreview><aside className="hero-mini-preview">
           <div className="hero-mini-preview__heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <small>编辑内容实时预览</small>
@@ -167,7 +168,7 @@ export function HomeHeroPage() {
               <div className="hero-phone-preview__video"><AdminIcon name="video" /></div>
             </div>
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
     </div>
   )

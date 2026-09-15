@@ -19,6 +19,7 @@ import { AdminIcon } from './AdminIcon'
 import { MediaPreview } from './MediaPreview'
 import { MediaUploadField } from './MediaUploadField'
 import { PageIntro } from './PageIntro'
+import { MobilePreview } from './MobilePreview'
 
 interface ProductEditorProps {
   productId?: string
@@ -409,7 +410,7 @@ export function ProductEditor({
           </div>
         </form>
 
-        <aside className="product-mini-preview">
+        <MobilePreview><aside className="product-mini-preview">
           <div className="company-preview-heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <div className="company-preview-switch" role="group" aria-label="产品预览页面">
@@ -446,7 +447,7 @@ export function ProductEditor({
               </div>
             )}
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
 
       {preview && (

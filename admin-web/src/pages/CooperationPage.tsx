@@ -19,6 +19,7 @@ import { AdminIcon } from '../components/AdminIcon'
 import { CooperationIcon } from '../components/CooperationIcon'
 import { cooperationIconOptions, resolveCooperationIcon } from '../components/cooperationIconConfig'
 import { PageIntro } from '../components/PageIntro'
+import { MobilePreview } from '../components/MobilePreview'
 
 const fixedPageTitle = '常清静文旅投'
 const fixedPageSummary = '业务架构与合作权利'
@@ -394,7 +395,7 @@ export function CooperationPage() {
           </div>
         </form>
 
-        <aside className="cooperation-mini-preview">
+        <MobilePreview><aside className="cooperation-mini-preview">
           <div className="company-preview-heading">
             <div><span aria-hidden="true">▯</span><strong>小程序预览</strong></div>
             <div className="company-preview-switch" role="group" aria-label="合作权益预览状态">
@@ -434,7 +435,7 @@ export function CooperationPage() {
               </section>
             </div>
           </div>
-        </aside>
+        </aside></MobilePreview>
       </div>
 
       {preview && <CooperationPreview content={preview} onClose={() => setPreview(undefined)} />}
