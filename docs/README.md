@@ -1,5 +1,6 @@
 # 项目文档
 
+- [管理后台使用指南](admin-user-guide.md)：管理员与运营人员的操作流程、各模块维护方法、账号权限与常见问题；后台内置可搜索版本。
 - [产品需求文档](product-requirements.md)：小程序与管理后台的功能范围、登录规则、地图选点、内容维护、验收清单和待定项。
 - [技术设计文档](technical-design.md)：三个独立工程、Spring Boot、PostgreSQL、认证权限、API、内容版本、媒体与地图、部署及验证方案。
 - [实现步骤与节点计划](implementation-roadmap.md)：后端、管理后台后端、管理前端和小程序的分阶段任务、依赖、交付物与完成标准。

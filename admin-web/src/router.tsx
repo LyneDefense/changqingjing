@@ -6,6 +6,7 @@ import { ComingSoonPage } from './pages/ComingSoonPage'
 import { CooperationPage } from './pages/CooperationPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
+import { GuidePage } from './pages/GuidePage'
 import { HomeVideoPage } from './pages/HomeVideoPage'
 import { HomeHeroPage } from './pages/HomeHeroPage'
 import { LoginPage } from './pages/LoginPage'
@@ -29,6 +30,7 @@ export const routes = [
             Component: App,
             children: [
               { index: true, Component: DashboardPage },
+              { path: 'guide', Component: GuidePage },
               { path: 'home-hero', Component: HomeHeroPage },
               { path: 'home-videos', Component: HomeVideoPage },
               { path: 'company', Component: ContentPage },

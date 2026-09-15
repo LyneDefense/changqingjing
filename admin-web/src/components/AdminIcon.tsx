@@ -4,6 +4,7 @@ export type AdminIconName =
   | 'cooperation'
   | 'dashboard'
   | 'gift'
+  | 'guide'
   | 'hero'
   | 'member'
   | 'scenic'
@@ -29,6 +30,8 @@ export function AdminIcon({ className, name }: AdminIconProps) {
   }
 
   switch (name) {
+    case 'guide':
+      return <svg {...common}><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14M6 9h3m-3 4h3m6-4h3m-3 4h3" /></svg>
     case 'dashboard':
       return <svg {...common}><path d="M4 11.2 12 4l8 7.2V20h-6v-5h-4v5H4z" /></svg>
     case 'hero':

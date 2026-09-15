@@ -33,6 +33,7 @@ describe('DashboardPage', () => {
 
     expect(screen.getByRole('heading', { name: '工作台' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '查看注册用户' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '查看完整使用指南' })).toHaveAttribute('href', '/guide')
     expect(screen.getByText('宣传视频')).toBeInTheDocument()
     expect(screen.getByText('公司介绍')).toBeInTheDocument()
   })

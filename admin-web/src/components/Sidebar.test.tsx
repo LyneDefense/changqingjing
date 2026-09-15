@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthContext } from '../auth/authContextValue'
 import type { AuthContextValue } from '../auth/authContextValue'
 import { Sidebar } from './Sidebar'
@@ -23,6 +23,8 @@ function authValue(permissions: string[]): AuthContextValue {
   }
 }
 
+afterEach(cleanup)
+
 describe('Sidebar', () => {
   it('does not show administrator-only menus to operators', () => {
     render(
@@ -34,12 +36,19 @@ describe('Sidebar', () => {
     )
 
     expect(screen.getByRole('link', { name: '首页宣传视频' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '使用指南' })).toHaveAttribute('href', '/guide')
     expect(screen.getByRole('link', { name: '公司介绍' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '会员福利管理' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '收益板块管理' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '分公司方案' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '会员体系' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '注册用户' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '后台人员' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the guide available to every authenticated role', () => {
+    render(<AuthContext.Provider value={authValue([])}><MemoryRouter><Sidebar /></MemoryRouter></AuthContext.Provider>)
+    expect(screen.getByRole('link', { name: '使用指南' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '后台人员' })).not.toBeInTheDocument()
   })
 })

@@ -70,6 +70,7 @@ export function DashboardPage() {
               <li><i>02</i><div><strong>保存草稿</strong><span>检查图片与文字是否完整</span></div></li>
               <li><i>03</i><div><strong>确认发布</strong><span>发布后小程序端立即更新</span></div></li>
             </ol>
+            <Link className="quiet-link workflow-guide-link" to="/guide">查看完整使用指南 <span aria-hidden="true">›</span></Link>
           </section>
 
           <section className="dashboard-note">
