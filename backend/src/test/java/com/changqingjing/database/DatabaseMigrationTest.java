@@ -47,7 +47,9 @@ class DatabaseMigrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(9);
+        int pending = flyway.info().pending().length;
+        assertThat(pending).isGreaterThanOrEqualTo(10);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(pending);
         assertThat(flyway.migrate().migrationsExecuted).isZero();
 
         Set<String> actualTables = new TreeSet<>();
@@ -80,7 +82,7 @@ class DatabaseMigrationTest {
                         """);
                 assertThat(Flyway.configure()
                         .dataSource(previous.getJdbcUrl(), previous.getUsername(), previous.getPassword())
-                        .load().migrate().migrationsExecuted).isEqualTo(1);
+                        .target("9").load().migrate().migrationsExecuted).isEqualTo(1);
                 try (ResultSet rows = statement.executeQuery("SELECT display_name, status, lock_version, deleted_at FROM app_user")) {
                     assertThat(rows.next()).isTrue();
                     assertThat(rows.getString("display_name")).isEqualTo("已有用户");
@@ -88,6 +90,33 @@ class DatabaseMigrationTest {
                     assertThat(rows.getLong("lock_version")).isEqualTo(2);
                     assertThat(rows.getObject("deleted_at")).isNull();
                     assertThat(rows.next()).isFalse();
+                }
+            }
+        }
+    }
+
+    @Test
+    void auditMetadataUpgradePreservesHistoricalEventsWithoutInventingSnapshots() throws Exception {
+        try (PostgreSQLContainer<?> previous = new PostgreSQLContainer<>("postgres:16-alpine")) {
+            previous.start();
+            Flyway.configure().dataSource(previous.getJdbcUrl(), previous.getUsername(), previous.getPassword())
+                    .target("9").load().migrate();
+            try (Connection connection = previous.createConnection(""); Statement statement = connection.createStatement()) {
+                statement.executeUpdate("""
+                    INSERT INTO admin_audit_event(id,action,target_type,result,trace_id,detail)
+                    VALUES ('e265c101-3ebe-425e-ae01-c915285a701a','COMPANY_PUBLISH','CONTENT_ENTRY',
+                        'SUCCESS','historical-trace','{"revisionNumber":2}')
+                    """);
+                assertThat(Flyway.configure().dataSource(previous.getJdbcUrl(), previous.getUsername(), previous.getPassword())
+                        .target("10").load().migrate().migrationsExecuted).isEqualTo(1);
+                try (ResultSet row = statement.executeQuery("SELECT * FROM admin_audit_event")) {
+                    assertThat(row.next()).isTrue();
+                    assertThat(row.getString("action")).isEqualTo("COMPANY_PUBLISH");
+                    assertThat(row.getString("trace_id")).isEqualTo("historical-trace");
+                    assertThat(row.getString("detail")).contains("revisionNumber", "2");
+                    for (String field : new String[]{"client_ip", "user_agent", "login_batch_id", "target_name", "change_summary", "affects_online"})
+                        assertThat(row.getObject(field)).isNull();
+                    assertThat(row.next()).isFalse();
                 }
             }
         }
