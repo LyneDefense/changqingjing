@@ -29,6 +29,11 @@ command -v pnpm >/dev/null || die "缺少 pnpm。"
 command -v rg >/dev/null || die "缺少 ripgrep (rg)。"
 command -v shasum >/dev/null || die "缺少 shasum。"
 
+API_BASE_URL="$api_base_url" node -e \
+  'require(process.argv[1]).productionApiUrl(process.env.API_BASE_URL)' \
+  "$repository_root/scripts/miniprogram-release.cjs"
+node --test "$repository_root/scripts/miniprogram-release.test.cjs"
+
 app_id="$(node -e "const c=require(process.argv[1]); process.stdout.write(c.appid || '')" "$repository_root/miniprogram/project.config.json")"
 [[ "$app_id" =~ ^wx[0-9A-Za-z]{16}$ ]] || die "miniprogram/project.config.json 尚未配置有效正式 AppID。"
 
@@ -50,8 +55,11 @@ fi
 release_directory="$artifact_root/$version"
 [[ ! -e "$release_directory" ]] || die "版本 $version 的制品目录已经存在；版本号必须唯一。"
 mkdir -p "$release_directory"
+upload_project="$release_directory/miniprogram"
+node "$repository_root/scripts/miniprogram-release.cjs" \
+  "$repository_root/miniprogram" "$upload_project" "$api_base_url"
 tar -czf "$release_directory/miniprogram-$version.tgz" \
-  -C "$repository_root/miniprogram" dist project.config.json
+  -C "$upload_project" dist project.config.json
 
 source_revision="$(git -C "$repository_root" rev-parse HEAD)"
 openapi_sha256="$(shasum -a 256 "$repository_root/contracts/openapi.json" | awk '{print $1}')"
@@ -83,6 +91,6 @@ NODE
 cat <<RESULT
 Release $version is ready.
 Manifest: $release_directory/release-manifest.json
-Mini program source directory for WeChat DevTools: $repository_root/miniprogram
+Mini program source directory for WeChat DevTools: $upload_project
 Use the WeChat DevTools “上传” button and enter version $version. No upload was performed automatically.
 RESULT

@@ -6,6 +6,7 @@ audit_registry="https://registry.npmjs.org"
 
 cd "$repository_root"
 ./scripts/check-secrets.sh
+node --test scripts/miniprogram-release.test.cjs
 
 (
   cd backend
