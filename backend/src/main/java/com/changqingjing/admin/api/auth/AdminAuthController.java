@@ -46,6 +46,9 @@ public class AdminAuthController {
             @Valid @RequestBody AdminLoginRequest loginRequest,
             HttpServletRequest request,
             HttpServletResponse response) {
+        request.setAttribute("audit.loginName", loginRequest.loginName());
+        java.util.UUID loginBatch = java.util.UUID.randomUUID();
+        request.setAttribute("audit.loginBatch", loginBatch);
         AdminPrincipal principal = authService.login(
                 loginRequest.loginName(),
                 loginRequest.password(),
@@ -67,6 +70,7 @@ public class AdminAuthController {
                         .toList()));
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
+        request.getSession().setAttribute("audit.loginBatch", loginBatch);
         return ApiResponse.of(AdminMeResponse.from(principal));
     }
 
@@ -80,6 +84,7 @@ public class AdminAuthController {
     public ApiResponse<String> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            request.setAttribute("audit.loginBatch", session.getAttribute("audit.loginBatch"));
             session.invalidate();
         }
         SecurityContextHolder.clearContext();

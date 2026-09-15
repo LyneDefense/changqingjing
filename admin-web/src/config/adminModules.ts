@@ -25,6 +25,7 @@ export const adminModules: AdminModuleDefinition[] = [
   { to: '/cooperation/membership', label: '会员体系', group: '合作权益', icon: 'member', permission: 'content:read' },
   { to: '/users', label: '注册用户', group: '系统管理', icon: 'users', permission: 'user:read' },
   { to: '/staff', label: '后台人员', group: '系统管理', icon: 'staff', permission: 'staff:manage' },
+  { to: '/audit-events', label: '操作日志', group: '系统管理', icon: 'audit', permission: 'audit:read' },
 ]
 
 export const adminNavigationGroups = ['概览', '内容运营', '合作权益', '系统管理'].map((label) => ({

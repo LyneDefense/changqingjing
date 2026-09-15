@@ -2395,6 +2395,67 @@
           }
         }
       }
+    },
+    "/api/v1/admin/audit-events": {
+      "get": {
+        "tags": [
+          "admin-audit-controller"
+        ],
+        "operationId": "search_5",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AdminAuditQuery"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponsePageResponseAdminAuditResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/audit-events/{id}": {
+      "get": {
+        "tags": [
+          "admin-audit-controller"
+        ],
+        "operationId": "detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminAuditResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5018,10 +5079,10 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "headerName": {
+          "parameterName": {
             "type": "string"
           },
-          "parameterName": {
+          "headerName": {
             "type": "string"
           },
           "token": {
@@ -5048,6 +5109,170 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/AdminCsrfResponse"
+          }
+        }
+      },
+      "AdminAuditQuery": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "actor": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "keyword": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "module": {
+            "pattern": "AUTH|STAFF|USERS|HOME_HERO|HOME_VIDEO|PRODUCT|MAP|COMPANY|COOPERATION|SCENIC|MEDIA|OTHER|^$",
+            "type": "string"
+          },
+          "action": {
+            "pattern": "DRAFT_SAVE|PUBLISH|UNPUBLISH|PREVIEW|DELETE|LOGIN|LOGOUT|CREATE|UPDATE|PASSWORD_RESET|UPLOAD|^$",
+            "type": "string"
+          },
+          "result": {
+            "pattern": "SUCCESS|FAILURE|^$",
+            "type": "string"
+          }
+        }
+      },
+      "AdminAuditResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorLoginName": {
+            "type": "string"
+          },
+          "actorDisplayName": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actionLabel": {
+            "type": "string"
+          },
+          "module": {
+            "type": "string"
+          },
+          "moduleLabel": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetName": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "affectsOnline": {
+            "type": "boolean"
+          },
+          "clientIp": {
+            "type": "string"
+          },
+          "clientSummary": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          },
+          "loginBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "changeSummary": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failureCode": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historical": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiResponsePageResponseAdminAuditResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PageResponseAdminAuditResponse"
+          }
+        }
+      },
+      "PageResponseAdminAuditResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAuditResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ApiResponseAdminAuditResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminAuditResponse"
           }
         }
       },

@@ -102,6 +102,7 @@ public class GlobalApiExceptionHandler {
             String code,
             String message,
             HttpServletRequest request) {
+        request.setAttribute("audit.failureCode", code);
         return ResponseEntity.status(status)
                 .body(ApiErrorResponse.of(code, message, ApiTraceFilter.currentTraceId(request)));
     }

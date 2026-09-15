@@ -60,6 +60,51 @@ export interface PageResponse<T> {
   total: number
 }
 
+export interface AuditEvent {
+  id: string
+  actorId?: string
+  actorLoginName?: string
+  actorDisplayName?: string
+  action: string
+  actionLabel: string
+  module: string
+  moduleLabel: string
+  targetType: string
+  targetId?: string
+  targetName?: string
+  result: 'SUCCESS' | 'FAILURE'
+  affectsOnline?: boolean
+  clientIp?: string
+  clientSummary: string
+  userAgent?: string
+  loginBatchId?: string
+  traceId: string
+  changeSummary: string[]
+  failureCode?: string
+  createdAt: string
+  historical: boolean
+}
+
+export interface AuditFilters {
+  from?: string
+  to?: string
+  actor?: string
+  keyword?: string
+  module?: string
+  action?: string
+  result?: string
+}
+
+export function searchAuditEvents(input: AuditFilters & { page?: number; pageSize?: number }) {
+  const query = new URLSearchParams()
+  Object.entries(input).forEach(([key, value]) => { if (value !== undefined && value !== '') query.set(key, String(value)) })
+  return request<PageResponse<AuditEvent>>(`/audit-events?${query}`)
+}
+
+export function getAuditEvent(id: string) {
+  return request<AuditEvent>(`/audit-events/${encodeURIComponent(id)}`)
+}
+
 export interface CreateAdminStaffInput {
   loginName: string
   displayName: string

@@ -18,6 +18,7 @@ import type {
   AdminScenicRevision,
   AdminStaff,
   AdminUser,
+  AuditEvent,
   CompanyContentBlock,
   CooperationRevenueSection,
   CooperationValueSection,
@@ -51,6 +52,7 @@ type HasRoute<Route extends keyof paths> = Route
 // Compiled by `tsc`; a changed DTO field, union, or route fails the frontend build.
 export type AdminApiContractAssertions = [
   Assert<Compatible<AdminUser, Schema<'AdminMeResponse'>>>,
+  Assert<Compatible<AuditEvent, Schema<'AdminAuditResponse'>>>,
   Assert<Compatible<AdminStaff, Schema<'AdminStaffResponse'>>>,
   Assert<Compatible<RegisteredAppUser, Schema<'AdminAppUserResponse'>>>,
   Assert<Compatible<CompanyContentBlock, Schema<'CompanyContentBlock'>>>,
@@ -79,6 +81,7 @@ export type AdminApiContractAssertions = [
   Assert<Compatible<AdminCooperationRevision, Schema<'AdminCooperationRevisionResponse'>>>,
   Assert<Compatible<AdminCooperationContent, Schema<'AdminCooperationContentResponse'>>>,
   HasRoute<'/api/v1/admin/auth/login'>,
+  HasRoute<'/api/v1/admin/audit-events'>,
   HasRoute<'/api/v1/admin/contents/home-hero'>,
   HasRoute<'/api/v1/admin/contents/home-videos'>,
   HasRoute<'/api/v1/admin/contents/company'>,

@@ -1,4 +1,5 @@
 export type AdminIconName =
+  | 'audit'
   | 'branch'
   | 'company'
   | 'cooperation'
@@ -30,6 +31,8 @@ export function AdminIcon({ className, name }: AdminIconProps) {
   }
 
   switch (name) {
+    case 'audit':
+      return <svg {...common}><path d="M14 3H5v18h14v-9M8 8h3m-3 4h3m-3 4h7" /><circle cx="17" cy="6" r="4" /><path d="M17 4v2l1.5 1" /></svg>
     case 'guide':
       return <svg {...common}><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14M6 9h3m-3 4h3m6-4h3m-3 4h3" /></svg>
     case 'dashboard':

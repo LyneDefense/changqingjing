@@ -23,7 +23,10 @@ public class AdminMapSelectionController {
     @PostMapping
     public ApiResponse<MapSelectionResponse> create(
             @Valid @RequestBody CreateMapSelectionRequest request,
-            @AuthenticationPrincipal AdminPrincipal actor) {
-        return ApiResponse.of(scenicService.confirmMapSelection(request, actor));
+            @AuthenticationPrincipal AdminPrincipal actor,
+            jakarta.servlet.http.HttpServletRequest servletRequest) {
+        MapSelectionResponse selection = scenicService.confirmMapSelection(request, actor);
+        servletRequest.setAttribute("audit.targetId", selection.id());
+        return ApiResponse.of(selection);
     }
 }

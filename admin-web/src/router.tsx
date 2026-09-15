@@ -15,6 +15,7 @@ import { RouteErrorPage } from './pages/RouteErrorPage'
 import { ScenicPage } from './pages/ScenicPage'
 import { StaffPage } from './pages/StaffPage'
 import { UsersPage } from './pages/UsersPage'
+import { AuditPage } from './pages/AuditPage'
 
 export const routes = [
   {
@@ -31,6 +32,7 @@ export const routes = [
             children: [
               { index: true, Component: DashboardPage },
               { path: 'guide', Component: GuidePage },
+              { path: 'audit-events', Component: AuditPage },
               { path: 'home-hero', Component: HomeHeroPage },
               { path: 'home-videos', Component: HomeVideoPage },
               { path: 'company', Component: ContentPage },
