@@ -193,7 +193,7 @@ export function ScenicPage() {
           </div>
           <small>首页按照展示顺序排列已发布景区</small>
         </div>
-        <table>
+        <table role="table">
           <thead><tr><th>景区</th><th>内容状态</th><th>开放状态</th><th>浏览量</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
           <tbody>
             {!loading && result.items.length === 0 && (
@@ -201,17 +201,17 @@ export function ScenicPage() {
             )}
             {result.items.map((item) => (
               <tr key={item.id}>
-                <td>
+                <td data-card-heading="">
                   <div className="video-list-title">
                     {item.coverMediaId && <div className="video-list-cover"><MediaPreview alt={item.title} mediaId={item.coverMediaId} /></div>}
                     <div><strong>{item.title}</strong><small>首页顺序：{item.displayOrder}{item.hasUnpublishedChanges ? ' · 有未发布修改' : ''}</small></div>
                   </div>
                 </td>
-                <td><span className={`status-pill ${item.status === 'ONLINE' ? 'active' : 'disabled'}`}>{publicationText[item.status]}</span></td>
-                <td><span className={`status-pill ${item.openStatus === 'OPEN' ? 'active' : 'paused'}`}>{item.openStatus === 'OPEN' ? '正常开放' : '暂停开放'}</span></td>
-                <td>{item.viewCount}</td>
-                <td>{formatTime(item.updatedAt)}</td>
-                <td>
+                <td data-label="内容状态"><span className={`status-pill ${item.status === 'ONLINE' ? 'active' : 'disabled'}`}>{publicationText[item.status]}</span></td>
+                <td data-label="开放状态"><span className={`status-pill ${item.openStatus === 'OPEN' ? 'active' : 'paused'}`}>{item.openStatus === 'OPEN' ? '正常开放' : '暂停开放'}</span></td>
+                <td data-label="浏览量">{item.viewCount}</td>
+                <td data-label="最近更新">{formatTime(item.updatedAt)}</td>
+                <td data-card-actions="">
                   <div className="row-actions">
                     <button className="text-button" disabled={Boolean(busyId)} onClick={() => setEditingId(item.id)} type="button">编辑</button>
                     {item.status !== 'ONLINE' && <button className="text-button" disabled={Boolean(busyId)} onClick={() => void publish(item)} type="button">发布</button>}

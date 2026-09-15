@@ -140,7 +140,7 @@ export function StaffPage() {
 
       {error && <p className="notice error-notice" role="alert">{error}</p>}
       <div className="table-card">
-        <table>
+        <table role="table">
           <thead>
             <tr>
               <th>人员</th>
@@ -153,18 +153,18 @@ export function StaffPage() {
           <tbody>
             {result.items.map((staff) => (
               <tr key={staff.id}>
-                <td>
+                <td data-card-heading="">
                   <strong>{staff.displayName}</strong>
                   <small>{staff.loginName}</small>
                 </td>
-                <td>{staff.role === 'ADMIN' ? '管理员' : '运营'}</td>
-                <td>
+                <td data-label="角色">{staff.role === 'ADMIN' ? '管理员' : '运营'}</td>
+                <td data-label="状态">
                   <span className={`status-pill ${staff.status.toLowerCase()}`}>
                     {staff.status === 'ACTIVE' ? '已启用' : '已停用'}
                   </span>
                 </td>
-                <td>{formatTime(staff.lastLoginAt)}</td>
-                <td>
+                <td data-label="最近登录">{formatTime(staff.lastLoginAt)}</td>
+                <td data-card-actions="">
                   <div className="row-actions">
                     <button className="text-button" onClick={() => setEditor({ kind: 'edit', staff })} type="button">编辑</button>
                     <button className="text-button" onClick={() => setEditor({ kind: 'password', staff })} type="button">重置密码</button>

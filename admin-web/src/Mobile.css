@@ -204,6 +204,136 @@
     font-size: 23px;
   }
 
+  .table-card {
+    overflow: visible;
+  }
+
+  .table-card table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .table-card table thead {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    width: 1px;
+  }
+
+  .table-card table tbody {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .table-card table tbody tr {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    display: grid;
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .table-card table tbody td {
+    border: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 7px 0;
+    white-space: normal;
+  }
+
+  .table-card table tbody td[data-label] {
+    align-items: start;
+    column-gap: 12px;
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    line-height: 1.5;
+  }
+
+  .table-card td[data-label]::before {
+    color: var(--admin-muted);
+    content: attr(data-label);
+    font-size: 12px;
+    padding-top: 1px;
+  }
+
+  .table-card td[data-label] .status-pill {
+    justify-self: start;
+  }
+
+  .table-card table tbody td[data-card-heading] {
+    border-bottom: 1px solid var(--admin-border);
+    margin-bottom: 6px;
+    padding: 0 0 12px;
+  }
+
+  .table-card td[data-card-heading] > strong,
+  .table-card .video-list-title strong {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .table-card .video-list-title {
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .table-card .video-list-title > div:last-child {
+    min-width: 0;
+  }
+
+  .table-card .video-list-cover {
+    flex: 0 0 72px;
+    height: 52px;
+    width: 72px;
+  }
+
+  .table-card table tbody td[data-card-actions] {
+    border-top: 1px solid var(--admin-border);
+    margin-top: 7px;
+    padding: 9px 0 0;
+  }
+
+  .table-card .row-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  .table-card .row-actions .text-button {
+    background: var(--admin-surface-soft);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    min-height: 44px;
+    padding: 9px 12px;
+  }
+
+  .table-card table tbody td.empty-state {
+    padding: 20px 8px;
+    text-align: center;
+  }
+
+  .pagination {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pagination > span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+
+  .pagination > button {
+    grid-row: 2;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .admin-shell > .sidebar {
       transition: none;

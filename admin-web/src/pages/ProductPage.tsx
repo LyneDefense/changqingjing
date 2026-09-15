@@ -291,7 +291,7 @@ export function ProductPage() {
               </div>
               <small>会员端以双列卡片展示已上架产品</small>
             </div>
-            <table>
+            <table role="table">
               <thead><tr><th>福利产品</th><th>分类</th><th>上架状态</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
               <tbody>
                 {!loading && result.items.length === 0 && (
@@ -299,16 +299,16 @@ export function ProductPage() {
                 )}
                 {result.items.map((item) => (
                   <tr key={item.id}>
-                    <td>
+                    <td data-card-heading="">
                       <div className="video-list-title">
                         {item.coverMediaId && <div className="video-list-cover"><MediaPreview alt={item.name} mediaId={item.coverMediaId} /></div>}
                         <div><strong>{item.name}</strong><small>展示顺序：{item.displayOrder}{item.hasUnpublishedChanges ? ' · 有未上架修改' : ''}</small></div>
                       </div>
                     </td>
-                    <td>{item.categoryName ?? '未分类'}</td>
-                    <td><span className={`status-pill ${item.status === 'ONLINE' ? 'active' : 'disabled'}`}>{publicationText[item.status]}</span></td>
-                    <td>{formatTime(item.updatedAt)}</td>
-                    <td>
+                    <td data-label="分类">{item.categoryName ?? '未分类'}</td>
+                    <td data-label="上架状态"><span className={`status-pill ${item.status === 'ONLINE' ? 'active' : 'disabled'}`}>{publicationText[item.status]}</span></td>
+                    <td data-label="最近更新">{formatTime(item.updatedAt)}</td>
+                    <td data-card-actions="">
                       <div className="row-actions">
                         <button className="text-button" disabled={Boolean(busyId)} onClick={() => setEditingId(item.id)} type="button">编辑</button>
                         {item.status !== 'ONLINE' && <button className="text-button" disabled={Boolean(busyId)} onClick={() => void publishProduct(item)} type="button">上架</button>}
@@ -335,17 +335,17 @@ export function ProductPage() {
               <div><strong>产品分类</strong><span>共 {categories.length} 个分类</span></div>
               <small>分类仅用于会员端筛选</small>
             </div>
-            <table>
+            <table role="table">
               <thead><tr><th>分类名称</th><th>展示顺序</th><th>状态</th><th>最近更新</th><th><span className="visually-hidden">操作</span></th></tr></thead>
               <tbody>
                 {categories.length === 0 && <tr><td className="empty-state" colSpan={5}>暂未设置分类。产品也可以保持“未分类”。</td></tr>}
                 {categories.map((category) => (
                   <tr key={category.id}>
-                    <td><strong>{category.name}</strong>{category.hasUnpublishedChanges && <small>有未发布修改</small>}</td>
-                    <td>{category.displayOrder}</td>
-                    <td><span className={`status-pill ${category.status === 'ONLINE' ? 'active' : 'disabled'}`}>{category.status === 'ONLINE' ? '已启用' : '未启用'}</span></td>
-                    <td>{formatTime(category.updatedAt)}</td>
-                    <td>
+                    <td data-card-heading=""><strong>{category.name}</strong>{category.hasUnpublishedChanges && <small>有未发布修改</small>}</td>
+                    <td data-label="展示顺序">{category.displayOrder}</td>
+                    <td data-label="状态"><span className={`status-pill ${category.status === 'ONLINE' ? 'active' : 'disabled'}`}>{category.status === 'ONLINE' ? '已启用' : '未启用'}</span></td>
+                    <td data-label="最近更新">{formatTime(category.updatedAt)}</td>
+                    <td data-card-actions="">
                       <div className="row-actions">
                         <button className="text-button" disabled={Boolean(busyId)} onClick={() => setCategoryForm({ id: category.id, name: category.name, displayOrder: category.displayOrder, expectedVersion: category.version })} type="button">编辑</button>
                         {(category.status !== 'ONLINE' || category.hasUnpublishedChanges) && <button className="text-button" disabled={Boolean(busyId)} onClick={() => void publishCategory(category)} type="button">{category.status === 'ONLINE' ? '发布修改' : '启用'}</button>}

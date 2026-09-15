@@ -201,7 +201,7 @@ export function UsersPage() {
       {notice && <p className="notice success-notice" role="status">{notice}</p>}
 
       <div className="table-card">
-        <table>
+        <table role="table">
           <thead>
             <tr>
               <th>用户</th>
@@ -215,19 +215,19 @@ export function UsersPage() {
           <tbody>
             {result.items.map((user) => (
               <tr key={user.id}>
-                <td>
+                <td data-card-heading="">
                   <strong>{user.displayName || '微信用户'}</strong>
                   <small>用户编号：{user.id}</small>
                 </td>
-                <td>{user.phoneBound ? user.maskedPhone : '未绑定'}</td>
-                <td>
+                <td data-label="手机号">{user.phoneBound ? user.maskedPhone : '未绑定'}</td>
+                <td data-label="状态">
                   <span className={`status-pill ${user.status.toLowerCase()}`}>
                     {user.status === 'ACTIVE' ? '正常' : '已冻结'}
                   </span>
                 </td>
-                <td>{formatTime(user.registeredAt)}</td>
-                <td>{formatTime(user.lastLoginAt)}</td>
-                <td>
+                <td data-label="注册时间">{formatTime(user.registeredAt)}</td>
+                <td data-label="最近登录">{formatTime(user.lastLoginAt)}</td>
+                <td data-card-actions="">
                   <div className="row-actions">
                     <button className="text-button" disabled={loading || busy} onClick={() => void openDetail(user)} type="button">
                       查看详情

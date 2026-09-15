@@ -206,7 +206,7 @@ export function HomeVideoPage() {
           </div>
           <small>首页同一时间仅展示一条已发布视频</small>
         </div>
-        <table>
+        <table role="table">
           <thead>
             <tr>
               <th>视频</th>
@@ -225,7 +225,7 @@ export function HomeVideoPage() {
             )}
             {result.items.map((item) => (
               <tr key={item.id}>
-                <td>
+                <td data-card-heading="">
                   <div className="video-list-title">
                     <div className="video-list-cover">
                       <MediaPreview alt={item.title} mediaId={item.coverMediaId} />
@@ -236,13 +236,13 @@ export function HomeVideoPage() {
                     </div>
                   </div>
                 </td>
-                <td>
+                <td data-label="状态">
                   <span className={'status-pill ' + (item.status === 'ONLINE' ? 'active' : 'disabled')}>
                     {statusText[item.status]}
                   </span>
                 </td>
-                <td>{formatTime(item.updatedAt)}</td>
-                <td>
+                <td data-label="最近更新">{formatTime(item.updatedAt)}</td>
+                <td data-card-actions="">
                   <div className="row-actions">
                     <button className="text-button" onClick={() => setEditingId(item.id)} type="button">
                       编辑
