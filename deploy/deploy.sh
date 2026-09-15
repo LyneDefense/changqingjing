@@ -11,6 +11,8 @@ lock_file="$deploy_dir/.deploy.lock"
 compose=(docker compose --project-directory "$deploy_dir" --env-file "$environment_file" --file "$compose_file")
 # shellcheck source=runtime.sh
 source "$deploy_dir/runtime.sh"
+# shellcheck source=import-data.sh
+source "$deploy_dir/import-data.sh"
 
 log() {
   printf '[changqingjing] %s\n' "$*"
@@ -31,6 +33,7 @@ Commands:
   deploy                备份、迁移、发布、健康检查，失败时自动回退应用镜像
   backup                立即生成并校验一份 PostgreSQL 备份
   restore-check [file]  把指定或最新备份恢复到临时数据库并校验，然后删除临时库
+  import-data [dir]      导入本地数据包，仅允许首次空业务库；保留服务器管理员和原库
   rollback              切换到上一个成功发布的应用镜像
   renew-cert            续签证书，通过 nginx -t 后重新加载
   renew-cert --dry-run  执行 Let's Encrypt 续签演练
@@ -527,12 +530,12 @@ show_status() {
 main() {
   local command="${1:-}"
   case "$command" in
-    bootstrap|enable-https|deploy|backup|restore-check|rollback|renew-cert|status) ;;
+    bootstrap|enable-https|deploy|backup|restore-check|import-data|rollback|renew-cert|status) ;;
     -h|--help|help|"") usage; exit 0 ;;
     *) usage >&2; die "未知命令：$command" ;;
   esac
 
-  if [[ "$command" == bootstrap && "$EUID" -ne 0 ]]; then
+  if [[ ( "$command" == bootstrap || "$command" == import-data ) && "$EUID" -ne 0 ]]; then
     exec sudo "$deploy_dir/deploy.sh" "$@"
   fi
   load_environment
@@ -543,6 +546,7 @@ main() {
     deploy) deploy_release ;;
     backup) backup_now ;;
     restore-check) restore_check "${2:-}" ;;
+    import-data) import_initial_data "${2:-}" ;;
     rollback) rollback_release ;;
     renew-cert) renew_certificate "${2:-}" ;;
     status) show_status ;;

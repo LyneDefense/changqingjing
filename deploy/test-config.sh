@@ -35,6 +35,7 @@ COS_OBJECT_PREFIX=prod
 ENVIRONMENT
 
 bash -n "$deploy_dir/deploy.sh" "$deploy_dir/runtime.sh" "$deploy_dir/install-runtime.sh" "$deploy_dir/monitor.sh" "$deploy_dir/test-stack.sh"
+bash -n "$deploy_dir/import-data.sh"
 bash "$deploy_dir/test-deploy.sh"
 bash "$deploy_dir/test-install-runtime.sh"
 bash "$deploy_dir/test-docker-mirror.sh"

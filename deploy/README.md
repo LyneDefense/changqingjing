@@ -2,7 +2,7 @@
 
 统一入口是 `deploy/deploy.sh`，在 Ubuntu 服务器的仓库根目录执行。它编排 PostgreSQL、Spring Boot、管理后台、Nginx 和 Certbot；媒体仍使用腾讯云 COS，不写入数据库或容器磁盘。
 
-目前只准备部署工具，没有在服务器安装软件、启动应用或搬迁本地数据库数据。首次运行会创建空的服务器数据库并执行项目的 Flyway 建表/升级脚本；**这不等于迁移本地业务数据**，数据搬迁另行安排。
+首次运行会创建空的服务器数据库并执行项目的 Flyway 建表/升级脚本；**这不等于迁移本地业务数据**。已有本地数据通过下面的单独导入步骤迁移，不在普通部署时自动同步。
 
 ## 1. 准备代码和配置
 
@@ -134,6 +134,7 @@ sudo journalctl -u changqingjing-cert-renew.service
 bash deploy/test-deploy.sh
 bash deploy/test-install-runtime.sh
 bash deploy/test-docker-mirror.sh
+bash deploy/test-data-import.sh
 bash deploy/test-config.sh
 # 本机先构建 changqingjing-backend:verification 后，可验证隔离的空库启动和备份恢复：
 bash deploy/test-stack.sh
@@ -142,3 +143,32 @@ bash deploy/test-stack.sh
 测试仅使用本机 Docker 的验证镜像/独立数据库，不读取生产密钥，不连接服务器。覆盖模式选择、Cookie/端口隔离、证书重载逻辑、镜像加速配置合并/幂等/失败回退、Compose、三种 Nginx 配置和 HTTP 后台路由。镜像加速测试中的 Docker、网络和 systemd 操作均使用替身，不修改本机 Docker 配置。
 
 参考：[Docker 官方 Ubuntu 安装说明](https://docs.docker.com/engine/install/ubuntu/)、[腾讯云 Docker 软件源安装说明](https://cloud.tencent.com/document/product/213/46000)、[腾讯云 Docker Hub 内网加速器](https://cloud.tencent.com/document/product/213/8623)、[Docker 配置校验及热加载](https://docs.docker.com/reference/cli/dockerd/#configuration-reload-behavior)、[端口发布安全说明](https://docs.docker.com/engine/network/port-publishing/)、[Certbot 续签与 deploy-hook](https://eff-certbot.readthedocs.io/en/stable/man/certbot.html)。
+
+## 首次导入本地业务数据
+
+只适用于已完成 `bootstrap`、业务表仍为空、两边各有一个管理员的服务器。服务器已存在内容、媒体或小程序用户时，脚本拒绝覆盖；后续合并必须单独规划。此流程保留服务器管理员的账号密码，将本地内容的管理者引用归到该账号，不把本地测试管理员密码用于服务器。
+
+在本机仓库根目录准备独立工具环境（不是后端的运行环境）：
+
+```bash
+python3 -m venv deploy/data/import-tools
+deploy/data/import-tools/bin/python -m pip install cos-python-sdk-v5==1.9.44 cryptography
+deploy/data/import-tools/bin/python scripts/prepare-data-import.py \
+  --ssh-target 你的SSH配置名 --remote-repository /服务器实际仓库路径
+```
+
+工具读取本地 `.env.local` 和服务器运行中的后端配置，只在内存中比较密钥，不输出、不上传环境文件。微信 AppID、手机号加密密钥、COS 桶和地域必须一致。先导出本地数据库并恢复到本机独立临时库，校验手机号解密和摘要；再将所有 READY 媒体复制到服务器配置的 COS 生产前缀下的独立 `imports/` 目录，校验大小、类型和 CRC64。不会删除开发目录原文件，不下载媒体到数据库或容器磁盘。未完成上传的媒体、不同 COS 桶或多管理员合并需要另行处理。
+
+输出目录为本机 `deploy/data/local-import-时间-随机值/`。将目录内的 `source.dump`、`media.csv`、`manifest.json` 传到服务器对应的 `deploy/data/` 子目录；目录权限 700，文件权限 600。不要把导入包或工具环境提交到 Git。迁移期间暂停两边的后台内容编辑。
+
+在服务器仓库根目录执行唯一部署入口：
+
+```bash
+sudo ./deploy/deploy.sh import-data deploy/data/实际导入包目录
+```
+
+导入先验证归档/映射 SHA-256、配置指纹、数据库结构及目标空库条件，再恢复到服务器独立临时库并逐表核对数量和数据摘要。然后关闭已完成的一次性管理员初始化开关（原配置备份到导入包），短暂停止后端并备份服务器数据库，保留服务器管理员及已有审计记录，更新媒体对象键。登录会话、微信访问令牌缓存和地图临时授权票据不沿用。
+
+全部通过后，在单个事务中重命名数据库完成切换；原服务器数据库保留为 `cqj_before_import_*`，不删除。后端启动、应用健康和业务表摘要核对失败时，自动切回原数据库。导入包中的 `completed.txt` 记录原库名和服务器备份位置，`imported-final.dump` 是转换后数据的备份。原库、开发目录媒体及导入包不会自动清理，应在确认完成并另存备份后再处理。操作日志和环境备份包含敏感信息，仅供服务器维护人员读取。
+
+`test-data-import.sh` 使用无网络、无端口、无持久卷的独立 PostgreSQL 容器和虚构数据，覆盖归档恢复、空库保护、账号保留、媒体引用、转换事务回退及数据库切换/反向切换。
