@@ -948,7 +948,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/contents/home-videos/{entryId}": {
+    "/api/v1/admin/dashboard": {
         parameters: {
             query?: never;
             header?: never;
@@ -956,6 +956,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contents/home-videos/{entryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
         put?: never;
         post?: never;
         delete: operations["delete_2"];
@@ -987,7 +1003,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1019,7 +1035,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1051,7 +1067,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2006,6 +2022,76 @@ export interface components {
         ApiResponseListAdminProductCategoryResponse: {
             data?: components["schemas"]["AdminProductCategoryResponse"][];
         };
+        AdminAuditResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            actorId?: string;
+            actorLoginName?: string;
+            actorDisplayName?: string;
+            action?: string;
+            actionLabel?: string;
+            module?: string;
+            moduleLabel?: string;
+            targetType?: string;
+            /** Format: uuid */
+            targetId?: string;
+            targetName?: string;
+            result?: string;
+            affectsOnline?: boolean;
+            clientIp?: string;
+            clientSummary?: string;
+            userAgent?: string;
+            /** Format: uuid */
+            loginBatchId?: string;
+            traceId?: string;
+            changeSummary?: string[];
+            failureCode?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            historical?: boolean;
+        };
+        AdminDashboardResponse: {
+            userMetricsVisible?: boolean;
+            statistics?: components["schemas"]["Statistics"];
+            registrationTrend?: components["schemas"]["DailyRegistration"][];
+            recentUsers?: components["schemas"]["RecentUser"][];
+            recentOperations?: components["schemas"]["AdminAuditResponse"][];
+            /** Format: int32 */
+            trendDays?: number;
+            /** Format: date-time */
+            generatedAt?: string;
+            timezone?: string;
+        };
+        ApiResponseAdminDashboardResponse: {
+            data?: components["schemas"]["AdminDashboardResponse"];
+        };
+        DailyRegistration: {
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            count?: number;
+        };
+        RecentUser: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            maskedPhone?: string;
+            avatarUrl?: string;
+            status?: string;
+            /** Format: date-time */
+            registeredAt?: string;
+        };
+        Statistics: {
+            /** Format: int64 */
+            totalRegistrations?: number;
+            /** Format: int64 */
+            todayRegistrations?: number;
+            /** Format: int64 */
+            last7DaysRegistrations?: number;
+            /** Format: int64 */
+            frozenUsers?: number;
+        };
         AdminHomeVideoQuery: {
             /** Format: int32 */
             page?: number;
@@ -2056,8 +2142,8 @@ export interface components {
             data?: components["schemas"]["AdminCompanyRevisionResponse"];
         };
         CsrfToken: {
-            parameterName?: string;
             headerName?: string;
+            parameterName?: string;
             token?: string;
         };
         AdminCsrfResponse: {
@@ -2082,35 +2168,6 @@ export interface components {
             module?: string;
             action?: string;
             result?: string;
-        };
-        AdminAuditResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            actorId?: string;
-            actorLoginName?: string;
-            actorDisplayName?: string;
-            action?: string;
-            actionLabel?: string;
-            module?: string;
-            moduleLabel?: string;
-            targetType?: string;
-            /** Format: uuid */
-            targetId?: string;
-            targetName?: string;
-            result?: string;
-            affectsOnline?: boolean;
-            clientIp?: string;
-            clientSummary?: string;
-            userAgent?: string;
-            /** Format: uuid */
-            loginBatchId?: string;
-            traceId?: string;
-            changeSummary?: string[];
-            failureCode?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            historical?: boolean;
         };
         ApiResponsePageResponseAdminAuditResponse: {
             data?: components["schemas"]["PageResponseAdminAuditResponse"];
@@ -3720,6 +3777,28 @@ export interface operations {
     };
     get_5: {
         parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminDashboardResponse"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
             query?: never;
             header?: never;
             path: {
@@ -3788,7 +3867,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -3828,7 +3907,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -3868,7 +3947,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;

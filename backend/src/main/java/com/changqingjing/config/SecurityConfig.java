@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/admin/auth/me", "/api/v1/admin/auth/logout").authenticated()
                 .requestMatchers("/api/v1/admin/staff/**", "/api/v1/admin/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/admin/audit-events/**").hasAnyRole("ADMIN", "OPERATOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/dashboard").hasAnyRole("ADMIN", "OPERATOR")
                 .requestMatchers(
                     "/api/v1/admin/contents/**",
                     "/api/v1/admin/media/**",

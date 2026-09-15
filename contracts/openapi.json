@@ -2125,12 +2125,44 @@
         }
       }
     },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "tags": [
+          "admin-dashboard-controller"
+        ],
+        "operationId": "get_5",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminDashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/contents/home-videos/{entryId}": {
       "get": {
         "tags": [
           "admin-home-video-content-controller"
         ],
-        "operationId": "get_5",
+        "operationId": "get_6",
         "parameters": [
           {
             "name": "entryId",
@@ -2231,7 +2263,7 @@
         "tags": [
           "admin-home-hero-content-controller"
         ],
-        "operationId": "get_6",
+        "operationId": "get_7",
         "responses": {
           "200": {
             "description": "OK",
@@ -2271,7 +2303,7 @@
         "tags": [
           "admin-cooperation-controller"
         ],
-        "operationId": "get_7",
+        "operationId": "get_8",
         "responses": {
           "200": {
             "description": "OK",
@@ -2311,7 +2343,7 @@
         "tags": [
           "admin-company-content-controller"
         ],
-        "operationId": "get_8",
+        "operationId": "get_9",
         "responses": {
           "200": {
             "description": "OK",
@@ -4945,6 +4977,192 @@
           }
         }
       },
+      "AdminAuditResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorLoginName": {
+            "type": "string"
+          },
+          "actorDisplayName": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actionLabel": {
+            "type": "string"
+          },
+          "module": {
+            "type": "string"
+          },
+          "moduleLabel": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetName": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "affectsOnline": {
+            "type": "boolean"
+          },
+          "clientIp": {
+            "type": "string"
+          },
+          "clientSummary": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          },
+          "loginBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "changeSummary": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failureCode": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "historical": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "userMetricsVisible": {
+            "type": "boolean"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/Statistics"
+          },
+          "registrationTrend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyRegistration"
+            }
+          },
+          "recentUsers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentUser"
+            }
+          },
+          "recentOperations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAuditResponse"
+            }
+          },
+          "trendDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiResponseAdminDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminDashboardResponse"
+          }
+        }
+      },
+      "DailyRegistration": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RecentUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "maskedPhone": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Statistics": {
+        "type": "object",
+        "properties": {
+          "totalRegistrations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayRegistrations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "last7DaysRegistrations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "frozenUsers": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "AdminHomeVideoQuery": {
         "type": "object",
         "properties": {
@@ -5079,10 +5297,10 @@
       "CsrfToken": {
         "type": "object",
         "properties": {
-          "parameterName": {
+          "headerName": {
             "type": "string"
           },
-          "headerName": {
+          "parameterName": {
             "type": "string"
           },
           "token": {
@@ -5155,85 +5373,6 @@
           "result": {
             "pattern": "SUCCESS|FAILURE|^$",
             "type": "string"
-          }
-        }
-      },
-      "AdminAuditResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "actorId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "actorLoginName": {
-            "type": "string"
-          },
-          "actorDisplayName": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string"
-          },
-          "actionLabel": {
-            "type": "string"
-          },
-          "module": {
-            "type": "string"
-          },
-          "moduleLabel": {
-            "type": "string"
-          },
-          "targetType": {
-            "type": "string"
-          },
-          "targetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "targetName": {
-            "type": "string"
-          },
-          "result": {
-            "type": "string"
-          },
-          "affectsOnline": {
-            "type": "boolean"
-          },
-          "clientIp": {
-            "type": "string"
-          },
-          "clientSummary": {
-            "type": "string"
-          },
-          "userAgent": {
-            "type": "string"
-          },
-          "loginBatchId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "traceId": {
-            "type": "string"
-          },
-          "changeSummary": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "failureCode": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "historical": {
-            "type": "boolean"
           }
         }
       },

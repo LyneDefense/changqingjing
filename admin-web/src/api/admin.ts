@@ -105,6 +105,35 @@ export function getAuditEvent(id: string) {
   return request<AuditEvent>(`/audit-events/${encodeURIComponent(id)}`)
 }
 
+export interface DashboardStatistics {
+  totalRegistrations: number
+  todayRegistrations: number
+  last7DaysRegistrations: number
+  frozenUsers: number
+}
+export interface DailyRegistration { date: string; count: number }
+export interface RecentRegisteredUser {
+  id: string
+  displayName?: string
+  maskedPhone?: string
+  avatarUrl?: string
+  status: AppUserStatus
+  registeredAt: string
+}
+export interface AdminDashboard {
+  userMetricsVisible: boolean
+  statistics?: DashboardStatistics
+  registrationTrend: DailyRegistration[]
+  recentUsers: RecentRegisteredUser[]
+  recentOperations: AuditEvent[]
+  trendDays: number
+  generatedAt: string
+  timezone: string
+}
+export function getAdminDashboard(days: 7 | 30 = 7) {
+  return request<AdminDashboard>(`/dashboard?days=${days}`)
+}
+
 export interface CreateAdminStaffInput {
   loginName: string
   displayName: string

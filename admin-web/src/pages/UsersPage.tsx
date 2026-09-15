@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   AdminApiError,
   getRegisteredUser,
@@ -57,6 +58,8 @@ export function UsersPage() {
   const listRequest = useRef(0)
   const detailRequest = useRef(0)
   const actionInFlight = useRef(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedUserId = searchParams.get('userId')
 
   const loadUsers = useCallback(async () => {
     const requestId = ++listRequest.current
@@ -90,27 +93,38 @@ export function UsersPage() {
     setKeyword(keywordInput.trim())
   }
 
-  async function openDetail(user: RegisteredAppUser) {
+  useEffect(() => {
+    if (!requestedUserId) {
+      // Closing via browser history must also dismiss the detail modal.
+      // oxlint-disable-next-line react/set-state-in-effect
+      setSelectedUser(undefined)
+      setDetailLoading(false)
+      return
+    }
     const requestId = ++detailRequest.current
-    setSelectedUser(user)
+    // Dashboard links and list selections share the same guarded detail request.
+    // oxlint-disable-next-line react/set-state-in-effect
     setDetailLoading(true)
     setError('')
-    try {
-      const detail = await getRegisteredUser(user.id)
+    void getRegisteredUser(requestedUserId).then((detail) => {
       if (requestId === detailRequest.current) setSelectedUser(detail)
-    } catch (requestError) {
-      if (requestId === detailRequest.current) {
-        setSelectedUser(undefined)
-        setError(errorText(requestError))
-      }
-    } finally {
-      if (requestId === detailRequest.current) setDetailLoading(false)
-    }
+    }).catch((requestError) => {
+      if (requestId === detailRequest.current) { setSelectedUser(undefined); setError(errorText(requestError)) }
+    }).finally(() => { if (requestId === detailRequest.current) setDetailLoading(false) })
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+    return () => { ++detailRequest.current }
+  }, [requestedUserId])
+
+  function openDetail(user: RegisteredAppUser) {
+    setSelectedUser(user)
+    setSearchParams({ userId: user.id })
   }
 
   function closeDetail() {
     ++detailRequest.current
     setSelectedUser(undefined)
+    setDetailLoading(false)
+    setSearchParams((current) => { current.delete('userId'); return current }, { replace: true })
   }
 
   function prepareAction(kind: 'freeze' | 'unfreeze' | 'delete', user: RegisteredAppUser) {
@@ -199,6 +213,7 @@ export function UsersPage() {
 
       {error && <p className="notice error-notice" role="alert">{error}</p>}
       {notice && <p className="notice success-notice" role="status">{notice}</p>}
+      {detailLoading && !selectedUser && <p role="status">正在加载用户详情…</p>}
 
       <div className="table-card">
         <table role="table">

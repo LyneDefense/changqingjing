@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import type { RegisteredAppUser } from '../api/admin'
 import { UsersPage } from './UsersPage'
 import { resetAdminApiForTests } from '../api/admin'
@@ -34,7 +35,7 @@ describe('UsersPage', () => {
       login: vi.fn(), logout: vi.fn(), refresh: vi.fn(),
       hasPermission: (permission) => permissions.includes(permission),
     }
-    return render(<AuthContext.Provider value={auth}><UsersPage /></AuthContext.Provider>)
+    return render(<MemoryRouter><AuthContext.Provider value={auth}><UsersPage /></AuthContext.Provider></MemoryRouter>)
   }
 
   beforeEach(() => {
