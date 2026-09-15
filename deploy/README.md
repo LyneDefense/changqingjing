@@ -74,22 +74,28 @@ ssh -N -o ExitOnForwardFailure=yes -L 18080:127.0.0.1:8088 zen
 
 ```dotenv
 DOMAIN=你的真实域名
+# 可选：明确填写已解析的 www 等别名；不需要别名时留空。
+DOMAIN_ALIAS=你的真实别名域名
 SERVER_PUBLIC_IP=服务器真实公网IPv4
 CERTBOT_EMAIL=你的真实邮箱
 CERTBOT_STAGING=false
 ADMIN_BOOTSTRAP_ENABLED=false
 ```
 
-`DOMAIN` 仅填写域名，不带协议、端口或路径。以上为说明，不能原样复制。执行：
+`DOMAIN` 和可选的 `DOMAIN_ALIAS` 仅填写小写域名，不带协议、端口或路径；别名不能与主域名相同。别名需要先添加 CNAME 指向主域名，或添加 A 记录指向同一服务器。以上为说明，不能原样复制。执行：
 
 ```bash
 sudo ./deploy/deploy.sh enable-https
 sudo ./deploy/deploy.sh renew-cert --dry-run
 ```
 
-`enable-https` 使用当前已验证镜像，先备份数据库，核对 DNS 和 ACME 公网路径，申请证书，启用 HTTPS 和安全 Cookie，检查应用，并启用运维定时器。不重建数据库，不导入数据，也无需手动运行容器命令。
+`enable-https` 使用当前已验证镜像，先备份数据库，核对主域名及别名的 DNS 和 ACME 公网路径，申请一张覆盖两个域名的证书，启用 HTTPS 和安全 Cookie，检查应用，并启用运维定时器。不重建数据库，不导入数据，也无需手动运行容器命令。已有未到期且覆盖所需域名的证书会复用，给原证书新增别名时会扩展同名证书，不会盲目跳过申请。
 
 之后后台为 `https://你的域名/admin/`，管理 API 和小程序 API 分别为 `/api/v1/admin/`、`/api/v1/app/`。证书接入前，公开 HTTP 入口只提供 ACME 和健康检查，不提供后台或业务 API。
+
+启用 HTTPS 后，主域名根路径会跳到 `/admin/`；主域名和别名的普通 HTTP 请求均跳到主域名 HTTPS，别名 HTTPS 同样跳到主域名，保留路径和查询参数。ACME 的 HTTP 路径始终直接提供验证文件，避免别名跳转影响续签；续签沿用该同名证书，两个域名都会续签。应用与 HTTPS 证书仍共用一个主域名，不为别名单独维护后台或接口。
+
+如果服务器仍是尚未支持别名的旧 Web 镜像，先保持 `DOMAIN`、`DOMAIN_ALIAS` 为空，为 `WEB_IMAGE` 设置新标签并执行 `deploy` 更新到支持别名的版本，再填写域名配置并执行 `enable-https`。增加或调整域名后同样使用 `enable-https` 核对解析和更新证书。
 
 也可以一开始就填写域名等三项，再执行 `bootstrap`，一次完成首次部署和证书申请。`CERTBOT_STAGING=true` 仅供独立演练环境使用，测试证书不被浏览器信任；正式部署保持 `false`。
 

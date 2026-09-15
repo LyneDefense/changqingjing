@@ -16,6 +16,7 @@ COPY --from=build /workspace/admin-web/dist/ /usr/share/nginx/html/admin/
 COPY deploy/nginx/http.conf.template /opt/changqingjing/nginx/http.conf.template
 COPY deploy/nginx/preview.conf.template /opt/changqingjing/nginx/preview.conf.template
 COPY deploy/nginx/https.conf.template /opt/changqingjing/nginx/https.conf.template
+COPY deploy/nginx/alias.conf.template /opt/changqingjing/nginx/alias.conf.template
 COPY deploy/nginx/entrypoint.sh /opt/changqingjing/nginx/entrypoint.sh
 RUN chmod 0755 /opt/changqingjing/nginx/entrypoint.sh \
     && rm -f /etc/nginx/conf.d/default.conf

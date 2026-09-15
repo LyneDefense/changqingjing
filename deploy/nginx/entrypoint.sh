@@ -18,5 +18,10 @@ case "${DEPLOY_MODE:-https}" in
   *) echo 'DEPLOY_MODE must be preview or https.' >&2; exit 1 ;;
 esac
 
-envsubst '${DOMAIN}' < "$template" > /etc/nginx/conf.d/default.conf
+envsubst '${DOMAIN} ${DOMAIN_ALIAS}' < "$template" > /etc/nginx/conf.d/default.conf
+if [ "${DEPLOY_MODE:-https}" = https ] && [ -n "${DOMAIN_ALIAS:-}" ] && [ -f "$certificate" ]; then
+  envsubst '${DOMAIN} ${DOMAIN_ALIAS}' < /opt/changqingjing/nginx/alias.conf.template > /etc/nginx/conf.d/alias.conf
+else
+  rm -f /etc/nginx/conf.d/alias.conf
+fi
 exec "$@"

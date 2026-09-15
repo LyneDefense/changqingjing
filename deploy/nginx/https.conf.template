@@ -1,7 +1,7 @@
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name ${DOMAIN};
+    server_name ${DOMAIN} ${DOMAIN_ALIAS};
 
     location = /nginx-health {
         access_log off;
@@ -16,7 +16,7 @@ server {
     }
 
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://${DOMAIN}$request_uri;
     }
 }
 
@@ -99,6 +99,10 @@ server {
         proxy_set_header X-Forwarded-Proto https;
         proxy_connect_timeout 5s;
         proxy_read_timeout 60s;
+    }
+
+    location = / {
+        return 302 /admin/;
     }
 
     location / {

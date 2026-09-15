@@ -109,6 +109,7 @@ services:
         MAP_REFERER_NAME: ${VITE_TENCENT_MAP_REFERER:-changqingjing-admin}
     environment:
       DOMAIN: ${DOMAIN:-}
+      DOMAIN_ALIAS: ${DOMAIN_ALIAS:-}
       DEPLOY_MODE: ${DEPLOY_MODE:-https}
     depends_on:
       backend:

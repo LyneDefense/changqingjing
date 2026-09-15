@@ -2,6 +2,7 @@
 # Source after .env.production. Domain presence is the single switch for HTTPS.
 configure_deployment_runtime() {
   export DOMAIN="${DOMAIN:-}"
+  export DOMAIN_ALIAS="${DOMAIN_ALIAS:-}"
   if [[ -z "$DOMAIN" ]]; then
     export DEPLOY_MODE=preview
     export HTTP_BIND_ADDRESS=127.0.0.1 HTTP_PORT="${PREVIEW_HTTP_PORT:-8088}"

@@ -1,7 +1,7 @@
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name ${DOMAIN};
+    server_name ${DOMAIN} ${DOMAIN_ALIAS};
 
     location = /nginx-health {
         access_log off;
@@ -27,4 +27,3 @@ server {
         return 503 "HTTPS certificate is not installed yet.\n";
     }
 }
-

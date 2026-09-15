@@ -72,9 +72,15 @@ load_environment() {
 
   configure_deployment_runtime
   if [[ "$DEPLOY_MODE" == https ]]; then
-    [[ "$DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ && "$DOMAIN" == *.* && "$DOMAIN" != *..* ]] || die "DOMAIN 格式无效。"
+    validate_domain "$DOMAIN" DOMAIN
+    if [[ -n "$DOMAIN_ALIAS" ]]; then
+      validate_domain "$DOMAIN_ALIAS" DOMAIN_ALIAS
+      [[ "$DOMAIN_ALIAS" != "$DOMAIN" ]] || die "DOMAIN_ALIAS 不能与 DOMAIN 相同。"
+    fi
     [[ "${SERVER_PUBLIC_IP:-}" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || die "启用 HTTPS 需要配置 SERVER_PUBLIC_IP。"
     [[ "${CERTBOT_EMAIL:-}" == *@*.* ]] || die "启用 HTTPS 需要配置 CERTBOT_EMAIL。"
+  else
+    [[ -z "$DOMAIN_ALIAS" ]] || die "配置 DOMAIN_ALIAS 时也必须填写 DOMAIN。"
   fi
   [[ "$HTTP_PORT" =~ ^[0-9]+$ && "$HTTP_PORT" -ge 1024 && "$HTTP_PORT" -le 65535 || "$DEPLOY_MODE" == https ]] || die "PREVIEW_HTTP_PORT 必须是 1024～65535。"
   [[ "$DEPLOY_MODE" == https || "$HTTP_PORT" -ne "$HTTPS_PORT" ]] || die "PREVIEW_HTTP_PORT 不能使用预留端口 $HTTPS_PORT。"
@@ -101,6 +107,21 @@ load_environment() {
 
   BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
   [[ "$BACKUP_RETENTION_DAYS" =~ ^[0-9]+$ && "$BACKUP_RETENTION_DAYS" -ge 1 ]] || die "BACKUP_RETENTION_DAYS 必须是正整数。"
+}
+
+validate_domain() {
+  local domain="$1" name="$2" label
+  [[ ${#domain} -le 253 && "$domain" == *.* && "$domain" != *..* && "$domain" != *. ]] || die "$name 格式无效。"
+  local labels=()
+  IFS=. read -r -a labels <<< "$domain"
+  for label in "${labels[@]}"; do
+    [[ ${#label} -le 63 && "$label" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || die "$name 必须是小写、无协议或路径的有效域名。"
+  done
+}
+
+deployment_domains() {
+  printf '%s\n' "$DOMAIN"
+  [[ -z "${DOMAIN_ALIAS:-}" ]] || printf '%s\n' "$DOMAIN_ALIAS"
 }
 
 validate_image_reference() {
@@ -145,10 +166,12 @@ check_server_prerequisites() {
   fi
   [[ "$DEPLOY_MODE" == https ]] || return 0
 
-  local resolved_ips
-  resolved_ips="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u)"
-  [[ -n "$resolved_ips" ]] || die "域名 $DOMAIN 尚无 IPv4 解析。"
-  grep -Fxq "$SERVER_PUBLIC_IP" <<<"$resolved_ips" || die "域名 $DOMAIN 未解析到 SERVER_PUBLIC_IP=$SERVER_PUBLIC_IP；当前为：$resolved_ips"
+  local domain resolved_ips
+  while IFS= read -r domain; do
+    resolved_ips="$(getent ahostsv4 "$domain" | awk '{print $1}' | sort -u || true)"
+    [[ -n "$resolved_ips" ]] || die "域名 $domain 尚无 IPv4 解析。"
+    [[ "$resolved_ips" == "$SERVER_PUBLIC_IP" ]] || die "域名 $domain 必须仅解析到 SERVER_PUBLIC_IP=$SERVER_PUBLIC_IP；当前为：$resolved_ips"
+  done < <(deployment_domains)
 
 }
 
@@ -283,7 +306,17 @@ check_external_health() {
   curl --fail --silent --show-error \
     --retry 20 --retry-delay 3 --retry-all-errors \
     --connect-timeout 5 --max-time 10 \
-    "$(deployment_base_url)/healthz" >/dev/null
+    "$(deployment_base_url)/healthz" >/dev/null || return 1
+  if [[ "$DEPLOY_MODE" == https && -n "${DOMAIN_ALIAS:-}" ]]; then
+    local redirect_result
+    redirect_result="$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
+      --output /dev/null --write-out '%{http_code} %{redirect_url}' \
+      "https://$DOMAIN_ALIAS/admin/?https-check=1")" || return 1
+    [[ "$redirect_result" == "301 https://$DOMAIN/admin/?https-check=1" ]] || {
+      log "别名 HTTPS 证书或主域名跳转检查失败"
+      return 1
+    }
+  fi
 }
 
 rollback_services_to() {
@@ -325,34 +358,37 @@ install_operations_timers() {
 }
 
 check_acme_route() {
-  local token_file token
+  local token_file token domain
   token="bootstrap-$PPID-$(date +%s)"
   token_file="$deploy_dir/certbot/www/.well-known/acme-challenge/$token"
   printf '%s' "$token" > "$token_file"
-  if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
-    --resolve "$DOMAIN:80:127.0.0.1" "http://$DOMAIN/.well-known/acme-challenge/$token" | grep -Fxq "$token"; then
-    rm -f "$token_file"
-    die "本机 Nginx ACME webroot 检查失败。"
-  fi
-  if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
-    "http://$DOMAIN/.well-known/acme-challenge/$token" | grep -Fxq "$token"; then
-    rm -f "$token_file"
-    die "公网无法通过 80 端口访问 ACME webroot；请检查安全组、防火墙和 DNS。"
-  fi
+  while IFS= read -r domain; do
+    if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
+      --resolve "$domain:80:127.0.0.1" "http://$domain/.well-known/acme-challenge/$token" | grep -Fxq "$token"; then
+      rm -f "$token_file"
+      die "$domain 的本机 Nginx ACME webroot 检查失败。"
+    fi
+    if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
+      "http://$domain/.well-known/acme-challenge/$token" | grep -Fxq "$token"; then
+      rm -f "$token_file"
+      die "$domain 的公网 80 端口无法访问 ACME webroot；请检查安全组、防火墙和 DNS。"
+    fi
+  done < <(deployment_domains)
   rm -f "$token_file"
 }
 
 request_first_certificate() {
-  if [[ -f "$deploy_dir/certbot/conf/live/$DOMAIN/fullchain.pem" ]]; then
-    log "已有证书，跳过首次申请"
-    return 0
-  fi
+  local domains=() domain
+  while IFS= read -r domain; do
+    domains+=(--domain "$domain")
+  done < <(deployment_domains)
   local staging=()
   [[ "${CERTBOT_STAGING:-false}" == "true" ]] && staging+=(--staging)
-  log "向 Let's Encrypt 申请 $DOMAIN 的首次证书"
+  log "申请或检查 $(deployment_domains | paste -sd ',' -) 的证书；覆盖域名未变时复用未到期证书"
   "${compose[@]}" run --rm certbot certonly \
     --webroot --webroot-path /var/www/certbot \
-    --domain "$DOMAIN" --email "$CERTBOT_EMAIL" \
+    --cert-name "$DOMAIN" "${domains[@]}" --email "$CERTBOT_EMAIL" \
+    --keep-until-expiring --expand \
     --agree-tos --no-eff-email --non-interactive ${staging[@]+"${staging[@]}"}
 }
 
